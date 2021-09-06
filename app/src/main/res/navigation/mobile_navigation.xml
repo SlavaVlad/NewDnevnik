@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mobile_navigation"
+    app:startDestination="@+id/nav_tasks">
+
+    <fragment
+        android:id="@+id/nav_tasks"
+        android:name="well.keepitsimple.dnevnik.ui.tasks.TasksFragment"
+        android:label="@string/menu_home"
+        tools:layout="@layout/fragment_tasks" />
+
+    <fragment
+        android:id="@+id/nav_lk"
+        android:name="well.keepitsimple.dnevnik.ui.lk.LkFragment"
+        android:label="@string/menu_gallery"
+        tools:layout="@layout/fragment_lk" />
+
+    <fragment
+        android:id="@+id/nav_settings"
+        android:name="well.keepitsimple.dnevnik.ui.settings.SettingsFragment"
+        android:label="@string/menu_slideshow"
+        tools:layout="@layout/fragment_settings" />
+
+    <fragment
+        android:id="@+id/nav_timetables"
+        android:name="well.keepitsimple.dnevnik.ui.timetables.TimetablesFragment"
+        android:label="Расписание"
+        tools:layout="@layout/fragment_timetables" />
+
+</navigation>

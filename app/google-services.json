@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "471144410285",
+    "project_id": "schooler-auto",
+    "storage_bucket": "schooler-auto.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:471144410285:android:32ef3cd8031792e79fea24",
+        "android_client_info": {
+          "package_name": "well.keepitsimple.dnevnik"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "471144410285-d73ukgjf46c3mjvj6uk6vde67s81l91d.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDviiMmsMx6DFQmTRBvVdux8An2gbbIwGc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "471144410285-d73ukgjf46c3mjvj6uk6vde67s81l91d.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
