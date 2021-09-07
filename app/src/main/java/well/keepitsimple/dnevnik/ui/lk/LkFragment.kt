@@ -37,8 +37,9 @@ class LkFragment : Fragment() {
         rb_student = view.findViewById(R.id.rb_student)
 
         val activity: MainActivity? = activity as MainActivity?
+        uid = activity!!.uid!!
 
-        db.collection("users").document(activity!!.uid!!).get().addOnSuccessListener {
+        db.collection("users").document(uid).get().addOnSuccessListener {
             setCabinet(it)
         }
 
@@ -77,7 +78,7 @@ class LkFragment : Fragment() {
 
         btn_save.isEnabled = false
 
-        db.collection("users").document(uid).set(data).addOnSuccessListener {
+        db.collection("users").document(uid).update(data).addOnSuccessListener {
             btn_save.isEnabled = true
             Toast.makeText(requireContext().applicationContext, "Информация записана", Toast.LENGTH_SHORT).show()
         }

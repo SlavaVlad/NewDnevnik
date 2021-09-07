@@ -4,6 +4,15 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="..\:/AndroidProjects/NewDnevnik/app/src/main/res/layout/activity_add_homework.xml" value="0.3385416666666667" />
+        <entry key="..\:/AndroidProjects/NewDnevnik/app/src/main/res/layout/activity_expand_task.xml" value="0.3385416666666667" />
+        <entry key="..\:/AndroidProjects/NewDnevnik/app/src/main/res/layout/activity_main.xml" value="0.3385416666666667" />
+        <entry key="..\:/AndroidProjects/NewDnevnik/app/src/main/res/layout/app_bar_main.xml" value="0.3385416666666667" />
+        <entry key="..\:/AndroidProjects/NewDnevnik/app/src/main/res/layout/content_main.xml" value="0.3385416666666667" />
+        <entry key="..\:/AndroidProjects/NewDnevnik/app/src/main/res/layout/fragment_add_homework.xml" value="0.3385416666666667" />
+        <entry key="..\:/AndroidProjects/NewDnevnik/app/src/main/res/layout/nav_header_main.xml" value="0.3385416666666667" />
+        <entry key="..\:/AndroidProjects/NewDnevnik/app/src/main/res/layout/task_item_layout.xml" value="0.3385416666666667" />
+        <entry key="..\:/AndroidProjects/NewDnevnik/app/src/main/res/menu/activity_main_drawer.xml" value="0.3385416666666667" />
+        <entry key="..\:/AndroidProjects/NewDnevnik/app/src/main/res/menu/main.xml" value="0.3385416666666667" />
         <entry key="..\:/REP/android_basic/2/app/src/main/res/drawable-v24/ic_edit.xml" value="0.11423611111111111" />
         <entry key="..\:/REP/android_basic/2/app/src/main/res/drawable/bg_roundrect_ripple_light_border.xml" value="0.23645833333333333" />
         <entry key="..\:/REP/android_basic/2/app/src/main/res/drawable/ic_baseline_schema_24.xml" value="0.23645833333333333" />

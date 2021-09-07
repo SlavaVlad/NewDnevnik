@@ -10,6 +10,7 @@ import android.widget.*
 import androidx.fragment.app.Fragment
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.Timestamp
+import io.grpc.Context
 import well.keepitsimple.dnevnik.*
 import java.util.*
 import kotlin.collections.ArrayList
@@ -70,7 +71,7 @@ class TasksFragment : Fragment() {
 
     private fun setList(list: ArrayList<TaskItem>, uid: String) {
 
-        val tasksAdapter = TasksAdapter(requireContext().applicationContext, R.layout.task_item_layout, list)
+        val tasksAdapter = TasksAdapter(requireActivity().applicationContext, R.layout.task_item_layout, list)
 
         db.collection("users").document(gactivity!!.uid!!).get().addOnSuccessListener {
 

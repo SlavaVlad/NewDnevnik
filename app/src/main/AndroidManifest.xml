@@ -3,7 +3,7 @@
     package="well.keepitsimple.dnevnik">
 
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
         android:allowBackup="true"
@@ -13,7 +13,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Дневник">
         <activity
-            android:name=".AddHomework"
+            android:name=".ui.tasks.AddHomework"
             android:noHistory="true"
             android:theme="@style/Theme.Дневник.NoActionBar" />
         <activity
