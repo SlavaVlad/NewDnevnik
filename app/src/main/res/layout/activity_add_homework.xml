@@ -103,6 +103,7 @@
 
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
                 android:hint="Текст">
 
                 <!--this is the actual edit text which takes the input-->
@@ -110,7 +111,7 @@
                     android:id="@+id/et_text"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="textMultiLine|textAutoCorrect|textPersonName"/>
+                    android:inputType="textMultiLine|textAutoCorrect|textPersonName" />
 
             </com.google.android.material.textfield.TextInputLayout>
 

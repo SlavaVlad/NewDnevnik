@@ -133,9 +133,9 @@ class MainActivity : AppCompatActivity() {
                     // Sign in success, update UI with the signed-in user's information
                     Log.d(F, "signInWithCredential:success")
                     val user = auth.currentUser
-                    uid = auth.currentUser!!.uid
+                    uid = user!!.uid
 
-                        checkUserInDatabase(user!!)
+                        checkUserInDatabase(user)
 
                 } else {
                     // If sign in fails, display a message to the user.
@@ -146,7 +146,7 @@ class MainActivity : AppCompatActivity() {
     private fun checkUserInDatabase(user: FirebaseUser) {
 
         db.collection("users").document(user.uid).addSnapshotListener { doc, error ->
-            if (doc != null) {
+            if (doc != null && doc.getBoolean("isStudent") != null && doc.getBoolean("isAdmin") != null) {
 
                 Log.w(F, "Ты есть в базе")
 
@@ -168,6 +168,7 @@ class MainActivity : AppCompatActivity() {
                 }.addOnFailureListener {
                     Log.w(F, "Error writing user data - ${it.message}")
                 }
+
             }
         }
     }

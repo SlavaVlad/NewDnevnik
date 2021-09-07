@@ -26,16 +26,18 @@ class TasksFragment : Fragment() {
     private val tasks = ArrayList<TaskItem>() // динамический массив - список из полей документов в коллекции
     lateinit var MActivity: MainActivity
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
+    var gactivity: MainActivity? = null
+
+        override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View? {
 
         val view = inflater.inflate(R.layout.fragment_tasks, container, false)
 
         lv_tasks = view.findViewById(R.id.lv_tasks)
 
-        getTasks()
+        gactivity = activity as MainActivity?
 
-         MActivity = activity as MainActivity
+        getTasks()
 
         return view
     }
@@ -57,7 +59,7 @@ class TasksFragment : Fragment() {
                             )
                         }
                     }
-                    setList(tasks)
+                    setList(tasks, gactivity!!.uid!!)
                 }
 
     }
@@ -66,11 +68,11 @@ class TasksFragment : Fragment() {
         return ceil(((timestamp!!.seconds.toDouble()) - System.currentTimeMillis() / 1000) / 86400)
     }
 
-    private fun setList(list: ArrayList<TaskItem>) {
+    private fun setList(list: ArrayList<TaskItem>, uid: String) {
 
         val tasksAdapter = TasksAdapter(requireContext().applicationContext, R.layout.task_item_layout, list)
 
-        db.collection("tasks").document(MActivity.uid!!).get().addOnSuccessListener {
+        db.collection("users").document(gactivity!!.uid!!).get().addOnSuccessListener {
 
             lv_tasks.adapter = tasksAdapter
 
@@ -80,6 +82,8 @@ class TasksFragment : Fragment() {
                 }
             }
 
+        }.addOnFailureListener {
+            Log.w(F, "error getting documents ${it.message}")
         }
 
     }
