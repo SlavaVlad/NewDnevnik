@@ -2,6 +2,7 @@ package well.keepitsimple.dnevnik.ui.tasks
 
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -15,20 +16,20 @@ import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
 import com.google.firebase.firestore.FirebaseFirestore
 import well.keepitsimple.dnevnik.R
+import java.sql.Date
 import java.sql.Timestamp
+import kotlin.time.days
 
 class CreateHomework : Fragment() {
 
-    var gyear: Int? = null
-    var gmonth: Int? = null
-    var gday: Int? = null
+    lateinit var date: Date
     lateinit var cg_subject: ChipGroup
     lateinit var cg_type: ChipGroup
     var btn_complete: Button? = null
     lateinit var calendar_i: CalendarView
     lateinit var et_text: EditText
     val db = FirebaseFirestore.getInstance()
-    val F = "Firebase"
+    var doc_time: com.google.firebase.Timestamp? = null
     var data = hashMapOf<String, Any>()
 
     //lateinit var user: String
@@ -44,42 +45,31 @@ class CreateHomework : Fragment() {
         val view = inflater.inflate(R.layout.fragment_create_homework, container, false)
 
         btn_complete = view.findViewById(R.id.btn_complete)
-        btn_complete
 
         chips = arrayOf(view.findViewById(R.id.chip4),
-        view.findViewById(R.id.chip4),
-        view.findViewById(R.id.chip5),
-        view.findViewById(R.id.chip6),
-        view.findViewById(R.id.chip7),
-        view.findViewById(R.id.chip8),
-        view.findViewById(R.id.chip9),
-        view.findViewById(R.id.chip10),
-        view.findViewById(R.id.chip11),
-        view.findViewById(R.id.chip12),
-        view.findViewById(R.id.chip13),
-        view.findViewById(R.id.chip14),
-        view.findViewById(R.id.chip15),
-        view.findViewById(R.id.chip16),
-        view.findViewById(R.id.chip17),
-        view.findViewById(R.id.chip18),
-        view.findViewById(R.id.chip19),
-        view.findViewById(R.id.chip20),
-        view.findViewById(R.id.chip21),
-        view.findViewById(R.id.chip22)
+            view.findViewById(R.id.chip4),
+            view.findViewById(R.id.chip5),
+            view.findViewById(R.id.chip6),
+            view.findViewById(R.id.chip7),
+            view.findViewById(R.id.chip8),
+            view.findViewById(R.id.chip9),
+            view.findViewById(R.id.chip10),
+            view.findViewById(R.id.chip11),
+            view.findViewById(R.id.chip12),
+            view.findViewById(R.id.chip13),
+            view.findViewById(R.id.chip14),
+            view.findViewById(R.id.chip15),
+            view.findViewById(R.id.chip16),
+            view.findViewById(R.id.chip17),
+            view.findViewById(R.id.chip18),
+            view.findViewById(R.id.chip19),
+            view.findViewById(R.id.chip20),
+            view.findViewById(R.id.chip21),
+            view.findViewById(R.id.chip22),
+            view.findViewById(R.id.chip23)
         )
 
-
-        if (requireArguments().getBoolean("edit")) {
-            doc_id = requireArguments().getString("doc_id")
-            setupUpdate(doc_id!!)
-            btn_complete!!.setOnClickListener {
-                completeUpdate()
-            }
-        } else {
-            btn_complete!!.setOnClickListener {
-                completeAdd()
-            }
-        }
+        date = Date(1970,1,1)
 
         cg_subject = view.findViewById(R.id.cg_subject)
         cg_type = view.findViewById(R.id.cg_type)
@@ -101,9 +91,19 @@ class CreateHomework : Fragment() {
         }
 
         calendar_i.setOnDateChangeListener { view, year, month, dayOfMonth ->
-            gyear = year-1900
-            gmonth = month
-            gday = dayOfMonth
+            date = Date(year-1900, month, dayOfMonth)
+        }
+
+        if (requireArguments().getBoolean("edit")) {
+            doc_id = requireArguments().getString("doc_id")
+            setupUpdate(doc_id!!)
+            btn_complete!!.setOnClickListener {
+                completeUpdate()
+            }
+        } else {
+            btn_complete!!.setOnClickListener {
+                completeAdd()
+            }
         }
 
         setupChips()
@@ -113,7 +113,7 @@ class CreateHomework : Fragment() {
 
     private fun setupUpdate(docId: String) {
 
-        db.collection("tasks").document(docId).get().addOnSuccessListener {
+        db.collection("4tasks").document(docId).get().addOnSuccessListener {
 
             cg_subject.setOnCheckedChangeListener { group, id ->
                 if (id != -1) {
@@ -132,23 +132,23 @@ class CreateHomework : Fragment() {
 
             et_text.setText(it.getString("text"))
 
-            val time: com.google.firebase.Timestamp = it.getTimestamp("deadline")!!
+            doc_time = it.getTimestamp("deadline")!!
 
-            calendar_i.date = time.seconds*1000
-            gyear = time.toDate().year
-            gmonth = time.toDate().month
-            gday = time.toDate().day
+            calendar_i.date = doc_time!!.toDate().toInstant().toEpochMilli()
+
+            //if (requireArguments()["edit"] == true) {
+            //    calendar_i.setDate(time.toDate().toInstant().toEpochMilli())
+            //}
 
         }
-
     }
 
     private fun addChipData(group: ChipGroup?, chip: Int) {
 
         var c: Chip? = null
 
-        for(i in chips){
-            if (i.id == chip){
+        for (i in chips) {
+            if (i.id == chip) {
                 c = i
             }
         }
@@ -162,34 +162,25 @@ class CreateHomework : Fragment() {
             data["type"] = c!!.text.toString()
             data["type_id"] = c.id
         }
-
-        btn_complete!!.isEnabled = !(et_text.text.isBlank() && !data.contains("subject") && !data.contains("type"))
     }
 
 
     private fun setupChips() {
 
         if (requireArguments()["edit"] == true) {
-
-            db.collection("tasks").document(doc_id!!).get().addOnSuccessListener {
-
+            db.collection("4tasks").document(doc_id!!).get().addOnSuccessListener {
                 for (c in chips) {
-                    if (c.text == it.getString("subject")){
+                    if (c.text == it.getString("subject")) {
                         c.isChecked = true
                     }
-
-                    if (c.text == it.getString("type")){
+                    if (c.text == it.getString("type")) {
                         c.isChecked = true
                     }
                 }
-
             }
         }
 
-            btn_complete!!.isEnabled = true
-
-            if (requireArguments()["edit"] == true){ setupUpdate(doc_id!!) }
-
+        btn_complete!!.isEnabled = true
 
     }
 
@@ -197,10 +188,8 @@ class CreateHomework : Fragment() {
 
         btn_complete!!.isEnabled = false
 
-        if (gyear != null) {
-            data["deadline"] = Timestamp(gyear!!, gmonth!!, gday!!, 0, 0, 0, 0)
-        } else {
-            data["deadline"] = Timestamp(System.currentTimeMillis())
+        if (date != Date(1970,1,1)){
+            data["deadline"] = com.google.firebase.Timestamp(date)
         }
 
         if (et_text.text.isNotEmpty() && data.contains("subject") && data.contains("type")) {
@@ -208,7 +197,7 @@ class CreateHomework : Fragment() {
             data["text"] = et_text.text.toString()
             //data["owner"] = user
 
-            db.collection("tasks").document(doc_id!!).update(data).addOnCompleteListener {
+            db.collection("4tasks").document(doc_id!!).update(data).addOnCompleteListener {
 
                 requireFragmentManager()
                     .beginTransaction()
@@ -229,8 +218,8 @@ class CreateHomework : Fragment() {
     }
 
     private fun completeAdd() {
-        if (gyear != null) {
-            data["deadline"] = Timestamp(gyear!!, gmonth!!, gday!!, 0, 0, 0, 0)
+        if (date != Date(1970,1,1)) {
+            data["deadline"] = com.google.firebase.Timestamp(date)
         } else {
             data["deadline"] = Timestamp(System.currentTimeMillis())
         }
@@ -242,7 +231,7 @@ class CreateHomework : Fragment() {
 
             btn_complete!!.isEnabled = false
 
-            db.collection("tasks").add(data).addOnCompleteListener {
+            db.collection("4tasks").add(data).addOnCompleteListener {
 
                 requireFragmentManager()
                     .beginTransaction()

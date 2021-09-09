@@ -226,6 +226,13 @@
                         android:layout_height="wrap_content"
                         android:checkable="true"
                         android:text="Работа на оценку" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/chip23"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checkable="true"
+                        android:text="TEST" />
                 </com.google.android.material.chip.ChipGroup>
             </LinearLayout>
 
