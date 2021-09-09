@@ -11,8 +11,8 @@ android {
         applicationId "well.keepitsimple.dnevnik"
         minSdkVersion 26
         targetSdkVersion 30
-        versionCode 5
-        versionName "0.3.2.1"
+        versionCode 6
+        versionName "0.4.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }

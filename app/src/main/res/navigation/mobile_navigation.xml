@@ -9,13 +9,32 @@
         android:id="@+id/nav_tasks"
         android:name="well.keepitsimple.dnevnik.ui.tasks.TasksFragment"
         android:label="@string/menu_home"
-        tools:layout="@layout/fragment_tasks" />
+        tools:layout="@layout/fragment_tasks" >
+        <action
+            android:id="@+id/action_nav_tasks_to_nav_createhw"
+            app:destination="@id/nav_createhw" />
+        <action
+            android:id="@+id/action_nav_tasks_to_nav_lk"
+            app:destination="@id/nav_lk" />
+        <action
+            android:id="@+id/action_nav_tasks_to_nav_settings"
+            app:destination="@id/nav_settings" />
+        <action
+            android:id="@+id/action_nav_tasks_to_nav_timetables"
+            app:destination="@id/nav_timetables" />
+    </fragment>
 
     <fragment
         android:id="@+id/nav_lk"
         android:name="well.keepitsimple.dnevnik.ui.lk.LkFragment"
         android:label="@string/menu_gallery"
         tools:layout="@layout/fragment_lk" />
+
+    <fragment
+        android:id="@+id/nav_createhw"
+        android:name="well.keepitsimple.dnevnik.ui.lk.LkFragment"
+        android:label="@string/menu_gallery"
+        tools:layout="@layout/fragment_create_homework" />
 
     <fragment
         android:id="@+id/nav_settings"

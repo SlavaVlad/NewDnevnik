@@ -13,10 +13,6 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Дневник">
         <activity
-            android:name=".ui.tasks.AddHomework"
-            android:noHistory="true"
-            android:theme="@style/Theme.Дневник.NoActionBar" />
-        <activity
             android:name=".MainActivity"
             android:label="@string/app_name"
             android:theme="@style/Theme.Дневник.NoActionBar">

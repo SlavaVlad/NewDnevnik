@@ -25,7 +25,6 @@ import com.google.firebase.auth.GoogleAuthProvider
 import androidx.work.*
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.DocumentSnapshot
-import well.keepitsimple.dnevnik.ui.tasks.AddHomework
 import java.util.*
 
 
@@ -62,10 +61,6 @@ class MainActivity : AppCompatActivity() {
 
         setSupportActionBar(binding.appBarMain.toolbar)
 
-        binding.appBarMain.fab.setOnClickListener {
-            val intent = Intent(this, AddHomework::class.java)
-            startActivity(intent)
-        }
         val drawerLayout: DrawerLayout = binding.drawerLayout
         val navView: NavigationView = binding.navView
         val navController = findNavController(R.id.nav_host_fragment_content_main)
@@ -150,10 +145,6 @@ class MainActivity : AppCompatActivity() {
             if (doc != null && doc.getBoolean("isStudent") != null && doc.getBoolean("isAdmin") != null) {
 
                 Log.w(F, "Ты есть в базе")
-
-                if (!doc.getBoolean("isStudent")!! || doc.getBoolean("isAdmin")!!) {
-                    binding.appBarMain.fab.visibility = View.VISIBLE
-                }
 
             } else {
 

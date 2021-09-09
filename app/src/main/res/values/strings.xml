@@ -14,5 +14,7 @@
     <string name="name">Имя</string>
     <string name="otchestvo">Отчество</string>
     <string name="title_activity_view_document">ViewDocument</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
     <!-- Strings used for fragments for navigation -->
 </resources>

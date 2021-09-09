@@ -1,23 +1,14 @@
 package well.keepitsimple.dnevnik
 
 import android.content.Context
-import android.content.Intent
-import android.content.res.ColorStateList
-import android.content.res.XmlResourceParser
-import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.TextView
-import androidx.cardview.widget.CardView
-import androidx.core.graphics.drawable.toDrawable
-import com.google.android.material.floatingactionbutton.FloatingActionButton
-import well.keepitsimple.dnevnik.ui.tasks.TasksFragment
 
 
-
-class TasksAdapter (var ctx:Context, var ressource:Int, var item:ArrayList<TaskItem>): ArrayAdapter<TaskItem>(ctx,ressource,item){
+class TasksAdapter(var ctx: Context, var ressource:Int, var item:ArrayList<TaskItem>): ArrayAdapter<TaskItem>(ctx,ressource,item){
 
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
         val layoutInflater = LayoutInflater.from(ctx)
