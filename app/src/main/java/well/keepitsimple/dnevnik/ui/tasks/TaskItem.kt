@@ -1,4 +1,4 @@
-package well.keepitsimple.dnevnik
+package well.keepitsimple.dnevnik.ui.tasks
 
 import com.google.firebase.firestore.DocumentSnapshot
 

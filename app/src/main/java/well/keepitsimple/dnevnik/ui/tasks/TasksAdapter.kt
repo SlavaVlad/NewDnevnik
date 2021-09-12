@@ -1,4 +1,4 @@
-package well.keepitsimple.dnevnik
+package well.keepitsimple.dnevnik.ui.tasks
 
 import android.content.Context
 import android.view.LayoutInflater
@@ -6,9 +6,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.TextView
+import well.keepitsimple.dnevnik.R
 
-
-class TasksAdapter(var ctx: Context, var ressource:Int, var item:ArrayList<TaskItem>): ArrayAdapter<TaskItem>(ctx,ressource,item){
+class TasksAdapter(var ctx: Context, var ressource: Int, var item: ArrayList<TaskItem>) :
+    ArrayAdapter<TaskItem>(ctx, ressource, item) {
 
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
         val layoutInflater = LayoutInflater.from(ctx)
@@ -30,7 +31,7 @@ class TasksAdapter(var ctx: Context, var ressource:Int, var item:ArrayList<TaskI
         text.text = item_doc.getString("text")
         text.setTextColor(context.getColor(R.color.design_default_color_primary_dark))
 
-        when (item[position].deadline){
+        when (item[position].deadline) {
             1.0 -> {// deadline = 0 -> сдача завтра
                 deadline.text = "Сдача завтра"
                 deadline.setTextColor(context.getColor(R.color.colorAccent))

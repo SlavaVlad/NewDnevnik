@@ -37,7 +37,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:elegantTextHeight="true"
-                android:lines="1"
+                android:lines="2"
                 android:text="Написать 1 отзыв на произведение из списка на лето. Тихий дон лучше)) Либо о герое подробнее, либо об эпизоде. Литературоведческие термины использовать. Не меньше 5. Лучше их подчеркнуть. (Объем А4, либо 2-3 страницы)"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"

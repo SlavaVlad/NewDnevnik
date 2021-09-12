@@ -14,8 +14,6 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.Timestamp
 import well.keepitsimple.dnevnik.*
-import java.util.*
-import java.util.zip.Inflater
 import kotlin.collections.ArrayList
 import kotlin.math.ceil
 
@@ -27,7 +25,8 @@ class TasksFragment : Fragment() {
 
     private val db = FirebaseFirestore.getInstance()
 
-    private val tasks = ArrayList<TaskItem>() // динамический массив - список из полей документов в коллекции
+    private val tasks =
+        ArrayList<TaskItem>() // динамический массив - список из полей документов в коллекции
 
     lateinit var fab: FloatingActionButton
 
@@ -56,8 +55,8 @@ class TasksFragment : Fragment() {
 
         fab.setOnClickListener {
             val bundle = Bundle()
-                bundle.putBoolean("edit", false)
-                bundle.putString("user", gactivity!!.uid)
+            bundle.putBoolean("edit", false)
+            bundle.putString("user", gactivity!!.uid)
             val fragment: Fragment = CreateHomework()
             fragment.arguments = bundle
             val trans: FragmentTransaction = requireFragmentManager()
@@ -83,7 +82,10 @@ class TasksFragment : Fragment() {
     private fun getTasks() {
         db.collection("4tasks").whereNotEqualTo("subject_id", null).get().addOnSuccessListener {
             for (i in 0 until it.size()) { // проходим по каждому документу
-                if (getDeadlineInDays(it.documents[i].getTimestamp("deadline")) > -1 && !tasks.contains(TaskItem((getDeadlineInDays(it.documents[i].getTimestamp("deadline"))), it.documents[i]))) {
+                if (getDeadlineInDays(it.documents[i].getTimestamp("deadline")) > -1 && !tasks.contains(
+                        TaskItem((getDeadlineInDays(it.documents[i].getTimestamp("deadline"))),
+                            it.documents[i]))
+                ) {
                     tasks.add(
                         TaskItem
                             ((getDeadlineInDays(it.documents[i].getTimestamp("deadline"))), it.documents[i])
@@ -92,7 +94,7 @@ class TasksFragment : Fragment() {
             }
             setList(tasks, gactivity!!.uid!!)
         }
-            //.whereEqualTo("group", "-")
+        //.whereEqualTo("group", "-")
     }
 
     private fun getDeadlineInDays(timestamp: Timestamp?): Double {
@@ -108,22 +110,22 @@ class TasksFragment : Fragment() {
             lv_tasks.adapter = tasksAdapter
 
             //if(!it.getBoolean("isStudent")!! || it.getBoolean("isAdmin")!!) {
-                lv_tasks.setOnItemClickListener { parent, view, position, id ->
+            lv_tasks.setOnItemClickListener { parent, view, position, id ->
 
-                    val bundle = Bundle()
-                    val fragment = CreateHomework()
-                    bundle.putBoolean("edit", true)
-                    bundle.putString("doc_id", tasks[position].doc.id)
-                    bundle.putString("user", gactivity!!.uid!!)
-                    fragment.arguments = bundle
-                    val trans: FragmentTransaction = requireFragmentManager()
-                        .beginTransaction()
-                        .setTransition(TRANSIT_FRAGMENT_OPEN)
-                        .addToBackStack(null)
-                    trans.replace(R.id.nav_host_fragment_content_main, fragment)
-                    trans.commit()
+                val bundle = Bundle()
+                val fragment = CreateHomework()
+                bundle.putBoolean("edit", true)
+                bundle.putString("doc_id", tasks[position].doc.id)
+                bundle.putString("user", gactivity!!.uid!!)
+                fragment.arguments = bundle
+                val trans: FragmentTransaction = requireFragmentManager()
+                    .beginTransaction()
+                    .setTransition(TRANSIT_FRAGMENT_OPEN)
+                    .addToBackStack(null)
+                trans.replace(R.id.nav_host_fragment_content_main, fragment)
+                trans.commit()
 
-                }
+            }
             //}
 
             pb.visibility = View.GONE
