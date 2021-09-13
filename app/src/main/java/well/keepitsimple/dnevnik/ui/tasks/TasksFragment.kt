@@ -103,7 +103,7 @@ class TasksFragment : Fragment() {
 
     private fun setList(list: ArrayList<TaskItem>, uid: String) {
 
-        val tasksAdapter = TasksAdapter(ctx.baseContext, R.layout.task_item_layout, list)
+        val tasksAdapter = TasksAdapter(ctx.baseContext, R.layout.task_item, list)
 
         db.collection("users").document(uid).get().addOnSuccessListener {
 
