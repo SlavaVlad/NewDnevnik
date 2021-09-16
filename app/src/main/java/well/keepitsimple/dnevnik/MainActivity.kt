@@ -23,9 +23,13 @@ import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import androidx.work.*
+import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.DocumentSnapshot
+import well.keepitsimple.dnevnik.ui.tasks.TaskItem
+import well.keepitsimple.dnevnik.ui.timetables.Lesson
 import java.util.*
+import kotlin.math.ceil
 
 
 class MainActivity : AppCompatActivity() {
@@ -40,6 +44,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
     val db = FirebaseFirestore.getInstance()
+    val list_lessons = ArrayList<Lesson>()
+    val tasks = ArrayList<TaskItem>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -73,6 +79,66 @@ class MainActivity : AppCompatActivity() {
         )
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
+
+        getTimetables()
+
+    }
+
+    private fun getDeadlineInDays(timestamp: Timestamp?): Double {
+        return ceil(((timestamp!!.seconds.toDouble()) - System.currentTimeMillis() / 1000) / 86400)
+    }
+
+    private fun getTimetables() {
+        list_lessons.clear()
+        // запрос документов расписания
+        db.collection("lessonstime").document("LxTrsAIg81E96zMSg0SL").get()
+            .addOnSuccessListener { lesson_time -> // расписание звонков
+                db.collection("lessons").get()
+                    .addOnSuccessListener { lesson_query -> // получаем всё расписание на все дни
+                        repeat(lesson_query.size()) { // проходимся по каждому документу
+                            val lesson = lesson_query.documents[it] // получаем текущий документ
+                            var error = 0
+                            repeat(lesson.getLong("lessonsCount")!!
+                                .toInt()) { loop -> // проходимся по списку уроков в дне
+                                val loopindex: Int = loop + 1 // получаем не 0-based индекс
+                                var offset = lesson.getLong("timeOffset")!!
+                                when (lesson.get("${loopindex}_parent")) {
+                                    null -> {
+                                        offset -= error
+                                        list_lessons.add(Lesson( // добавляем урок в массив
+                                            cab = lesson.getLong("${loopindex}_cab")!!, // кабинет
+                                            name = lesson.getString("${loopindex}_name")!!, // название предмета (пример: Математика)
+                                            startAt = lesson_time.getString("${loopindex + offset}_startAt")!!, // время начала урока 09:15, например
+                                            endAt = lesson_time.getString("${loopindex + offset}_endAt")!!, // время конца урока
+                                            day = lesson.getLong("day")!! // номер дня в неделе, ПН=1, СБ=6
+                                        ))
+                                    }
+                                    else -> {
+                                        if (lesson.getBoolean("${loopindex}_parent")!!) {
+                                            offset -= error
+                                            list_lessons.add(Lesson( // добавляем урок в массив
+                                                cab = lesson.getLong("${loopindex}_cab")!!, // кабинет
+                                                name = lesson.getString("${loopindex}_name")!!, // название предмета (пример Математика)
+                                                startAt = lesson_time.getString("${loopindex + offset}_startAt")!!, // время начала урока 09:15, например
+                                                endAt = lesson_time.getString("${loopindex + offset}_endAt")!!, // время конца урока
+                                                day = lesson.getLong("day")!!)) // номер дня в неделе, ПН=1, СБ=6))
+                                        } else {
+                                            error++
+                                            offset -= error
+                                            list_lessons.add(Lesson( // добавляем урок в массив
+                                                cab = lesson.getLong("${loopindex}_cab")!!, // кабинет
+                                                name = lesson.getString("${loopindex}_name")!!, // название предмета (пример Математика)
+                                                startAt = lesson_time.getString("${loopindex + offset}_startAt")!!, // время начала урока 09:15, например
+                                                endAt = lesson_time.getString("${loopindex + offset}_endAt")!!, // время конца урока
+                                                day = lesson.getLong("day")!! // номер дня в неделе, ПН=1, СБ=6
+                                            ))
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+            }
     }
 
     // START LOGIN

@@ -46,6 +46,15 @@
         android:id="@+id/nav_timetables"
         android:name="well.keepitsimple.dnevnik.ui.timetables.TimetablesFragment"
         android:label="Расписание"
-        tools:layout="@layout/fragment_timetables" />
+        tools:layout="@layout/fragment_timetables" >
+        <action
+            android:id="@+id/action_nav_timetables_to_createLesson"
+            app:destination="@id/createLesson" />
+    </fragment>
+    <fragment
+        android:id="@+id/createLesson"
+        android:name="well.keepitsimple.dnevnik.ui.timetables.lessons.CreateLesson"
+        android:label="fragment_create_lesson"
+        tools:layout="@layout/fragment_create_lesson" />
 
 </navigation>

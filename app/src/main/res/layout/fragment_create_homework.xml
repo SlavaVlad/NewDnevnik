@@ -1,284 +1,278 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_width="410dp"
+    android:layout_height="wrap_content"
+    android:scrollbarStyle="insideOverlay"
+    android:scrollbars="none"
     tools:context=".ui.tasks.CreateHomework">
 
-    <ScrollView
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:orientation="vertical"
+        android:scrollbarStyle="outsideInset">
+
+        <TextView
+            android:id="@+id/tv_subject"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Предмет"
+            android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
 
         <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
             android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/tv_subject"
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/cg_subject"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="Предмет"
-                android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+                android:layout_marginTop="4dp"
+                app:singleLine="false"
+                app:singleSelection="true">
 
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:orientation="vertical">
-
-                <com.google.android.material.chip.ChipGroup
-                    android:id="@+id/cg_subject"
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip4"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    app:singleLine="false"
-                    app:singleSelection="true">
+                    android:checkable="true"
+                    android:text="Алгебра" />
 
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip4"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checkable="true"
-                        android:text="Алгебра" />
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip5"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checkable="true"
-                        android:text="Геометрия" />
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip6"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checkable="true"
-                        android:text="Литература" />
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip7"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checkable="true"
-                        android:text="Русский язык" />
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip8"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checkable="true"
-                        android:text="Экономика" />
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip9"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checkable="true"
-                        android:text="Английский язык" />
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip10"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checkable="true"
-                        android:text="История" />
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip11"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checkable="true"
-                        android:text="Обществознание" />
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip12"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checkable="true"
-                        android:text="Биология" />
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip13"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checkable="true"
-                        android:text="Право" />
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip14"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checkable="true"
-                        android:text="Физика" />
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip15"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checkable="true"
-                        android:text="Физическая культура" />
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip16"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checkable="true"
-                        android:text="ОБЖ" />
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip17"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checkable="true"
-                        android:text="Химия" />
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip18"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checkable="true"
-                        android:text="География" />
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip19"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checkable="true"
-                        android:text="Экономика" />
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip20"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checkable="true"
-                        android:text="Информатика" />
-                </com.google.android.material.chip.ChipGroup>
-            </LinearLayout>
-
-            <TextView
-                android:id="@+id/tv_groups"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="Цель"
-                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-                android:visibility="gone"
-                app:layout_constraintStart_toStartOf="parent" />
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:orientation="vertical"
-                android:visibility="gone">
-
-                <com.google.android.material.chip.ChipGroup
-                    android:id="@+id/cg_target"
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip5"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:visibility="gone"
-                    app:singleLine="true"
-                    app:singleSelection="true">
+                    android:checkable="true"
+                    android:text="Геометрия" />
 
-                </com.google.android.material.chip.ChipGroup>
-            </LinearLayout>
-
-            <TextView
-                android:id="@+id/textView2"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="Тип"
-                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-                app:layout_constraintStart_toStartOf="parent" />
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:orientation="vertical">
-
-                <com.google.android.material.chip.ChipGroup
-                    android:id="@+id/cg_type"
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip6"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    app:singleLine="false"
-                    app:singleSelection="true">
+                    android:checkable="true"
+                    android:text="Литература" />
 
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip21"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checkable="true"
-                        android:text="Д/з" />
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip22"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checkable="true"
-                        android:text="Работа на оценку" />
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip23"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checkable="true"
-                        android:text="TEST" />
-                </com.google.android.material.chip.ChipGroup>
-            </LinearLayout>
-
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/filledTextField1"
-
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:hint="Текст">
-
-                <!--this is the actual edit text which takes the input-->
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/et_text"
-                    android:layout_width="match_parent"
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip7"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:inputType="textMultiLine|textAutoCorrect|textPersonName" />
+                    android:checkable="true"
+                    android:text="Русский язык" />
 
-            </com.google.android.material.textfield.TextInputLayout>
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip8"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checkable="true"
+                    android:text="Экономика" />
 
-            <TextView
-                android:id="@+id/textView3"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="Дата сдачи"
-                android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip9"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checkable="true"
+                    android:text="Английский язык" />
 
-            <CalendarView
-                android:id="@+id/calendar"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip10"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checkable="true"
+                    android:text="История" />
 
-            <Button
-                android:id="@+id/btn_complete"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:enabled="false"
-                android:text="Создать уведомление" />
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip11"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checkable="true"
+                    android:text="Обществознание" />
 
-            <Space
-                android:layout_width="match_parent"
-                android:layout_height="30dp" />
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip12"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checkable="true"
+                    android:text="Биология" />
 
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip13"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checkable="true"
+                    android:text="Право" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip14"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checkable="true"
+                    android:text="Физика" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip15"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checkable="true"
+                    android:text="Физическая культура" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip16"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checkable="true"
+                    android:text="ОБЖ" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip17"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checkable="true"
+                    android:text="Химия" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip18"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checkable="true"
+                    android:text="География" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip19"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checkable="true"
+                    android:text="Экономика" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip20"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checkable="true"
+                    android:text="Информатика" />
+            </com.google.android.material.chip.ChipGroup>
         </LinearLayout>
-    </ScrollView>
-</androidx.constraintlayout.widget.ConstraintLayout>
+
+        <TextView
+            android:id="@+id/tv_groups"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Цель"
+            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+            android:visibility="gone"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/cg_target"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:visibility="gone"
+                app:singleLine="true"
+                app:singleSelection="true">
+
+            </com.google.android.material.chip.ChipGroup>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/textView2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Тип"
+            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/cg_type"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                app:singleLine="false"
+                app:singleSelection="true">
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip21"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checkable="true"
+                    android:text="Д/з" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip22"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checkable="true"
+                    android:text="Работа на оценку" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip23"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checkable="true"
+                    android:text="TEST" />
+            </com.google.android.material.chip.ChipGroup>
+        </LinearLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/filledTextField1"
+
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:hint="Текст">
+
+            <!--this is the actual edit text which takes the input-->
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textMultiLine|textAutoCorrect|textPersonName" />
+
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <TextView
+            android:id="@+id/textView3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Дата сдачи"
+            android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+
+        <CalendarView
+            android:id="@+id/calendar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <Button
+            android:id="@+id/btn_complete"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:enabled="false"
+            android:text="Создать уведомление" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="30dp" />
+
+    </LinearLayout>
+</ScrollView>
