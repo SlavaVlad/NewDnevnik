@@ -1,10 +1,10 @@
 package well.keepitsimple.dnevnik
 
 import android.content.Intent
+import android.icu.util.Calendar
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
-import android.view.View
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.drawerlayout.widget.DrawerLayout
@@ -20,17 +20,17 @@ import com.google.firebase.firestore.FirebaseFirestore
 import well.keepitsimple.dnevnik.databinding.ActivityMainBinding
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
+import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
-import androidx.work.*
-import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.Query
+import com.onesignal.OneSignal
 import well.keepitsimple.dnevnik.ui.tasks.TaskItem
 import well.keepitsimple.dnevnik.ui.timetables.Lesson
-import java.util.*
-import kotlin.math.ceil
+import kotlin.collections.ArrayList
 
+const val ONESIGNAL_APP_ID = "b5aa6c76-4619-4497-9b1e-2e7a1ef4095f"
 
 class MainActivity : AppCompatActivity() {
 
@@ -39,7 +39,8 @@ class MainActivity : AppCompatActivity() {
     val F: String = "Firebase"
     private val RC_SIGN_IN: Int = 123
 
-    var uid:String? = null
+    var uid: String? = null
+    var next_lesson: Timestamp = Timestamp(0, 0)
 
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
@@ -52,6 +53,13 @@ class MainActivity : AppCompatActivity() {
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        // Logging set to help debug issues, remove before releasing your app.
+        OneSignal.setLogLevel(OneSignal.LOG_LEVEL.VERBOSE, OneSignal.LOG_LEVEL.NONE)
+
+        // OneSignal Initialization
+        OneSignal.initWithContext(this)
+        OneSignal.setAppId(ONESIGNAL_APP_ID)
 
         // Configure Google Sign In
         val gso = GoogleSignInOptions
@@ -81,11 +89,6 @@ class MainActivity : AppCompatActivity() {
         navView.setupWithNavController(navController)
 
         getTimetables()
-
-    }
-
-    private fun getDeadlineInDays(timestamp: Timestamp?): Double {
-        return ceil(((timestamp!!.seconds.toDouble()) - System.currentTimeMillis() / 1000) / 86400)
     }
 
     private fun getTimetables() {
@@ -93,7 +96,7 @@ class MainActivity : AppCompatActivity() {
         // запрос документов расписания
         db.collection("lessonstime").document("LxTrsAIg81E96zMSg0SL").get()
             .addOnSuccessListener { lesson_time -> // расписание звонков
-                db.collection("lessons").get()
+                db.collection("lessons").orderBy("day", Query.Direction.ASCENDING).get()
                     .addOnSuccessListener { lesson_query -> // получаем всё расписание на все дни
                         repeat(lesson_query.size()) { // проходимся по каждому документу
                             val lesson = lesson_query.documents[it] // получаем текущий документ
@@ -141,30 +144,67 @@ class MainActivity : AppCompatActivity() {
             }
     }
 
+    fun alert(title: String, message: String) {
+        val builder = AlertDialog.Builder(this)
+        builder
+            .setTitle(title)
+            .setMessage(message)
+            .setCancelable(true)
+            .setNeutralButton("Ok") { dialog, id ->
+            }
+            .show()
+    }
+
+    fun getNextLesson(lesson_name: String): Long {
+
+        val week: ArrayList<Lesson> = ArrayList()
+
+        val day = 0
+
+        if (day < 7) {
+            repeat(list_lessons.size) {
+                if (list_lessons[it].day > day) {
+                    week.add(list_lessons[it])
+                }
+            }
+        }
+        repeat(list_lessons.size){ e ->
+            week.add(list_lessons[e])
+        }
+
+        // Заполнили массивы
+
+        var d: Long
+        var index = 0
+
+        d = week[0].day
+        repeat(week.size) {
+            if (d != week[it].day) {
+                d = week[it].day
+                index++
+            }
+
+
+            if (week[it].name == lesson_name) {
+                return (System.currentTimeMillis()/1000 + 86400*d)
+            }
+        }
+
+        Log.d("TIME", "Lesson time incorrect or lesson does not exist! lessons: $list_lessons \n ${System.currentTimeMillis()/1000}")
+        return (0)
+    }
     // START LOGIN
     override fun onStart() {
         super.onStart()
         // Check if user is signed in (non-null) and update UI accordingly.
         val currentUser = auth.currentUser
-        if ( currentUser == null) {
+        if (currentUser == null) {
             signIn()
         } else {
             uid = currentUser.uid
             checkUserInDatabase(currentUser)
         }
     }
-
-    fun alert(title: String, btn: String, message: String){
-        val builder = AlertDialog.Builder(this)
-        builder
-            .setTitle(title)
-            .setMessage(message)
-            .setCancelable(true)
-            .setNeutralButton(btn){ dialog, id ->
-            }
-            .show()
-    }
-
     private fun signIn() {
         val signInIntent = googleSignInClient.signInIntent
         startActivityForResult(signInIntent, RC_SIGN_IN)
@@ -197,7 +237,7 @@ class MainActivity : AppCompatActivity() {
                     val user = auth.currentUser
                     uid = user!!.uid
 
-                        checkUserInDatabase(user)
+                    checkUserInDatabase(user)
 
                 } else {
                     // If sign in fails, display a message to the user.
