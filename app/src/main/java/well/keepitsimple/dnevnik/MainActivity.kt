@@ -1,7 +1,6 @@
 package well.keepitsimple.dnevnik
 
 import android.content.Intent
-import android.icu.util.Calendar
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
@@ -20,11 +19,11 @@ import com.google.firebase.firestore.FirebaseFirestore
 import well.keepitsimple.dnevnik.databinding.ActivityMainBinding
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
-import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.ktx.toObject
 import com.onesignal.OneSignal
 import well.keepitsimple.dnevnik.ui.tasks.TaskItem
 import well.keepitsimple.dnevnik.ui.timetables.Lesson
@@ -40,7 +39,7 @@ class MainActivity : AppCompatActivity() {
     private val RC_SIGN_IN: Int = 123
 
     var uid: String? = null
-    var next_lesson: Timestamp = Timestamp(0, 0)
+    var global_user: Any? = null
 
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
@@ -245,22 +244,33 @@ class MainActivity : AppCompatActivity() {
                 }
             }
     }
-    private fun checkUserInDatabase(user: FirebaseUser) {
 
-        db.collection("users").document(user.uid).addSnapshotListener { doc, error ->
-            if (doc != null && doc.getBoolean("isStudent") != null && doc.getBoolean("isAdmin") != null) {
+    data class User(
+        val email: String? = null,
+        @field:JvmField
+        val isAdmin: Boolean? = null,
+        @field:JvmField
+        val isStudent: Boolean? = null,
+        val groups: ArrayList<String>? = null
+    )
+
+    private fun checkUserInDatabase(fire_user: FirebaseUser) {
+        db.collection("users").document(fire_user.uid).get().addOnSuccessListener {
+            if (it != null && it.getBoolean("isStudent") != null && it.getBoolean("isAdmin") != null) {
+
+                global_user = it.toObject<User>()!!
+                val a = global_user
+                a
 
                 Log.w(F, "Ты есть в базе")
 
             } else {
 
                 val data = hashMapOf<String, Any>(
-                    "isStudent" to true,
-                    "isAdmin" to false,
-                    "email" to user.email!!
+                    "email" to fire_user.email!!
                 )
 
-                val docRef = db.collection("users").document(user.uid)
+                val docRef = db.collection("users").document(fire_user.uid)
                 docRef.set(data).addOnSuccessListener {
                     Log.w(F, "User data write successfully")
                 }.addOnFailureListener {
