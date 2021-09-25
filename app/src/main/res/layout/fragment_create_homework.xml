@@ -31,6 +31,15 @@
                 android:text="Предмет"
                 android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
 
+            <ProgressBar
+                android:id="@+id/pb_subj"
+                style="@style/Widget.AppCompat.ProgressBar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="100"
+                android:progress="0"
+                android:progressTint="@color/teal_200" />
+
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
@@ -42,127 +51,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
                     app:singleLine="false"
-                    app:singleSelection="true">
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip4"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checkable="true"
-                        android:text="Алгебра" />
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip5"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checkable="true"
-                        android:text="Геометрия" />
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip6"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checkable="true"
-                        android:text="Литература" />
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip7"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checkable="true"
-                        android:text="Русский язык" />
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip8"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checkable="true"
-                        android:text="Экономика" />
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip9"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checkable="true"
-                        android:text="Английский язык" />
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip10"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checkable="true"
-                        android:text="История" />
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip11"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checkable="true"
-                        android:text="Обществознание" />
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip12"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checkable="true"
-                        android:text="Биология" />
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip13"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checkable="true"
-                        android:text="Право" />
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip14"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checkable="true"
-                        android:text="Физика" />
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip15"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checkable="true"
-                        android:text="Физическая культура" />
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip16"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checkable="true"
-                        android:text="ОБЖ" />
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip17"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checkable="true"
-                        android:text="Химия" />
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip18"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checkable="true"
-                        android:text="География" />
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip19"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checkable="true"
-                        android:text="Экономика" />
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip20"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checkable="true"
-                        android:text="Информатика" />
-                </com.google.android.material.chip.ChipGroup>
+                    app:singleSelection="true"/>
             </LinearLayout>
 
             <TextView

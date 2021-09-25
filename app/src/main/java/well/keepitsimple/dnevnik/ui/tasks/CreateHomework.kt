@@ -1,7 +1,5 @@
 package well.keepitsimple.dnevnik.ui.tasks
 
-import android.content.res.ColorStateList
-import android.graphics.Color
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -10,34 +8,48 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
-import androidx.core.graphics.*
-import androidx.core.view.get
 import androidx.fragment.app.FragmentTransaction
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
 import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
+import kotlinx.coroutines.*
+import kotlinx.coroutines.tasks.await
 import well.keepitsimple.dnevnik.MainActivity
 import well.keepitsimple.dnevnik.R
 import java.sql.Date
 import java.sql.Timestamp
+import kotlin.coroutines.CoroutineContext
 
-class CreateHomework : Fragment() {
+class CreateHomework : Fragment(), CoroutineScope {
 
     lateinit var date: Date
     lateinit var cg_subject: ChipGroup
     lateinit var cg_type: ChipGroup
-    lateinit var chips: Array<Chip>
+    var chips: ArrayList<Chip> = ArrayList()
     lateinit var til_text: TextInputLayout
     lateinit var btn_complete: Button
     lateinit var calendar_i: CalendarView
     lateinit var et_text: EditText
+    lateinit var pb_subj: ProgressBar
     val db = FirebaseFirestore.getInstance()
     var doc_time: com.google.firebase.Timestamp? = null
     var data = hashMapOf<String, Any>()
     var gactivity: MainActivity? = null
+    var text_length: Int = 0
 
     private var doc_id: String? = null
+
+    private var job: Job = Job()
+
+    override val coroutineContext: CoroutineContext
+        get() = Dispatchers.Main + job
+
+    override fun onDestroy() {
+        super.onDestroy()
+        job.cancel()
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -50,30 +62,6 @@ class CreateHomework : Fragment() {
 
         btn_complete = view.findViewById(R.id.btn_complete)
 
-        chips = arrayOf(
-            view.findViewById(R.id.chip4),
-            view.findViewById(R.id.chip4),
-            view.findViewById(R.id.chip5),
-            view.findViewById(R.id.chip6),
-            view.findViewById(R.id.chip7),
-            view.findViewById(R.id.chip8),
-            view.findViewById(R.id.chip9),
-            view.findViewById(R.id.chip10),
-            view.findViewById(R.id.chip11),
-            view.findViewById(R.id.chip12),
-            view.findViewById(R.id.chip13),
-            view.findViewById(R.id.chip14),
-            view.findViewById(R.id.chip15),
-            view.findViewById(R.id.chip16),
-            view.findViewById(R.id.chip17),
-            view.findViewById(R.id.chip18),
-            view.findViewById(R.id.chip19),
-            view.findViewById(R.id.chip20),
-            view.findViewById(R.id.chip21),
-            view.findViewById(R.id.chip22),
-            view.findViewById(R.id.chip23)
-        ) // Добавил чип - добавил findViewById!
-
         date = Date(1970, 1, 1)
 
         cg_subject = view.findViewById(R.id.cg_subject)
@@ -81,59 +69,84 @@ class CreateHomework : Fragment() {
         calendar_i = view.findViewById(R.id.calendar)
         et_text = view.findViewById(R.id.et_text)
         til_text = view.findViewById(R.id.til_text)
+        pb_subj = view.findViewById(R.id.pb_subj)
 
+        launch {
+            val unique_lessons: ArrayList<String> = getLessonsUniqueNames()
+            pb_subj.visibility = View.GONE
+            repeat(getLessonsUniqueNames().size) {
 
-        calendar_i.minDate = System.currentTimeMillis()
+                var c = Chip(gactivity)
+                c.text = unique_lessons[it]
+                c.isCheckable = true
+                chips.add(c)
+                cg_subject.addView(c)
 
-        cg_subject.setOnCheckedChangeListener { group, id ->
-            if (id != -1) {
-                addChipData(group, id)
             }
         }
 
-        cg_type.setOnCheckedChangeListener { group, id ->
-            if (id != -1) {
-                addChipData(group, id)
-            }
-        }
+            calendar_i.minDate = System.currentTimeMillis()
 
-        calendar_i.setOnDateChangeListener { _, year, month, dayOfMonth ->
-            date = Date(year - 1900, month, dayOfMonth)
-        }
-
-        if (requireArguments().getBoolean("edit")) {
-            doc_id = requireArguments().getString("doc_id")
-            setupUpdate(doc_id!!)
-            btn_complete.setOnClickListener {
-                completeUpdate()
-            }
-        } else {
-            btn_complete.setOnClickListener {
-                completeAdd()
-            }
-        }
-
-        et_text.addTextChangedListener(object : TextWatcher {
-
-            override fun afterTextChanged(s: Editable) {
+            cg_subject.setOnCheckedChangeListener { group, id ->
+                if (id != -1) {addDataFromChip(group, id); check()}
             }
 
-            override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {
+            cg_type.setOnCheckedChangeListener { group, id ->
+                if (id != -1) {addDataFromChip(group, id); check()}
             }
 
-            override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
-                check(s.length)
+            calendar_i.setOnDateChangeListener { _, year, month, dayOfMonth ->
+                date = Date(year - 1900, month, dayOfMonth)
             }
-        })
 
-        setupChips()
+            if (requireArguments().getBoolean("edit")) {
+                doc_id = requireArguments().getString("doc_id")
+                setupUpdate(doc_id!!)
+                btn_complete.setOnClickListener {
+                    completeUpdate()
+                }
+            } else {
+                btn_complete.setOnClickListener {
+                    completeAdd()
+                }
+            }
 
-        return view
+            et_text.addTextChangedListener(object : TextWatcher {
+
+                override fun afterTextChanged(s: Editable) {
+                }
+
+                override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {
+                }
+
+                override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
+                    text_length = s.length
+                }
+            })
+
+            setupChips()
+
+            return view
     }
 
-    fun check(count: Int) {
-        btn_complete.isEnabled = data.contains("subject") && data.contains("type") && count > 3
+    private suspend fun getLessonsUniqueNames(): ArrayList<String> {
+        val names = ArrayList<String>()
+        val docRef =  db.collection("lessons").orderBy("day", Query.Direction.ASCENDING)
+        val lesson_query = docRef.get().await().query.get().await()
+        repeat(lesson_query.size()) { // проходимся по каждому документу
+            val lesson = lesson_query.documents[it] // получаем текущий документ
+            var error = 0
+            repeat(lesson.getLong("lessonsCount")!!.toInt()) { loop -> // проходимся по списку уроков в дне
+                if (!names.contains(lesson.getString("${loop+1}_name")!!)) {
+                    names.add(lesson.getString("${loop + 1}_name")!!)
+                }
+            }
+        }
+        return names
+    }
 
+    private fun check() {
+        btn_complete.isEnabled = data.contains("subject") && data.contains("type") && text_length > 3
     }
 
     private fun setupUpdate(docId: String) {
@@ -141,11 +154,11 @@ class CreateHomework : Fragment() {
         db.collection("4tasks").document(docId).get().addOnSuccessListener {
 
             cg_subject.setOnCheckedChangeListener { group, id ->
-                addChipData(group, id)
+                if (id != -1) {addDataFromChip(group, id); check()}
             }
 
             cg_type.setOnCheckedChangeListener { group, id ->
-                addChipData(group, id)
+                if (id != -1) {addDataFromChip(group, id); check()}
             }
 
             cg_subject.check(it.getLong("subject_id")!!.toInt())
@@ -164,18 +177,22 @@ class CreateHomework : Fragment() {
         }
     }
 
-    private fun addChipData(group: ChipGroup?, chip: Int) {
+    private fun addDataFromChip(group: ChipGroup?, chipId: Int) {
 
         if (group == cg_subject) {
-            data["subject"] = cg_subject.findViewById<Chip>(chip).text
-            data["subject_id"] = cg_subject.findViewById<Chip>(chip).id
-            calendar_i.date = gactivity!!.getNextLesson(data["subject"] as String)*1000
+            data["subject"] = cg_subject.findViewById<Chip>(chipId).text
+            data["subject_id"] = cg_subject.findViewById<Chip>(chipId).id
+            calendar_i.date  = gactivity!!.getNextLesson(data["subject"] as String)*1000
+            date = Date(calendar_i.date)
         }
 
         if (group == cg_type) {
-            data["type"] = cg_type.findViewById<Chip>(chip).text
-            data["type_id"] = cg_type.findViewById<Chip>(chip).id
+            data["type"] = cg_type.findViewById<Chip>(chipId).text
+            data["type_id"] = cg_type.findViewById<Chip>(chipId).id
         }
+
+        check()
+
     }
 
     private fun setupChips() {
@@ -231,7 +248,7 @@ class CreateHomework : Fragment() {
             data["deadline"] = com.google.firebase.Timestamp(date)
         } else {
             data["deadline"] = Timestamp(System.currentTimeMillis())
-            gactivity!!.alert("Ошибка!", "Не удалось установить дату, будет записана текущая")
+            gactivity!!.alert("Ошибка!", "Не удалось установить дату, будет записана текущая", "completeAdd")
         }
 
         if (et_text.text.isNotEmpty() && data.contains("subject") && data.contains("type")){

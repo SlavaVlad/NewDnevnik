@@ -79,6 +79,7 @@ apply plugin: 'com.google.firebase.crashlytics'
 
 dependencies {
     implementation 'com.google.firebase:firebase-firestore-ktx:23.0.3'
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.2.1"
     // Import the Firebase BoM
     implementation platform('com.google.firebase:firebase-bom:28.4.0')
     implementation 'com.google.android.gms:play-services-analytics:17.0.1'

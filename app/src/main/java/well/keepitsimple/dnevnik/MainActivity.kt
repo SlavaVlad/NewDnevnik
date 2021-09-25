@@ -1,5 +1,6 @@
 package well.keepitsimple.dnevnik
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -7,6 +8,7 @@ import android.view.Menu
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.drawerlayout.widget.DrawerLayout
+import androidx.fragment.app.Fragment
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
@@ -26,10 +28,23 @@ import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.toObject
 import com.onesignal.OneSignal
 import well.keepitsimple.dnevnik.ui.tasks.TaskItem
+import well.keepitsimple.dnevnik.ui.tasks.TasksFragment
 import well.keepitsimple.dnevnik.ui.timetables.Lesson
+import java.sql.Date
+import java.sql.Time
+import java.time.DayOfWeek
+import java.util.*
 import kotlin.collections.ArrayList
+import kotlin.math.abs
+import android.net.ConnectivityManager
+
+import android.net.NetworkInfo
+import android.widget.ProgressBar
+import kotlinx.coroutines.tasks.await
+
 
 const val ONESIGNAL_APP_ID = "b5aa6c76-4619-4497-9b1e-2e7a1ef4095f"
+const val dayInSeconds = 86400
 
 class MainActivity : AppCompatActivity() {
 
@@ -100,40 +115,49 @@ class MainActivity : AppCompatActivity() {
                         repeat(lesson_query.size()) { // проходимся по каждому документу
                             val lesson = lesson_query.documents[it] // получаем текущий документ
                             var error = 0
-                            repeat(lesson.getLong("lessonsCount")!!
-                                .toInt()) { loop -> // проходимся по списку уроков в дне
+                            repeat(
+                                lesson.getLong("lessonsCount")!!
+                                    .toInt()
+                            ) { loop -> // проходимся по списку уроков в дне
                                 val loopindex: Int = loop + 1 // получаем не 0-based индекс
                                 var offset = lesson.getLong("timeOffset")!!
                                 when (lesson.get("${loopindex}_parent")) {
                                     null -> {
                                         offset -= error
-                                        list_lessons.add(Lesson( // добавляем урок в массив
-                                            cab = lesson.getLong("${loopindex}_cab")!!, // кабинет
-                                            name = lesson.getString("${loopindex}_name")!!, // название предмета (пример: Математика)
-                                            startAt = lesson_time.getString("${loopindex + offset}_startAt")!!, // время начала урока 09:15, например
-                                            endAt = lesson_time.getString("${loopindex + offset}_endAt")!!, // время конца урока
-                                            day = lesson.getLong("day")!! // номер дня в неделе, ПН=1, СБ=6
-                                        ))
+                                        list_lessons.add(
+                                            Lesson( // добавляем урок в массив
+                                                cab = lesson.getLong("${loopindex}_cab")!!, // кабинет
+                                                name = lesson.getString("${loopindex}_name")!!, // название предмета (пример: Математика)
+                                                startAt = lesson_time.getString("${loopindex + offset}_startAt")!!, // время начала урока 09:15, например
+                                                endAt = lesson_time.getString("${loopindex + offset}_endAt")!!, // время конца урока
+                                                day = lesson.getLong("day")!! // номер дня в неделе, ПН=1, СБ=6
+                                            )
+                                        )
                                     }
                                     else -> {
                                         if (lesson.getBoolean("${loopindex}_parent")!!) {
                                             offset -= error
-                                            list_lessons.add(Lesson( // добавляем урок в массив
-                                                cab = lesson.getLong("${loopindex}_cab")!!, // кабинет
-                                                name = lesson.getString("${loopindex}_name")!!, // название предмета (пример Математика)
-                                                startAt = lesson_time.getString("${loopindex + offset}_startAt")!!, // время начала урока 09:15, например
-                                                endAt = lesson_time.getString("${loopindex + offset}_endAt")!!, // время конца урока
-                                                day = lesson.getLong("day")!!)) // номер дня в неделе, ПН=1, СБ=6))
+                                            list_lessons.add(
+                                                Lesson( // добавляем урок в массив
+                                                    cab = lesson.getLong("${loopindex}_cab")!!, // кабинет
+                                                    name = lesson.getString("${loopindex}_name")!!, // название предмета (пример Математика)
+                                                    startAt = lesson_time.getString("${loopindex + offset}_startAt")!!, // время начала урока 09:15, например
+                                                    endAt = lesson_time.getString("${loopindex + offset}_endAt")!!, // время конца урока
+                                                    day = lesson.getLong("day")!!
+                                                )
+                                            ) // номер дня в неделе, ПН=1, СБ=6))
                                         } else {
                                             error++
                                             offset -= error
-                                            list_lessons.add(Lesson( // добавляем урок в массив
-                                                cab = lesson.getLong("${loopindex}_cab")!!, // кабинет
-                                                name = lesson.getString("${loopindex}_name")!!, // название предмета (пример Математика)
-                                                startAt = lesson_time.getString("${loopindex + offset}_startAt")!!, // время начала урока 09:15, например
-                                                endAt = lesson_time.getString("${loopindex + offset}_endAt")!!, // время конца урока
-                                                day = lesson.getLong("day")!! // номер дня в неделе, ПН=1, СБ=6
-                                            ))
+                                            list_lessons.add(
+                                                Lesson( // добавляем урок в массив
+                                                    cab = lesson.getLong("${loopindex}_cab")!!, // кабинет
+                                                    name = lesson.getString("${loopindex}_name")!!, // название предмета (пример Математика)
+                                                    startAt = lesson_time.getString("${loopindex + offset}_startAt")!!, // время начала урока 09:15, например
+                                                    endAt = lesson_time.getString("${loopindex + offset}_endAt")!!, // время конца урока
+                                                    day = lesson.getLong("day")!! // номер дня в неделе, ПН=1, СБ=6
+                                                )
+                                            )
                                         }
                                     }
                                 }
@@ -143,23 +167,22 @@ class MainActivity : AppCompatActivity() {
             }
     }
 
-    fun alert(title: String, message: String) {
+    fun alert(title: String, message: String, source: String) {
         val builder = AlertDialog.Builder(this)
         builder
             .setTitle(title)
             .setMessage(message)
             .setCancelable(true)
-            .setNeutralButton("Ok") { dialog, id ->
+            .setPositiveButton("Ok") { dialog, id ->
             }
             .show()
+        Log.e("ErrorAlert", "t: $title m: $message")
+        Log.e("ErrorAlert", source)
     }
 
     fun getNextLesson(lesson_name: String): Long {
-
         val week: ArrayList<Lesson> = ArrayList()
-
-        val day = 0
-
+        val day = Calendar.getInstance(TimeZone.getDefault()).get(Calendar.DAY_OF_WEEK) - 1
         if (day < 7) {
             repeat(list_lessons.size) {
                 if (list_lessons[it].day > day) {
@@ -167,31 +190,41 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
-        repeat(list_lessons.size){ e ->
+        repeat(list_lessons.size) { e ->
             week.add(list_lessons[e])
         }
-
         // Заполнили массивы
-
         var d: Long
         var index = 0
-
-        d = week[0].day
+        d = if (week.size != 0) {
+            week[0].day
+        } else {
+            0
+        }
         repeat(week.size) {
             if (d != week[it].day) {
                 d = week[it].day
                 index++
             }
-
-
+            d++
             if (week[it].name == lesson_name) {
-                return (System.currentTimeMillis()/1000 + 86400*d)
+                if (d == day.toLong()) {
+                    return ((System.currentTimeMillis() / 1000) + (7 * dayInSeconds)) // если сегодня пн, а урок в пн (раз в неделю), то задаём на след. неделю в тот же день
+                } else if (d < day) {
+                    return ((System.currentTimeMillis() / 1000) + ((7 - day) + d) * dayInSeconds)
+                } else {
+                    return ((System.currentTimeMillis() / 1000) + d * dayInSeconds)
+                }
             }
         }
 
-        Log.d("TIME", "Lesson time incorrect or lesson does not exist! lessons: $list_lessons \n ${System.currentTimeMillis()/1000}")
-        return (0)
+        Log.d(
+            "TIME",
+            "Lesson time incorrect or lesson does not exist! lessons: $list_lessons \n ${System.currentTimeMillis() / 1000}"
+        )
+        return 0
     }
+
     // START LOGIN
     override fun onStart() {
         super.onStart()
@@ -200,14 +233,16 @@ class MainActivity : AppCompatActivity() {
         if (currentUser == null) {
             signIn()
         } else {
-            uid = currentUser.uid
             checkUserInDatabase(currentUser)
+            uid = currentUser.uid
         }
     }
+
     private fun signIn() {
         val signInIntent = googleSignInClient.signInIntent
         startActivityForResult(signInIntent, RC_SIGN_IN)
     }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
@@ -226,6 +261,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+
     private fun firebaseAuthWithGoogle(idToken: String) {
         val credential = GoogleAuthProvider.getCredential(idToken, null)
         auth.signInWithCredential(credential)
@@ -233,24 +269,23 @@ class MainActivity : AppCompatActivity() {
                 if (task.isSuccessful) {
                     // Sign in success, update UI with the signed-in user's information
                     Log.d(F, "signInWithCredential:success")
-                    val user = auth.currentUser
-                    uid = user!!.uid
+                    val user = auth.currentUser!!
+                    uid = auth.currentUser!!.uid
 
                     checkUserInDatabase(user)
 
                 } else {
-                    // If sign in fails, display a message to the user.
-                    Log.w(F, "signInWithCredential:failure", task.exception)
+                    alert(
+                        "Ошибка входа!",
+                        "Дальнейшая работа приложения невозможна по причине: ${task.exception}",
+                        "firebaseAuthWithGoogle"
+                    )
                 }
             }
     }
 
     data class User(
         val email: String? = null,
-        @field:JvmField
-        val isAdmin: Boolean? = null,
-        @field:JvmField
-        val isStudent: Boolean? = null,
         val groups: ArrayList<String>? = null
     )
 
@@ -259,8 +294,6 @@ class MainActivity : AppCompatActivity() {
             if (it != null && it.getBoolean("isStudent") != null && it.getBoolean("isAdmin") != null) {
 
                 global_user = it.toObject<User>()!!
-                val a = global_user
-                a
 
                 Log.w(F, "Ты есть в базе")
 
@@ -287,9 +320,24 @@ class MainActivity : AppCompatActivity() {
         menuInflater.inflate(R.menu.main, menu)
         return true
     }
+
     override fun onSupportNavigateUp(): Boolean {
         val navController = findNavController(R.id.nav_host_fragment_content_main)
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
+    }
+
+    fun hasConnection(context: Context): Boolean {
+        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        var wifiInfo = cm.getNetworkInfo(ConnectivityManager.TYPE_WIFI)
+        if (wifiInfo != null && wifiInfo.isConnected) {
+            return true
+        }
+        wifiInfo = cm.getNetworkInfo(ConnectivityManager.TYPE_MOBILE)
+        if (wifiInfo != null && wifiInfo.isConnected) {
+            return true
+        }
+        wifiInfo = cm.activeNetworkInfo
+        return wifiInfo != null && wifiInfo.isConnected
     }
 
 }

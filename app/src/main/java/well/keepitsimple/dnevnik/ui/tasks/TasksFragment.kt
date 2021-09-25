@@ -74,9 +74,7 @@ class TasksFragment : Fragment() {
 
     override fun onStart() {
         super.onStart()
-
         getTasks()
-
     }
 
     private fun getTasks() {
@@ -116,7 +114,7 @@ class TasksFragment : Fragment() {
                 val fragment = CreateHomework()
                 bundle.putBoolean("edit", true)
                 bundle.putString("doc_id", tasks[position].doc.id)
-                bundle.putString("user", gactivity!!.uid!!)
+                bundle.putString("user", gactivity!!.uid)
                 fragment.arguments = bundle
                 val trans: FragmentTransaction = requireFragmentManager()
                     .beginTransaction()
