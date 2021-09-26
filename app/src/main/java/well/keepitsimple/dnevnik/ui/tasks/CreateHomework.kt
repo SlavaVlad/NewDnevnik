@@ -83,16 +83,23 @@ class CreateHomework : Fragment(), CoroutineScope {
                 cg_subject.addView(c)
 
             }
+
+            if (requireArguments()["edit"] == true) {
+                setupUpdate(requireArguments()["doc_id"].toString())
+            }
+
         }
 
             calendar_i.minDate = System.currentTimeMillis()
 
             cg_subject.setOnCheckedChangeListener { group, id ->
-                if (id != -1) {addDataFromChip(group, id); check()}
+                check()
+                if (id != -1) {addDataFromChip(group, requireView().findViewById(id))}
             }
 
             cg_type.setOnCheckedChangeListener { group, id ->
-                if (id != -1) {addDataFromChip(group, id); check()}
+                check()
+                if (id != -1) {addDataFromChip(group, requireView().findViewById(id))}
             }
 
             calendar_i.setOnDateChangeListener { _, year, month, dayOfMonth ->
@@ -101,7 +108,7 @@ class CreateHomework : Fragment(), CoroutineScope {
 
             if (requireArguments().getBoolean("edit")) {
                 doc_id = requireArguments().getString("doc_id")
-                setupUpdate(doc_id!!)
+                btn_complete.text = "Обновить уведомление"
                 btn_complete.setOnClickListener {
                     completeUpdate()
                 }
@@ -151,14 +158,16 @@ class CreateHomework : Fragment(), CoroutineScope {
 
     private fun setupUpdate(docId: String) {
 
-        db.collection("4tasks").document(docId).get().addOnSuccessListener {
+        db.collection("5tasks").document(docId).get().addOnSuccessListener {
 
             cg_subject.setOnCheckedChangeListener { group, id ->
-                if (id != -1) {addDataFromChip(group, id); check()}
+                check()
+                if (id != -1) {addDataFromChip(group, requireView().findViewById(id))}
             }
 
             cg_type.setOnCheckedChangeListener { group, id ->
-                if (id != -1) {addDataFromChip(group, id); check()}
+                check()
+                if (id != -1) {addDataFromChip(group, requireView().findViewById(id))}
             }
 
             cg_subject.check(it.getLong("subject_id")!!.toInt())
@@ -170,25 +179,23 @@ class CreateHomework : Fragment(), CoroutineScope {
 
             calendar_i.date = doc_time!!.toDate().toInstant().toEpochMilli()
 
-            //if (requireArguments()["edit"] == true) {
-            //    calendar_i.setDate(time.toDate().toInstant().toEpochMilli())
-            //}
+            check()
 
         }
     }
 
-    private fun addDataFromChip(group: ChipGroup?, chipId: Int) {
+    private fun addDataFromChip(group: ChipGroup?, chip: Chip) {
 
         if (group == cg_subject) {
-            data["subject"] = cg_subject.findViewById<Chip>(chipId).text
-            data["subject_id"] = cg_subject.findViewById<Chip>(chipId).id
+            data["subject"] = chip.text
+            data["subject_id"] = chip.id
             calendar_i.date  = gactivity!!.getNextLesson(data["subject"] as String)*1000
             date = Date(calendar_i.date)
         }
 
         if (group == cg_type) {
-            data["type"] = cg_type.findViewById<Chip>(chipId).text
-            data["type_id"] = cg_type.findViewById<Chip>(chipId).id
+            data["type"] = chip.text
+            data["type_id"] = chip.id
         }
 
         check()
@@ -197,7 +204,7 @@ class CreateHomework : Fragment(), CoroutineScope {
 
     private fun setupChips() {
         if (requireArguments()["edit"] == true) {
-            db.collection("4tasks").document(doc_id!!).get().addOnSuccessListener {
+            db.collection("5tasks").document(doc_id!!).get().addOnSuccessListener {
                 for (c in chips) { // поиск нужного чипа
                     if (c.text == it.getString("subject")) {
                         c.isChecked = true
@@ -223,7 +230,7 @@ class CreateHomework : Fragment(), CoroutineScope {
             data["text"] = et_text.text.toString()
             //data["owner"] = user
 
-            db.collection("4tasks").document(doc_id!!).update(data).addOnCompleteListener {
+            db.collection("5tasks").document(doc_id!!).update(data).addOnCompleteListener {
 
                 requireFragmentManager()
                     .beginTransaction()
@@ -258,7 +265,7 @@ class CreateHomework : Fragment(), CoroutineScope {
 
             btn_complete.isEnabled = false
 
-            db.collection("4tasks").add(data).addOnCompleteListener {
+            db.collection("5tasks").add(data).addOnCompleteListener {
 
                 requireFragmentManager()
                     .beginTransaction()

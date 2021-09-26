@@ -78,7 +78,7 @@ class TasksFragment : Fragment() {
     }
 
     private fun getTasks() {
-        db.collection("4tasks").orderBy("deadline").get().addOnSuccessListener {
+        db.collection("5tasks").orderBy("deadline").get().addOnSuccessListener {
             for (i in 0 until it.size()) { // проходим по каждому документу
                 if (getDeadlineInDays(it.documents[i].getTimestamp("deadline")) > -1 && !tasks.contains(
                         TaskItem((getDeadlineInDays(it.documents[i].getTimestamp("deadline"))),
