@@ -72,12 +72,7 @@ class TasksFragment : Fragment() {
         return view
     }
 
-    override fun onStart() {
-        super.onStart()
-        getTasks()
-    }
-
-    private fun getTasks() {
+    public fun getTasks() {
         db.collection("5tasks").orderBy("deadline").get().addOnSuccessListener {
             for (i in 0 until it.size()) { // проходим по каждому документу
                 if (getDeadlineInDays(it.documents[i].getTimestamp("deadline")) > -1 && !tasks.contains(
@@ -92,7 +87,6 @@ class TasksFragment : Fragment() {
             }
             setList(tasks, gactivity!!.uid!!)
         }
-        //.whereEqualTo("group", "-")
     }
 
     private fun getDeadlineInDays(timestamp: Timestamp?): Double {

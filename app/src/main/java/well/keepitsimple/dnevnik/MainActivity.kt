@@ -1,6 +1,5 @@
 package well.keepitsimple.dnevnik
 
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -9,6 +8,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
@@ -30,21 +30,11 @@ import com.onesignal.OneSignal
 import well.keepitsimple.dnevnik.ui.tasks.TaskItem
 import well.keepitsimple.dnevnik.ui.tasks.TasksFragment
 import well.keepitsimple.dnevnik.ui.timetables.Lesson
-import java.sql.Date
-import java.sql.Time
-import java.time.DayOfWeek
 import java.util.*
 import kotlin.collections.ArrayList
-import kotlin.math.abs
-import android.net.ConnectivityManager
-
-import android.net.NetworkInfo
-import android.widget.ProgressBar
-import kotlinx.coroutines.tasks.await
-
 
 const val ONESIGNAL_APP_ID = "b5aa6c76-4619-4497-9b1e-2e7a1ef4095f"
-const val dayInSeconds = 86400
+const val DAYINSECONDS = 86400
 
 class MainActivity : AppCompatActivity() {
 
@@ -54,7 +44,7 @@ class MainActivity : AppCompatActivity() {
     private val RC_SIGN_IN: Int = 123
 
     var uid: String? = null
-    var global_user: Any? = null
+    var user: User = User()
 
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
@@ -209,11 +199,11 @@ class MainActivity : AppCompatActivity() {
             d++
             if (week[it].name == lesson_name) {
                 if (d == day.toLong()) {
-                    return ((System.currentTimeMillis() / 1000) + (7 * dayInSeconds)) // если сегодня пн, а урок в пн (раз в неделю), то задаём на след. неделю в тот же день
+                    return ((System.currentTimeMillis() / 1000) + (7 * DAYINSECONDS)) // если сегодня пн, а урок в пн (раз в неделю), то задаём на след. неделю в тот же день
                 } else if (d < day) {
-                    return ((System.currentTimeMillis() / 1000) + ((7 - day) + d) * dayInSeconds)
+                    return ((System.currentTimeMillis() / 1000) + ((7 - day) + d) * DAYINSECONDS)
                 } else {
-                    return ((System.currentTimeMillis() / 1000) + d * dayInSeconds)
+                    return ((System.currentTimeMillis() / 1000) + d * DAYINSECONDS)
                 }
             }
         }
@@ -223,7 +213,7 @@ class MainActivity : AppCompatActivity() {
             "Lesson time incorrect or lesson does not exist! lessons: $list_lessons \n ${System.currentTimeMillis() / 1000}"
         )
         return 0
-    }
+    } // TODO:неправильный результат
 
     // START LOGIN
     override fun onStart() {
@@ -284,16 +274,24 @@ class MainActivity : AppCompatActivity() {
             }
     }
 
-    data class User(
+    class User(
         val email: String? = null,
-        val groups: ArrayList<String>? = null
-    )
+        val groups: ArrayList<Group>? = ArrayList()
+    ) {
+
+        fun checkPermission(p: String){
+
+        }
+
+    }
 
     private fun checkUserInDatabase(fire_user: FirebaseUser) {
         db.collection("users").document(fire_user.uid).get().addOnSuccessListener {
-            if (it != null && it.getBoolean("isStudent") != null && it.getBoolean("isAdmin") != null) {
+            if (it.exists()) {
 
-                global_user = it.toObject<User>()!!
+                user = it.toObject<User>()!!
+
+                getRights()
 
                 Log.w(F, "Ты есть в базе")
 
@@ -306,10 +304,24 @@ class MainActivity : AppCompatActivity() {
                 val docRef = db.collection("users").document(fire_user.uid)
                 docRef.set(data).addOnSuccessListener {
                     Log.w(F, "User data write successfully")
-                }.addOnFailureListener {
-                    Log.w(F, "Error writing user data - ${it.message}")
+                }.addOnFailureListener { e ->
+                    Log.w(F, "Error writing user data - ${e.message}")
                 }
 
+            }
+        }
+    }
+
+    private fun getRights() {
+        db.collection("groups").whereArrayContains("users", uid!!).get().addOnSuccessListener {
+            repeat(it.size()){ loopIndex ->
+
+                user.groups!!.add(it.documents[loopIndex].toObject<Group>()!!)
+
+                //val doc_rights:Array<String> = it.documents[loopIndex]["rights"] as Array<String>
+                //doc_rights.forEach { permission ->
+                //    user_permissions.addUnique(permission)
+                //}
             }
         }
     }
@@ -324,20 +336,6 @@ class MainActivity : AppCompatActivity() {
     override fun onSupportNavigateUp(): Boolean {
         val navController = findNavController(R.id.nav_host_fragment_content_main)
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
-    }
-
-    fun hasConnection(context: Context): Boolean {
-        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        var wifiInfo = cm.getNetworkInfo(ConnectivityManager.TYPE_WIFI)
-        if (wifiInfo != null && wifiInfo.isConnected) {
-            return true
-        }
-        wifiInfo = cm.getNetworkInfo(ConnectivityManager.TYPE_MOBILE)
-        if (wifiInfo != null && wifiInfo.isConnected) {
-            return true
-        }
-        wifiInfo = cm.activeNetworkInfo
-        return wifiInfo != null && wifiInfo.isConnected
     }
 
 }
