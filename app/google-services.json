@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "471144410285",
+    "firebase_url": "https://schooler-auto-default-rtdb.europe-west1.firebasedatabase.app",
     "project_id": "schooler-auto",
     "storage_bucket": "schooler-auto.appspot.com"
   },
@@ -13,6 +14,14 @@
         }
       },
       "oauth_client": [
+        {
+          "client_id": "471144410285-hjvj5cjh2c9ek08f4f8b0a3qrs7963aq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "well.keepitsimple.dnevnik",
+            "certificate_hash": "68152f142090b72c3120f8dc4b5901117e242852"
+          }
+        },
         {
           "client_id": "471144410285-d73ukgjf46c3mjvj6uk6vde67s81l91d.apps.googleusercontent.com",
           "client_type": 3

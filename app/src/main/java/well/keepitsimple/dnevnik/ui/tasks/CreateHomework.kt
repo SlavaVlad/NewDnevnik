@@ -27,6 +27,7 @@ class CreateHomework : Fragment(), CoroutineScope {
     lateinit var date: Date
     lateinit var cg_subject: ChipGroup
     lateinit var cg_type: ChipGroup
+    lateinit var cg_target: ChipGroup
     var chips: ArrayList<Chip> = ArrayList()
     lateinit var til_text: TextInputLayout
     lateinit var btn_complete: Button
@@ -70,25 +71,33 @@ class CreateHomework : Fragment(), CoroutineScope {
         et_text = view.findViewById(R.id.et_text)
         til_text = view.findViewById(R.id.til_text)
         pb_subj = view.findViewById(R.id.pb_subj)
+        cg_target = view.findViewById(R.id.cg_target)
 
         launch {
             val unique_lessons: ArrayList<String> = getLessonsUniqueNames()
             pb_subj.visibility = View.GONE
             repeat(getLessonsUniqueNames().size) {
-
-                var c = Chip(gactivity)
+                val c = Chip(gactivity)
                 c.text = unique_lessons[it]
                 c.isCheckable = true
                 chips.add(c)
                 cg_subject.addView(c)
-
+            }
+            repeat(gactivity!!.user.groups.size){
+                if (gactivity!!.user.groups[it].type == "class"){
+                    val c = Chip(gactivity)
+                    c.text = gactivity!!.user.groups[it].name
+                    c.isCheckable = true
+                    chips.add(c)
+                    cg_target.addView(c)
+                }
             }
 
             if (requireArguments()["edit"] == true) {
                 setupUpdate(requireArguments()["doc_id"].toString())
             }
 
-        }
+        } // Заполняем список уроков
 
             calendar_i.minDate = System.currentTimeMillis()
 
@@ -142,7 +151,6 @@ class CreateHomework : Fragment(), CoroutineScope {
         val lesson_query = docRef.get().await().query.get().await()
         repeat(lesson_query.size()) { // проходимся по каждому документу
             val lesson = lesson_query.documents[it] // получаем текущий документ
-            var error = 0
             repeat(lesson.getLong("lessonsCount")!!.toInt()) { loop -> // проходимся по списку уроков в дне
                 if (!names.contains(lesson.getString("${loop+1}_name")!!)) {
                     names.add(lesson.getString("${loop + 1}_name")!!)
@@ -158,7 +166,7 @@ class CreateHomework : Fragment(), CoroutineScope {
 
     private fun setupUpdate(docId: String) {
 
-        db.collection("5tasks").document(docId).get().addOnSuccessListener {
+        db.collection("6tasks").document(docId).get().addOnSuccessListener {
 
             cg_subject.setOnCheckedChangeListener { group, id ->
                 check()
@@ -198,13 +206,17 @@ class CreateHomework : Fragment(), CoroutineScope {
             data["type_id"] = chip.id
         }
 
+        if (group == cg_target){
+            //data["groups"] =
+        }
+
         check()
 
     }
 
     private fun setupChips() {
         if (requireArguments()["edit"] == true) {
-            db.collection("5tasks").document(doc_id!!).get().addOnSuccessListener {
+            db.collection("6tasks").document(doc_id!!).get().addOnSuccessListener {
                 for (c in chips) { // поиск нужного чипа
                     if (c.text == it.getString("subject")) {
                         c.isChecked = true
@@ -230,7 +242,7 @@ class CreateHomework : Fragment(), CoroutineScope {
             data["text"] = et_text.text.toString()
             //data["owner"] = user
 
-            db.collection("5tasks").document(doc_id!!).update(data).addOnCompleteListener {
+            db.collection("6tasks").document(doc_id!!).update(data).addOnCompleteListener {
 
                 requireFragmentManager()
                     .beginTransaction()
@@ -258,14 +270,14 @@ class CreateHomework : Fragment(), CoroutineScope {
             gactivity!!.alert("Ошибка!", "Не удалось установить дату, будет записана текущая", "completeAdd")
         }
 
-        if (et_text.text.isNotEmpty() && data.contains("subject") && data.contains("type")){
+        if (et_text.text.isNotEmpty() && data.contains("subject") && data.contains("type")) {
 
             data["text"] = et_text.text.toString()
-            //data["owner"] = user
+            data["owner"] = gactivity!!.uid!!
 
             btn_complete.isEnabled = false
 
-            db.collection("5tasks").add(data).addOnCompleteListener {
+            db.collection("6tasks").add(data).addOnCompleteListener {
 
                 requireFragmentManager()
                     .beginTransaction()

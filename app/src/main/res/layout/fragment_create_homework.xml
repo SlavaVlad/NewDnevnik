@@ -47,11 +47,11 @@
 
                 <com.google.android.material.chip.ChipGroup
                     android:id="@+id/cg_subject"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
                     app:singleLine="false"
-                    app:singleSelection="true"/>
+                    app:singleSelection="true" />
             </LinearLayout>
 
             <TextView
@@ -61,23 +61,32 @@
                 android:layout_marginTop="16dp"
                 android:text="Цель"
                 android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-                android:visibility="gone"
+                android:visibility="visible"
                 app:layout_constraintStart_toStartOf="parent" />
 
             <LinearLayout
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="vertical"
-                android:visibility="gone">
+                android:visibility="visible">
+
+                <ProgressBar
+                    android:id="@+id/pb_tgt"
+                    style="@style/Widget.AppCompat.ProgressBar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:max="100"
+                    android:progress="0"
+                    android:progressTint="@color/teal_200" />
 
                 <com.google.android.material.chip.ChipGroup
                     android:id="@+id/cg_target"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:visibility="gone"
-                    app:singleLine="true"
-                    app:singleSelection="true">
+                    android:visibility="visible"
+                    app:singleLine="false"
+                    app:singleSelection="false">
 
                 </com.google.android.material.chip.ChipGroup>
             </LinearLayout>

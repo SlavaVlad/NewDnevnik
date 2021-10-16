@@ -7,8 +7,6 @@ import android.view.Menu
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.drawerlayout.widget.DrawerLayout
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
@@ -16,32 +14,39 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
-import com.google.android.material.navigation.NavigationView
-import com.google.firebase.firestore.FirebaseFirestore
-import well.keepitsimple.dnevnik.databinding.ActivityMainBinding
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
+import com.google.android.material.navigation.NavigationView
+import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.toObject
 import com.onesignal.OneSignal
+import kotlinx.coroutines.*
+import well.keepitsimple.dnevnik.databinding.ActivityMainBinding
+import well.keepitsimple.dnevnik.login.Group
 import well.keepitsimple.dnevnik.ui.tasks.TaskItem
-import well.keepitsimple.dnevnik.ui.tasks.TasksFragment
 import well.keepitsimple.dnevnik.ui.timetables.Lesson
+import java.sql.Date
 import java.util.*
+import java.util.Calendar.DAY_OF_MONTH
+import java.util.Calendar.DAY_OF_WEEK
 import kotlin.collections.ArrayList
+import kotlin.coroutines.CoroutineContext
+import kotlin.math.abs
 
 const val ONESIGNAL_APP_ID = "b5aa6c76-4619-4497-9b1e-2e7a1ef4095f"
-const val DAYINSECONDS = 86400
+const val DAY_IN_SECONDS = 86400
 
 class MainActivity : AppCompatActivity() {
 
     lateinit var auth: FirebaseAuth
     lateinit var googleSignInClient: GoogleSignInClient
-    val F: String = "Firebase"
     private val RC_SIGN_IN: Int = 123
+    val F: String = "Firebase"
 
     var uid: String? = null
     var user: User = User()
@@ -52,13 +57,23 @@ class MainActivity : AppCompatActivity() {
     val list_lessons = ArrayList<Lesson>()
     val tasks = ArrayList<TaskItem>()
 
+    private var job: Job = Job()
+
+    val coroutineContext: CoroutineContext
+        get() = Dispatchers.Main + job
+
+    override fun onDestroy() {
+        super.onDestroy()
+        job.cancel()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Logging set to help debug issues, remove before releasing your app.
+        //Logging set to help debug issues, remove before releasing your app.
         OneSignal.setLogLevel(OneSignal.LOG_LEVEL.VERBOSE, OneSignal.LOG_LEVEL.NONE)
 
         // OneSignal Initialization
@@ -93,7 +108,10 @@ class MainActivity : AppCompatActivity() {
         navView.setupWithNavController(navController)
 
         getTimetables()
+
     }
+
+    // Взаимодействие с фрагментами
 
     private fun getTimetables() {
         list_lessons.clear()
@@ -153,10 +171,59 @@ class MainActivity : AppCompatActivity() {
                                 }
                             }
                         }
+                        getNextLesson("Экономика")
+                        getNextLesson("ОБЖ")
+                        getNextLesson("Химия")
                     }
             }
+    } // Получили расписание
+
+    fun getNextLesson(lesson_name: String): Long {
+
+        val cal = Calendar.getInstance(TimeZone.getDefault())
+        val lessons = ArrayList<Lesson>()
+
+        //val listLessonsPlus = ArrayList<Lesson>(list_lessons)
+        //listLessonsPlus.forEach {
+        //    it.day--
+        //}
+
+        // Добавляем предметы остатка недели
+        list_lessons.forEach {
+            if ((it.day) > cal.get(DAY_OF_WEEK)){
+                val c = it
+                val tmp = Lesson(c.cab, c.name, c.startAt, c.endAt, c.day)
+                lessons.add(tmp)
+            }
+        }
+
+        // Добавляем предметы следующей недели
+        repeat(list_lessons.size) {
+            val c = list_lessons[it]
+            val tmp = Lesson(c.cab, c.name, c.startAt, c.endAt, c.day + 7)
+            lessons.add(tmp)
+        }
+
+        lessons.forEach {
+            it.day -= cal.get(DAY_OF_WEEK)-1
+        }
+
+        // ищем совпадающий по имени предмет в списке и возвращаем его
+        lessons.forEach {
+            if (lesson_name == it.name){
+                Log.d("TEST", "selected: $it")
+                Log.d("TEST", ((System.currentTimeMillis() / 1000) + ((it.day+1) * DAY_IN_SECONDS)).toString())
+                return (System.currentTimeMillis() / 1000) + ((it.day+1) * DAY_IN_SECONDS)
+            }
+        }
+
+        return 1
     }
 
+    // Конец взаимодействия с фрагментами
+
+
+    // Сервисные глобальные методы
     fun alert(title: String, message: String, source: String) {
         val builder = AlertDialog.Builder(this)
         builder
@@ -170,50 +237,6 @@ class MainActivity : AppCompatActivity() {
         Log.e("ErrorAlert", source)
     }
 
-    fun getNextLesson(lesson_name: String): Long {
-        val week: ArrayList<Lesson> = ArrayList()
-        val day = Calendar.getInstance(TimeZone.getDefault()).get(Calendar.DAY_OF_WEEK) - 1
-        if (day < 7) {
-            repeat(list_lessons.size) {
-                if (list_lessons[it].day > day) {
-                    week.add(list_lessons[it])
-                }
-            }
-        }
-        repeat(list_lessons.size) { e ->
-            week.add(list_lessons[e])
-        }
-        // Заполнили массивы
-        var d: Long
-        var index = 0
-        d = if (week.size != 0) {
-            week[0].day
-        } else {
-            0
-        }
-        repeat(week.size) {
-            if (d != week[it].day) {
-                d = week[it].day
-                index++
-            }
-            d++
-            if (week[it].name == lesson_name) {
-                if (d == day.toLong()) {
-                    return ((System.currentTimeMillis() / 1000) + (7 * DAYINSECONDS)) // если сегодня пн, а урок в пн (раз в неделю), то задаём на след. неделю в тот же день
-                } else if (d < day) {
-                    return ((System.currentTimeMillis() / 1000) + ((7 - day) + d) * DAYINSECONDS)
-                } else {
-                    return ((System.currentTimeMillis() / 1000) + d * DAYINSECONDS)
-                }
-            }
-        }
-
-        Log.d(
-            "TIME",
-            "Lesson time incorrect or lesson does not exist! lessons: $list_lessons \n ${System.currentTimeMillis() / 1000}"
-        )
-        return 0
-    } // TODO:неправильный результат
 
     // START LOGIN
     override fun onStart() {
@@ -276,11 +299,26 @@ class MainActivity : AppCompatActivity() {
 
     class User(
         val email: String? = null,
-        val groups: ArrayList<Group>? = ArrayList()
+        val groups: ArrayList<Group> = ArrayList()
     ) {
 
-        fun checkPermission(p: String){
+        fun checkPermission(r: String): Boolean {
+            repeat(groups.size) { groupIndex ->
+                repeat(groups[groupIndex].rights!!.size) { rightIndex ->
+                    return groups[groupIndex].rights!![rightIndex].contains(r)
+                }
+            }
+            return false
+        }
 
+        fun getAllPermissions(): ArrayList<String> {
+            var permissions = ArrayList<String>()
+            repeat(groups.size) { groupIndex ->
+                repeat(groups[groupIndex].rights!!.size) { rightIndex ->
+                    permissions.add(groups[groupIndex].rights!![rightIndex])
+                }
+            }
+            return permissions
         }
 
     }
@@ -292,8 +330,6 @@ class MainActivity : AppCompatActivity() {
                 user = it.toObject<User>()!!
 
                 getRights()
-
-                Log.w(F, "Ты есть в базе")
 
             } else {
 
@@ -314,18 +350,17 @@ class MainActivity : AppCompatActivity() {
 
     private fun getRights() {
         db.collection("groups").whereArrayContains("users", uid!!).get().addOnSuccessListener {
-            repeat(it.size()){ loopIndex ->
-
-                user.groups!!.add(it.documents[loopIndex].toObject<Group>()!!)
-
-                //val doc_rights:Array<String> = it.documents[loopIndex]["rights"] as Array<String>
-                //doc_rights.forEach { permission ->
-                //    user_permissions.addUnique(permission)
-                //}
+            repeat(it.size()) { loopIndex ->
+                val a = it.documents[loopIndex].toObject<Group>()!!.rights
+                a.toString()
+                user.groups.add(it.documents[loopIndex].toObject<Group>()!!)
+                Log.w(F, user.groups.toString())
             }
+
         }
     }
     // END LOGIN
+
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.

@@ -36,51 +36,8 @@ class LkFragment : Fragment() {
         btn_save = view.findViewById(R.id.btn_save)
         rb_student = view.findViewById(R.id.rb_student)
 
-        val activity: MainActivity? = activity as MainActivity?
-        uid = activity!!.uid!!
-
-        db.collection("users").document(uid).get().addOnSuccessListener {
-            setCabinet(it)
-        }
-
         return view
 
     }
 
-    private fun setCabinet(doc: DocumentSnapshot) {
-        if (doc.getString("class")!=null){et_class.setText(doc["class"].toString())}
-        if (doc.getString("school")!=null){et_school.setText(doc.getString("school"))}
-        when (doc.getBoolean("isStudent")!!){
-            true -> rg_student.check(R.id.rb_student)
-            false -> rg_student.check(R.id.rb_teacher)
-        }
-        if (doc.getBoolean("isAdmin") == true){
-            tv_admin.visibility = View.VISIBLE
-        } else {
-            tv_admin.visibility = View.GONE
-        }
-
-        btn_save.setOnClickListener {
-            saveUserInfo()
-        }
-
-    }
-
-    private fun saveUserInfo() {
-        var data = hashMapOf<String, Any>()
-        if (et_class.text.isNotEmpty() && et_school.text.isNotEmpty()) {
-            data = hashMapOf(
-                "school" to et_school.text.toString(),
-                "isStudent" to rb_student.isChecked,
-                "class" to et_class.text.toString()
-            )
-        }
-
-        btn_save.isEnabled = false
-
-        db.collection("users").document(uid).update(data).addOnSuccessListener {
-            btn_save.isEnabled = true
-            Toast.makeText(requireContext().applicationContext, "Информация записана", Toast.LENGTH_SHORT).show()
-        }
-    }
 }
