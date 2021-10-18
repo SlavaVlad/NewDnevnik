@@ -5,7 +5,10 @@ class Group(
     var rights: List<String>? = null,
     var type: String? = null,
     var parent: String? = null,
+    var id: String? = null,
 )
+
+
 
 //docView - просмотр домашек
 //docCreate - создание домашки

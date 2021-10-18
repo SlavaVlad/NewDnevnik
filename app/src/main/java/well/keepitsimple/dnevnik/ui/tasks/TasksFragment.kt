@@ -44,7 +44,7 @@ class TasksFragment : Fragment(), CoroutineScope {
 
     lateinit var btnCreateHomework: FloatingActionButton
 
-    var gactivity: MainActivity? = null
+    var act: MainActivity? = null
 
     lateinit var ctx: Activity
 
@@ -70,7 +70,7 @@ class TasksFragment : Fragment(), CoroutineScope {
         btnCreateHomework.setOnClickListener {
             val bundle = Bundle()
             bundle.putBoolean("edit", false)
-            bundle.putString("user", gactivity!!.uid)
+            bundle.putString("user", act!!.uid)
             val fragment: Fragment = CreateHomework()
             fragment.arguments = bundle
             val trans: FragmentTransaction = requireFragmentManager()
@@ -81,39 +81,41 @@ class TasksFragment : Fragment(), CoroutineScope {
             trans.commit()
         }
 
-        gactivity = activity as MainActivity
-
-        launch {
-            while (gactivity!!.user.getAllPermissions() == ArrayList<String>()){
-                delay(50)
-                if (gactivity!!.user.getAllPermissions() != ArrayList<String>()){
-                    setUIFromPermissions()
-                }
-            }
-        }
+        act = activity as MainActivity
 
         return view
     }
 
-    private fun setUIFromPermissions() {
+    override fun onStart() {
+        super.onStart()
 
-        val u = gactivity!!.user
-        btnCreateHomework.isVisible = u.checkPermission("docCreate")
-        if (gactivity!!.user.checkPermission("docView")) {
-
-            var school = Group()
-            var schoolClass = Group()
-
-            repeat(u.groups.size){ i ->
-                if (u.groups[i].type == "school"){
-                    school = u.groups[i]
-                }
-                if (u.groups[i].type == "class"){
-                    schoolClass = u.groups[i]
+        launch {
+            Log.d("TEST", "Launch coroutine")
+            if (act!!.user.getAllPermissions() != ArrayList<String>()){
+                Log.d("TEST", "SetUI")
+                setUIFromPermissions(act!!.user.getAllPermissions())
+            } else {
+                while (act!!.user.getAllPermissions() == ArrayList<String>()) {
+                    delay(50)
+                    if (act!!.user.getAllPermissions() != ArrayList<String>()) {
+                        Log.d("TEST", "SetUI")
+                        setUIFromPermissions(act!!.user.getAllPermissions())
+                    }
                 }
             }
+        }
 
-            getTasks(school, schoolClass)
+    }
+
+    private fun setUIFromPermissions(perms: ArrayList<String>) {
+
+        val user = act!!.user
+
+        btnCreateHomework.isVisible = perms.contains("docCreate")
+
+        if (perms.contains("docView")) {
+
+            getTasks(user.getGroupByType("school"), user.getGroupByType("class"))
 
         }
 
@@ -121,52 +123,45 @@ class TasksFragment : Fragment(), CoroutineScope {
 
     private fun getTasks(school: Group, schoolClass: Group) {
         db.collection("6tasks")
-            .whereArrayContains("groups", school.name as String)
-            .whereArrayContains("groups", schoolClass.name as String)
-            .orderBy("deadline")
+            .whereEqualTo("school", school.id)
+            .whereEqualTo("class", schoolClass.id)
             .get()
-            .addOnSuccessListener {
-            for (i in 0 until it.size()) { // проходим по каждому документу
-                if (getDeadlineInDays(it.documents[i].getTimestamp("deadline")) > -1 && !tasks.contains(
+            .addOnSuccessListener { querySnapshot ->
+
+            querySnapshot.forEach { doc -> // проходим по каждому документу
+                if (getDeadlineInDays(doc.getTimestamp("deadline")) > -1 && !tasks.contains(
                         TaskItem(
-                            (getDeadlineInDays(it.documents[i].getTimestamp("deadline"))),
-                            it.documents[i]
-                        )
+                            (getDeadlineInDays(doc.getTimestamp("deadline"))), doc)
                     )
                 ) {
                     tasks.add(
                         TaskItem
-                            (
-                            (getDeadlineInDays(it.documents[i].getTimestamp("deadline"))),
-                            it.documents[i]
-                        )
+                            ((getDeadlineInDays(doc.getTimestamp("deadline"))), doc)
                     )
                 }
             }
-            setList(tasks, gactivity!!.uid!!)
+            setList(tasks)
         }
     }
 
     private fun getDeadlineInDays(timestamp: Timestamp?): Double {
-        return ceil(((timestamp!!.seconds.toDouble()) - System.currentTimeMillis() / 1000) / DAY_IN_SECONDS)
+        return ceil(((timestamp!!.seconds.toDouble()) - System.currentTimeMillis() / 1000) / DAY_S)
     }
 
-    private fun setList(list: ArrayList<TaskItem>, uid: String) {
+    private fun setList(list: ArrayList<TaskItem>) {
 
-        val tasksAdapter = TasksAdapter(ctx.baseContext, R.layout.task_item, list)
+        lv_tasks.adapter = TasksAdapter(ctx.baseContext, R.layout.task_item, list)
 
-        db.collection("users").document(uid).get().addOnSuccessListener {
+        db.collection("users").document(act!!.uid!!).get().addOnSuccessListener {
 
-            lv_tasks.adapter = tasksAdapter
-
-            if (gactivity!!.user.checkPermission("docEdit")) {
+            if (act!!.user.checkPermission("docEdit")) {
 
                 lv_tasks.setOnItemClickListener { parent, view, position, id ->
                     val bundle = Bundle()
                     val fragment = CreateHomework()
                     bundle.putBoolean("edit", true)
                     bundle.putString("doc_id", tasks[position].doc.id)
-                    bundle.putString("user", gactivity!!.uid)
+                    bundle.putString("user", act!!.uid)
                     fragment.arguments = bundle
                     val trans: FragmentTransaction = requireFragmentManager()
                         .beginTransaction()
@@ -180,7 +175,7 @@ class TasksFragment : Fragment(), CoroutineScope {
 
             pb.visibility = View.GONE
 
-        }.addOnFailureListener {
+        } .addOnFailureListener {
             Log.w(F, "error getting documents ${it.message}")
         }
 

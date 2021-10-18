@@ -8,35 +8,75 @@ import android.widget.*
 import androidx.fragment.app.Fragment
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import well.keepitsimple.dnevnik.MainActivity
 import well.keepitsimple.dnevnik.R
-class LkFragment : Fragment() {
+import well.keepitsimple.dnevnik.login.Group
+import kotlin.coroutines.CoroutineContext
 
-    lateinit var rg_student:RadioGroup
-    lateinit var et_school:EditText
-    lateinit var et_class:EditText
-    lateinit var tv_admin:TextView
+class LkFragment : Fragment(), CoroutineScope {
+
     lateinit var btn_save:Button
-    lateinit var rb_student:RadioButton
 
-    lateinit var uid:String
+    val gactivity by lazy {
+        activity as MainActivity
+    }
+
+    lateinit var tvGroups: TextView
+    lateinit var tvRights: TextView
+    lateinit var etId: EditText
 
     val F: String = "Firebase"
     val db = FirebaseFirestore.getInstance()
+
+    private var job: Job = Job()
+
+    override val coroutineContext: CoroutineContext
+        get() = Dispatchers.Main + job
+
+    override fun onDestroy() {
+        super.onDestroy()
+        job.cancel()
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View? {
 
         val view = inflater.inflate(R.layout.fragment_lk, container, false)
 
-        rg_student = view.findViewById(R.id.rg_student)
-        et_school = view.findViewById(R.id.et_school)
-        et_class = view.findViewById(R.id.et_class)
-        tv_admin = view.findViewById(R.id.tv_admin)
         btn_save = view.findViewById(R.id.btn_save)
-        rb_student = view.findViewById(R.id.rb_student)
+        tvGroups = view.findViewById(R.id.tvGroups)
+        tvRights = view.findViewById(R.id.tvRights)
+        etId = view.findViewById(R.id.etId)
+
+        //launch {
+        //    getCabData()
+        //}
+
+        setUI()
 
         return view
+
+    }
+
+    private fun setUI() {
+
+        etId.setText(gactivity.uid)
+
+        val gNames = ArrayList<String>()
+        gactivity.user.groups.forEach {
+            gNames.add(it.name.toString())
+        }
+        tvGroups.text = gNames.toString()
+
+        val gPermissions = ArrayList<String>()
+        gactivity.user.getAllPermissions().forEach {
+            gPermissions.add(it)
+        }
+        tvRights.text = gPermissions.toString()
 
     }
 

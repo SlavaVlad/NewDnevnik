@@ -25,82 +25,42 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
+            <EditText
+                android:id="@+id/etId"
+                style="@style/Widget.AppCompat.Light.AutoCompleteTextView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:editable="false"
+                android:ems="10"
+                android:selectAllOnFocus="true"
+                android:singleLine="true"
+                android:textIsSelectable="true" />
+
             <TextView
-                android:id="@+id/tv_admin"
+                android:id="@+id/textView6"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Вам доступны права администратора"
-                android:textAlignment="center"
-                android:textAppearance="@style/TextAppearance.AppCompat.Large"
-                android:visibility="gone"
-                app:layout_constraintTop_toTopOf="parent" />
+                android:text="Группы:"
+                android:textAppearance="@style/TextAppearance.AppCompat.Body2" />
 
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/til_text"
-
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-
+            <TextView
+                android:id="@+id/tvGroups"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Школа">
+                android:text="TextView" />
 
-                <!--this is the actual edit text which takes the input-->
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/et_school"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
-
-            </com.google.android.material.textfield.TextInputLayout>
-
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/filledTextField2"
-
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-
+            <TextView
+                android:id="@+id/textView3"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Класс">
+                android:text="Права:"
+                android:textAppearance="@style/TextAppearance.AppCompat.Body2" />
 
-                <!--this is the actual edit text which takes the input-->
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/et_class"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
-
-            </com.google.android.material.textfield.TextInputLayout>
-
-            <RadioGroup
-                android:id="@+id/rg_student"
+            <TextView
+                android:id="@+id/tvRights"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:checkedButton="@id/rb_student"
-                android:clickable="false"
-                android:longClickable="false">
-
-                <Space
-                    android:layout_width="match_parent"
-                    android:layout_height="16dp" />
-
-                <RadioButton
-                    android:id="@+id/rb_student"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Ученик" />
-
-                <RadioButton
-                    android:id="@+id/rb_teacher"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Учитель" />
-
-                <Space
-                    android:layout_width="match_parent"
-                    android:layout_height="16dp"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-            </RadioGroup>
+                android:layout_height="wrap_content"
+                android:text="TextView" />
 
         </LinearLayout>
     </ScrollView>

@@ -17,12 +17,13 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.android.material.navigation.NavigationView
-import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.core.OrderBy
 import com.google.firebase.firestore.ktx.toObject
 import com.onesignal.OneSignal
 import kotlinx.coroutines.*
@@ -30,16 +31,15 @@ import well.keepitsimple.dnevnik.databinding.ActivityMainBinding
 import well.keepitsimple.dnevnik.login.Group
 import well.keepitsimple.dnevnik.ui.tasks.TaskItem
 import well.keepitsimple.dnevnik.ui.timetables.Lesson
-import java.sql.Date
 import java.util.*
 import java.util.Calendar.DAY_OF_MONTH
 import java.util.Calendar.DAY_OF_WEEK
 import kotlin.collections.ArrayList
 import kotlin.coroutines.CoroutineContext
-import kotlin.math.abs
 
 const val ONESIGNAL_APP_ID = "b5aa6c76-4619-4497-9b1e-2e7a1ef4095f"
-const val DAY_IN_SECONDS = 86400
+const val DAY_S = 86400
+const val WEEK = 7
 
 class MainActivity : AppCompatActivity() {
 
@@ -107,21 +107,31 @@ class MainActivity : AppCompatActivity() {
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
 
-        getTimetables()
-
     }
 
     // Взаимодействие с фрагментами
 
     private fun getTimetables() {
         list_lessons.clear()
+        Log.d("TEST", user.getGroupByType("class").id.toString())
         // запрос документов расписания
         db.collection("lessonstime").document("LxTrsAIg81E96zMSg0SL").get()
             .addOnSuccessListener { lesson_time -> // расписание звонков
-                db.collection("lessons").orderBy("day", Query.Direction.ASCENDING).get()
-                    .addOnSuccessListener { lesson_query -> // получаем всё расписание на все дни
-                        repeat(lesson_query.size()) { // проходимся по каждому документу
-                            val lesson = lesson_query.documents[it] // получаем текущий документ
+                db.collection("lessons")
+                    .orderBy("day", Query.Direction.ASCENDING)
+                    .get()
+                    .addOnSuccessListener { query -> // получаем всё расписание на все дни
+
+                        val lesson_query = ArrayList<DocumentSnapshot>()
+
+                        query.documents.forEach {
+                            if (it.getString("group") == user.getGroupByType("class").id.toString()){
+                                lesson_query.add(it)
+                            }
+                        }
+
+                        lesson_query.forEach { // проходимся по каждому документу
+                            val lesson = it // получаем текущий документ
                             var error = 0
                             repeat(
                                 lesson.getLong("lessonsCount")!!
@@ -171,49 +181,42 @@ class MainActivity : AppCompatActivity() {
                                 }
                             }
                         }
-                        getNextLesson("Экономика")
-                        getNextLesson("ОБЖ")
-                        getNextLesson("Химия")
                     }
             }
     } // Получили расписание
 
     fun getNextLesson(lesson_name: String): Long {
 
-        val cal = Calendar.getInstance(TimeZone.getDefault())
-        val lessons = ArrayList<Lesson>()
+        val calendar = Calendar.getInstance(TimeZone.getDefault())
+        val today = calendar.get(DAY_OF_WEEK) - 1
+        val now = (System.currentTimeMillis() / 1000)
+        val tmpLessons = ArrayList<Lesson>()
 
-        //val listLessonsPlus = ArrayList<Lesson>(list_lessons)
-        //listLessonsPlus.forEach {
-        //    it.day--
-        //}
-
-        // Добавляем предметы остатка недели
         list_lessons.forEach {
-            if ((it.day) > cal.get(DAY_OF_WEEK)){
-                val c = it
-                val tmp = Lesson(c.cab, c.name, c.startAt, c.endAt, c.day)
-                lessons.add(tmp)
+            if (it.day > today) {
+                val tmp = Lesson(it.cab, it.name, it.startAt, it.endAt, it.day)
+                tmp.day - today
+                tmpLessons.add(tmp)
             }
         }
 
-        // Добавляем предметы следующей недели
-        repeat(list_lessons.size) {
-            val c = list_lessons[it]
-            val tmp = Lesson(c.cab, c.name, c.startAt, c.endAt, c.day + 7)
-            lessons.add(tmp)
+        list_lessons.forEach {
+            val tmp = Lesson(it.cab, it.name, it.startAt, it.endAt, it.day)
+            tmp.day += 7 - today
+            tmpLessons.add(tmp)
         }
 
-        lessons.forEach {
-            it.day -= cal.get(DAY_OF_WEEK)-1
-        }
+        Log.d("DEBUG", tmpLessons.toString())
 
         // ищем совпадающий по имени предмет в списке и возвращаем его
-        lessons.forEach {
-            if (lesson_name == it.name){
-                Log.d("TEST", "selected: $it")
-                Log.d("TEST", ((System.currentTimeMillis() / 1000) + ((it.day+1) * DAY_IN_SECONDS)).toString())
-                return (System.currentTimeMillis() / 1000) + ((it.day+1) * DAY_IN_SECONDS)
+        tmpLessons.forEach {
+            if (lesson_name == it.name) {
+
+                Log.d("DEBUG", "Today: ${calendar.get(DAY_OF_MONTH)}")
+                Log.d("DEBUG", "Selected: $it")
+                Log.d("DEBUG", "Returned: ${(now + ((it.day) * DAY_S))}")
+
+                return (now + ((it.day) * DAY_S))
             }
         }
 
@@ -302,17 +305,23 @@ class MainActivity : AppCompatActivity() {
         val groups: ArrayList<Group> = ArrayList()
     ) {
 
-        fun checkPermission(r: String): Boolean {
-            repeat(groups.size) { groupIndex ->
-                repeat(groups[groupIndex].rights!!.size) { rightIndex ->
-                    return groups[groupIndex].rights!![rightIndex].contains(r)
+        fun getGroupByType(type: String): Group { // TODO: сделать типы групп перечислением
+
+            groups.forEach {
+                if (it.type == type) {
+                    return it
                 }
             }
-            return false
+
+            return Group()
+        }
+
+        fun checkPermission(p: String): Boolean {
+            return this.getAllPermissions().contains(p)
         }
 
         fun getAllPermissions(): ArrayList<String> {
-            var permissions = ArrayList<String>()
+            val permissions = ArrayList<String>()
             repeat(groups.size) { groupIndex ->
                 repeat(groups[groupIndex].rights!!.size) { rightIndex ->
                     permissions.add(groups[groupIndex].rights!![rightIndex])
@@ -349,13 +358,18 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun getRights() {
-        db.collection("groups").whereArrayContains("users", uid!!).get().addOnSuccessListener {
-            repeat(it.size()) { loopIndex ->
-                val a = it.documents[loopIndex].toObject<Group>()!!.rights
-                a.toString()
-                user.groups.add(it.documents[loopIndex].toObject<Group>()!!)
+        db.collection("groups").get().addOnSuccessListener { querySnapshot ->
+
+            var index = 0
+
+            querySnapshot.documents.forEach {   // записываем группы в пользователя
+                user.groups.add(it.toObject<Group>()!!)
+                user.groups[index].id = it.id
                 Log.w(F, user.groups.toString())
+                index++
             }
+
+            getTimetables()
 
         }
     }

@@ -32,14 +32,14 @@ class TasksAdapter(var ctx: Context, var ressource: Int, var item: ArrayList<Tas
         text.setTextColor(context.getColor(R.color.design_default_color_primary_dark))
 
         when (this.item[position].deadline) {
-            1.0 -> {// deadline = 0 -> сдача завтра
-                deadline.text = "Сдача завтра"
+            1.0 -> {// deadline = 1 -> сдача завтра
+                deadline.text = "Завтра"
                 deadline.setTextColor(context.getColor(R.color.colorAccent))
             }
-            //0.0 -> {// deadline = 1 -> сегодня
-            //    deadline.text = "Сдача сегодня"
-            //    deadline.setTextColor(context.getColor(R.color.colorAccent))
-            //}
+            0.0 -> {// deadline = 0 -> сегодня
+                deadline.text = "Сегодня"
+                deadline.setTextColor(context.getColor(R.color.design_default_color_error))
+            }
             else -> {// deadline > 1 -> Сдача через Н дней
                 deadline.text = ((this.item[position].deadline).toInt().toString() + " дн.")
                 deadline.setTextColor(context.getColor(R.color.design_default_color_secondary))

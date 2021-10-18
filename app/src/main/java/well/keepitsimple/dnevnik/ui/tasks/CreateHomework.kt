@@ -272,6 +272,8 @@ class CreateHomework : Fragment(), CoroutineScope {
 
         if (et_text.text.isNotEmpty() && data.contains("subject") && data.contains("type")) {
 
+            data["school"] = gactivity!!.user.getGroupByType("school")
+            data["class"] = gactivity!!.user.getGroupByType("class")
             data["text"] = et_text.text.toString()
             data["owner"] = gactivity!!.uid!!
 
