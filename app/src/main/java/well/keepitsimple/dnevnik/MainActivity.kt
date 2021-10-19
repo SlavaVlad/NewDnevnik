@@ -118,19 +118,14 @@ class MainActivity : AppCompatActivity() {
         db.collection("lessonstime").document("LxTrsAIg81E96zMSg0SL").get()
             .addOnSuccessListener { lesson_time -> // расписание звонков
                 db.collection("lessons")
-                    .orderBy("day", Query.Direction.ASCENDING)
+                    .whereEqualTo("group", user.getGroupByType("class").id.toString())
                     .get()
-                    .addOnSuccessListener { query -> // получаем всё расписание на все дни
+                    .addOnSuccessListener { lesson_query -> // получаем всё расписание на все дни
 
-                        val lesson_query = ArrayList<DocumentSnapshot>()
+                        val q = lesson_query.documents.sortedByDescending{ it.getLong("day") }
 
-                        query.documents.forEach {
-                            if (it.getString("group") == user.getGroupByType("class").id.toString()){
-                                lesson_query.add(it)
-                            }
-                        }
-
-                        lesson_query.forEach { // проходимся по каждому документу
+                        q.forEach { // проходимся по каждому документу
+                            Log.d("TEST", it.getLong("day").toString())
                             val lesson = it // получаем текущий документ
                             var error = 0
                             repeat(
