@@ -17,19 +17,14 @@ class TasksAdapter(var ctx: Context, var ressource: Int, var item: ArrayList<Tas
 
         val item = item[position].doc
 
-        val subject = view.findViewById<TextView>(R.id.i_subject)
-        val deadline = view.findViewById<TextView>(R.id.i_deadline)
-        val text = view.findViewById<TextView>(R.id.i_text)
-        val type = view.findViewById<TextView>(R.id.i_type)
+        val subject = view.findViewById<TextView>(R.id.i_group_name)
+        val deadline = view.findViewById<TextView>(R.id.i_type)
+        val text = view.findViewById<TextView>(R.id.i_users)
+        val type = view.findViewById<TextView>(R.id.i_id)
 
         subject.text = item.getString("subject")
-        subject.setTextColor(context.getColor(R.color.design_default_color_primary_variant))
-
         type.text = item.getString("type")
-        type.setTextColor(context.getColor(R.color.design_default_color_primary))
-
         text.text = item.getString("text")
-        text.setTextColor(context.getColor(R.color.design_default_color_primary_dark))
 
         when (this.item[position].deadline) {
             1.0 -> {// deadline = 1 -> сдача завтра

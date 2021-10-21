@@ -4,10 +4,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/llc"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="wrap_content">
 
     <androidx.cardview.widget.CardView
-        android:id="@+id/cv_lesson"
+        android:id="@+id/cv_group"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="8dp"
@@ -26,9 +26,8 @@
                 android:id="@+id/i_group_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Химия"
+                android:text="ГБОУ СОШ №134"
                 android:textAppearance="@style/TextAppearance.AppCompat.Body2"
-                android:textColor="@color/design_default_color_primary_variant"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
@@ -38,9 +37,6 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:elegantTextHeight="true"
-                android:lines="2"
-                android:text="Написать 1 отзыв на произведение из списка на лето. Тихий дон лучше)) Либо о герое подробнее, либо об эпизоде. Литературоведческие термины использовать. Не меньше 5. Лучше их подчеркнуть. (Объем А4, либо 2-3 страницы)"
-                android:textColor="@color/design_default_color_primary_dark"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -50,7 +46,7 @@
                 android:id="@+id/i_type"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="3 дн."
+                android:text="class"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
@@ -59,8 +55,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="8dp"
-                android:text="TextView"
-                android:textColor="@color/design_default_color_primary"
+                android:text="DEFAULT_DOC_ID"
                 app:layout_constraintEnd_toStartOf="@+id/i_type"
                 app:layout_constraintTop_toTopOf="parent" />
 

@@ -108,17 +108,11 @@ class TasksFragment : Fragment(), CoroutineScope {
     }
 
     private fun setUIFromPermissions(perms: ArrayList<String>) {
-
         val user = act!!.user
-
         btnCreateHomework.isVisible = perms.contains("docCreate")
-
         if (perms.contains("docView")) {
-
-            getTasks(user.getGroupByType("school"), user.getGroupByType("class"))
-
+                getTasks(user.getGroupByType("school"), user.getGroupByType("class"))
         }
-
     }
 
     private fun getTasks(school: Group, schoolClass: Group) {
@@ -149,13 +143,8 @@ class TasksFragment : Fragment(), CoroutineScope {
     }
 
     private fun setList(list: ArrayList<TaskItem>) {
-
         lv_tasks.adapter = TasksAdapter(ctx.baseContext, R.layout.task_item, list)
-
-        db.collection("users").document(act!!.uid!!).get().addOnSuccessListener {
-
             if (act!!.user.checkPermission("docEdit")) {
-
                 lv_tasks.setOnItemClickListener { parent, view, position, id ->
                     val bundle = Bundle()
                     val fragment = CreateHomework()
@@ -170,15 +159,7 @@ class TasksFragment : Fragment(), CoroutineScope {
                     trans.replace(R.id.nav_host_fragment_content_main, fragment)
                     trans.commit()
                 }
-
             }
-
             pb.visibility = View.GONE
-
-        } .addOnFailureListener {
-            Log.w(F, "error getting documents ${it.message}")
         }
-
-    }
-
 }

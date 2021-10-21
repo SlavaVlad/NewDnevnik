@@ -54,7 +54,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
     val db = FirebaseFirestore.getInstance()
-    val list_lessons = ArrayList<Lesson>()
+    var list_lessons = ArrayList<Lesson>()
     val tasks = ArrayList<TaskItem>()
 
     private var job: Job = Job()
@@ -101,7 +101,7 @@ class MainActivity : AppCompatActivity() {
         // menu should be considered as top level destinations.
         appBarConfiguration = AppBarConfiguration(
             setOf(
-                R.id.nav_tasks, R.id.nav_lk, R.id.nav_settings, R.id.nav_timetables
+                R.id.nav_tasks, R.id.nav_lk, R.id.nav_settings, R.id.nav_timetables, R.id.nav_groups
             ), drawerLayout
         )
         setupActionBarWithNavController(navController, appBarConfiguration)
@@ -112,63 +112,65 @@ class MainActivity : AppCompatActivity() {
     // Взаимодействие с фрагментами
 
     private fun getTimetables() {
-        list_lessons.clear()
-        Log.d("TEST", user.getGroupByType("class").id.toString())
+        val tmp_list_lessons = ArrayList<Lesson>()
         // запрос документов расписания
-        db.collection("lessonstime").document("LxTrsAIg81E96zMSg0SL").get()
+        db
+            .collection("lessonstime")
+            .document("LxTrsAIg81E96zMSg0SL")
+            .get()
             .addOnSuccessListener { lesson_time -> // расписание звонков
-                db.collection("lessons")
-                    .whereEqualTo("group", user.getGroupByType("class").id.toString())
+                db
+                    .collection("lessonsgroups")
+                    .document(user.getGroupByType("school").id!!)
+                    .collection("lessons")
+                    .whereEqualTo("class", user.getGroupByType("class").id !!)
                     .get()
                     .addOnSuccessListener { lesson_query -> // получаем всё расписание на все дни
-
-                        val q = lesson_query.documents.sortedByDescending{ it.getLong("day") }
-
-                        q.forEach { // проходимся по каждому документу
+                        lesson_query.forEach { // проходимся по каждому документу
                             Log.d("TEST", it.getLong("day").toString())
                             val lesson = it // получаем текущий документ
                             var error = 0
                             repeat(
-                                lesson.getLong("lessonsCount")!!
+                                lesson.getLong("lessonsCount") !!
                                     .toInt()
                             ) { loop -> // проходимся по списку уроков в дне
                                 val loopindex: Int = loop + 1 // получаем не 0-based индекс
-                                var offset = lesson.getLong("timeOffset")!!
+                                var offset = lesson.getLong("timeOffset") !!
                                 when (lesson.get("${loopindex}_parent")) {
                                     null -> {
                                         offset -= error
                                         list_lessons.add(
                                             Lesson( // добавляем урок в массив
-                                                cab = lesson.getLong("${loopindex}_cab")!!, // кабинет
-                                                name = lesson.getString("${loopindex}_name")!!, // название предмета (пример: Математика)
-                                                startAt = lesson_time.getString("${loopindex + offset}_startAt")!!, // время начала урока 09:15, например
-                                                endAt = lesson_time.getString("${loopindex + offset}_endAt")!!, // время конца урока
-                                                day = lesson.getLong("day")!! // номер дня в неделе, ПН=1, СБ=6
+                                                cab = lesson.getLong("${loopindex}_cab") !!, // кабинет
+                                                name = lesson.getString("${loopindex}_name") !!, // название предмета (пример: Математика)
+                                                startAt = lesson_time.getString("${loopindex + offset}_startAt") !!, // время начала урока 09:15, например
+                                                endAt = lesson_time.getString("${loopindex + offset}_endAt") !!, // время конца урока
+                                                day = lesson.getLong("day") !! // номер дня в неделе, ПН=1, СБ=6
                                             )
                                         )
                                     }
                                     else -> {
-                                        if (lesson.getBoolean("${loopindex}_parent")!!) {
+                                        if (lesson.getBoolean("${loopindex}_parent") !!) {
                                             offset -= error
                                             list_lessons.add(
                                                 Lesson( // добавляем урок в массив
-                                                    cab = lesson.getLong("${loopindex}_cab")!!, // кабинет
-                                                    name = lesson.getString("${loopindex}_name")!!, // название предмета (пример Математика)
-                                                    startAt = lesson_time.getString("${loopindex + offset}_startAt")!!, // время начала урока 09:15, например
-                                                    endAt = lesson_time.getString("${loopindex + offset}_endAt")!!, // время конца урока
-                                                    day = lesson.getLong("day")!!
+                                                    cab = lesson.getLong("${loopindex}_cab") !!, // кабинет
+                                                    name = lesson.getString("${loopindex}_name") !!, // название предмета (пример Математика)
+                                                    startAt = lesson_time.getString("${loopindex + offset}_startAt") !!, // время начала урока 09:15, например
+                                                    endAt = lesson_time.getString("${loopindex + offset}_endAt") !!, // время конца урока
+                                                    day = lesson.getLong("day") !!
                                                 )
                                             ) // номер дня в неделе, ПН=1, СБ=6))
                                         } else {
-                                            error++
+                                            error ++
                                             offset -= error
                                             list_lessons.add(
                                                 Lesson( // добавляем урок в массив
-                                                    cab = lesson.getLong("${loopindex}_cab")!!, // кабинет
-                                                    name = lesson.getString("${loopindex}_name")!!, // название предмета (пример Математика)
-                                                    startAt = lesson_time.getString("${loopindex + offset}_startAt")!!, // время начала урока 09:15, например
-                                                    endAt = lesson_time.getString("${loopindex + offset}_endAt")!!, // время конца урока
-                                                    day = lesson.getLong("day")!! // номер дня в неделе, ПН=1, СБ=6
+                                                    cab = lesson.getLong("${loopindex}_cab") !!, // кабинет
+                                                    name = lesson.getString("${loopindex}_name") !!, // название предмета (пример Математика)
+                                                    startAt = lesson_time.getString("${loopindex + offset}_startAt") !!, // время начала урока 09:15, например
+                                                    endAt = lesson_time.getString("${loopindex + offset}_endAt") !!, // время конца урока
+                                                    day = lesson.getLong("day") !! // номер дня в неделе, ПН=1, СБ=6
                                                 )
                                             )
                                         }
@@ -177,6 +179,11 @@ class MainActivity : AppCompatActivity() {
                             }
                         }
                     }
+
+                list_lessons.sortByDescending { list_lessons -> list_lessons.day }
+
+                Log.d("TEST", list_lessons.toString())
+
             }
     } // Получили расписание
 
@@ -190,7 +197,7 @@ class MainActivity : AppCompatActivity() {
         list_lessons.forEach {
             if (it.day > today) {
                 val tmp = Lesson(it.cab, it.name, it.startAt, it.endAt, it.day)
-                tmp.day - today
+                val l = tmp.day - today
                 tmpLessons.add(tmp)
             }
         }
@@ -264,7 +271,7 @@ class MainActivity : AppCompatActivity() {
                 // Google Sign In was successful, authenticate with Firebase
                 val account = task.getResult(ApiException::class.java)
                 Log.d(F, "firebaseAuthWithGoogle:" + account.id)
-                firebaseAuthWithGoogle(account.idToken!!)
+                firebaseAuthWithGoogle(account.idToken !!)
 
             } catch (e: ApiException) {
                 // Google Sign In failed, update UI appropriately
@@ -280,8 +287,8 @@ class MainActivity : AppCompatActivity() {
                 if (task.isSuccessful) {
                     // Sign in success, update UI with the signed-in user's information
                     Log.d(F, "signInWithCredential:success")
-                    val user = auth.currentUser!!
-                    uid = auth.currentUser!!.uid
+                    val user = auth.currentUser !!
+                    uid = auth.currentUser !!.uid
 
                     checkUserInDatabase(user)
 
@@ -318,8 +325,8 @@ class MainActivity : AppCompatActivity() {
         fun getAllPermissions(): ArrayList<String> {
             val permissions = ArrayList<String>()
             repeat(groups.size) { groupIndex ->
-                repeat(groups[groupIndex].rights!!.size) { rightIndex ->
-                    permissions.add(groups[groupIndex].rights!![rightIndex])
+                repeat(groups[groupIndex].rights !!.size) { rightIndex ->
+                    permissions.add(groups[groupIndex].rights !![rightIndex])
                 }
             }
             return permissions
@@ -331,14 +338,14 @@ class MainActivity : AppCompatActivity() {
         db.collection("users").document(fire_user.uid).get().addOnSuccessListener {
             if (it.exists()) {
 
-                user = it.toObject<User>()!!
+                user = it.toObject<User>() !!
 
                 getRights()
 
             } else {
 
                 val data = hashMapOf<String, Any>(
-                    "email" to fire_user.email!!
+                    "email" to fire_user.email !!
                 )
 
                 val docRef = db.collection("users").document(fire_user.uid)
@@ -353,21 +360,28 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun getRights() {
-        db.collection("groups").get().addOnSuccessListener { querySnapshot ->
+        db
+            .collectionGroup("groups")
+            .whereArrayContains("users", uid!!)
+            .get()
+            .addOnSuccessListener { querySnapshot ->
 
-            var index = 0
+                Log.d("TEST", "GROUPS: ${querySnapshot.documents.size}")
 
-            querySnapshot.documents.forEach {   // записываем группы в пользователя
-                user.groups.add(it.toObject<Group>()!!)
-                user.groups[index].id = it.id
-                Log.w(F, user.groups.toString())
-                index++
+                var index = 0
+
+                querySnapshot.documents.forEach {   // записываем группы в пользователя
+                    user.groups.add(it.toObject<Group>() !!)
+                    user.groups[index].id = it.id
+                    Log.w(F, user.groups.toString())
+                    index ++
+                }
+
+                getTimetables()
+
             }
-
-            getTimetables()
-
-        }
     }
+
     // END LOGIN
 
 
@@ -381,5 +395,4 @@ class MainActivity : AppCompatActivity() {
         val navController = findNavController(R.id.nav_host_fragment_content_main)
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
     }
-
 }

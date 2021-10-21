@@ -207,7 +207,7 @@ class CreateHomework : Fragment(), CoroutineScope {
         }
 
         if (group == cg_target){
-            //data["groups"] =
+            //TODO: data["groups"] =
         }
 
         check()
@@ -278,6 +278,8 @@ class CreateHomework : Fragment(), CoroutineScope {
             data["owner"] = gactivity!!.uid!!
 
             btn_complete.isEnabled = false
+
+            data
 
             db.collection("6tasks").add(data).addOnCompleteListener {
 

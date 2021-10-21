@@ -6,6 +6,7 @@ class Group(
     var type: String? = null,
     var parent: String? = null,
     var id: String? = null,
+    var users: List<String>? = null,
 )
 
 
