@@ -33,11 +33,10 @@ class CreateHomework : Fragment(), CoroutineScope {
     lateinit var btn_complete: Button
     lateinit var calendar_i: CalendarView
     lateinit var et_text: EditText
-    lateinit var pb_subj: ProgressBar
     val db = FirebaseFirestore.getInstance()
     var doc_time: com.google.firebase.Timestamp? = null
     var data = hashMapOf<String, Any>()
-    var gactivity: MainActivity? = null
+    var act: MainActivity? = null
     var text_length: Int = 0
 
     private var doc_id: String? = null
@@ -59,7 +58,7 @@ class CreateHomework : Fragment(), CoroutineScope {
 
         val view = inflater.inflate(R.layout.fragment_create_homework, container, false)
 
-        gactivity = activity as MainActivity?
+        act = activity as MainActivity?
 
         btn_complete = view.findViewById(R.id.btn_complete)
 
@@ -70,90 +69,104 @@ class CreateHomework : Fragment(), CoroutineScope {
         calendar_i = view.findViewById(R.id.calendar)
         et_text = view.findViewById(R.id.et_text)
         til_text = view.findViewById(R.id.til_text)
-        pb_subj = view.findViewById(R.id.pb_subj)
         cg_target = view.findViewById(R.id.cg_target)
 
         launch {
-            val unique_lessons: ArrayList<String> = getLessonsUniqueNames()
-            pb_subj.visibility = View.GONE
-            repeat(getLessonsUniqueNames().size) {
-                val c = Chip(gactivity)
+            val unique_lessons: ArrayList<String> = getChips()
+            repeat(unique_lessons.size) {
+                val c = Chip(act)
                 c.text = unique_lessons[it]
                 c.isCheckable = true
                 chips.add(c)
                 cg_subject.addView(c)
             }
-            repeat(gactivity!!.user.groups.size){
-                if (gactivity!!.user.groups[it].type == "class"){
-                    val c = Chip(gactivity)
-                    c.text = gactivity!!.user.groups[it].name
+            repeat(act!!.user.groups.size) {
+                if (act!!.user.groups[it].type == "class") {
+                    val c = Chip(act)
+                    c.text = act !!.user.groups[it].name
                     c.isCheckable = true
                     chips.add(c)
                     cg_target.addView(c)
                 }
             }
-
+            db.collection("constants").document("hwtags").get().addOnSuccessListener {
+                val types = it["types"] as List<String>
+                types.forEach {
+                    val c = Chip(act)
+                    c.text = it
+                    c.isCheckable = true
+                    chips.add(c)
+                    cg_type.addView(c)
+                }
+            }
             if (requireArguments()["edit"] == true) {
                 setupUpdate(requireArguments()["doc_id"].toString())
             }
 
-        } // Заполняем список уроков
+        } // Заполняем список чипов
 
-            calendar_i.minDate = System.currentTimeMillis()
+        calendar_i.minDate = System.currentTimeMillis()
 
-            cg_subject.setOnCheckedChangeListener { group, id ->
-                check()
-                if (id != -1) {addDataFromChip(group, requireView().findViewById(id))}
+        cg_subject.setOnCheckedChangeListener { group, id ->
+            if (id != View.NO_ID) {
+                addDataFromChip(group, requireView().findViewById(id))
             }
+            check()
+        }
 
-            cg_type.setOnCheckedChangeListener { group, id ->
-                check()
-                if (id != -1) {addDataFromChip(group, requireView().findViewById(id))}
+        cg_type.setOnCheckedChangeListener { group, id ->
+            if (id != View.NO_ID) {
+                addDataFromChip(group, requireView().findViewById(id))
             }
+            check()
+        }
 
-            calendar_i.setOnDateChangeListener { _, year, month, dayOfMonth ->
-                date = Date(year - 1900, month, dayOfMonth)
-            }
+        calendar_i.setOnDateChangeListener { _, year, month, dayOfMonth ->
+            date = Date(year - 1900, month, dayOfMonth)
+        }
 
-            if (requireArguments().getBoolean("edit")) {
-                doc_id = requireArguments().getString("doc_id")
-                btn_complete.text = "Обновить уведомление"
-                btn_complete.setOnClickListener {
-                    completeUpdate()
-                }
-            } else {
-                btn_complete.setOnClickListener {
-                    completeAdd()
-                }
-            }
-
-            et_text.addTextChangedListener(object : TextWatcher {
-
-                override fun afterTextChanged(s: Editable) {
-                }
-
-                override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {
-                }
-
-                override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
-                    text_length = s.length
-                }
-            })
-
+        if (requireArguments().getBoolean("edit")) {
+            doc_id = requireArguments().getString("doc_id")
+            btn_complete.text = "Обновить уведомление"
             setupChips()
+            btn_complete.setOnClickListener {
+                completeUpdate()
+            }
+        } else {
+            btn_complete.setOnClickListener {
+                completeAdd()
+            }
+        }
 
-            return view
+        et_text.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable) {
+            }
+
+            override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {
+            }
+
+            override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
+                text_length = s.length
+                check()
+            }
+        })
+
+        return view
     }
 
-    private suspend fun getLessonsUniqueNames(): ArrayList<String> {
+    private suspend fun getChips(): ArrayList<String> {
+
         val names = ArrayList<String>()
-        val docRef =  db.collection("lessons").orderBy("day", Query.Direction.ASCENDING)
+        val docRef = db.collection("lessons").orderBy("day", Query.Direction.ASCENDING)
         val lesson_query = docRef.get().await().query.get().await()
+
         repeat(lesson_query.size()) { // проходимся по каждому документу
             val lesson = lesson_query.documents[it] // получаем текущий документ
-            repeat(lesson.getLong("lessonsCount")!!.toInt()) { loop -> // проходимся по списку уроков в дне
-                if (!names.contains(lesson.getString("${loop+1}_name")!!)) {
-                    names.add(lesson.getString("${loop + 1}_name")!!)
+            repeat(
+                lesson.getLong("lessonsCount") !!.toInt()
+            ) { loop -> // проходимся по списку уроков в дне
+                if (! names.contains(lesson.getString("${loop + 1}_name") !!)) {
+                    names.add(lesson.getString("${loop + 1}_name") !!)
                 }
             }
         }
@@ -161,31 +174,41 @@ class CreateHomework : Fragment(), CoroutineScope {
     }
 
     private fun check() {
-        btn_complete.isEnabled = data.contains("subject") && data.contains("type") && text_length > 3
+        btn_complete.isEnabled =
+            data.contains("subject") && data.contains("type") && text_length > 3
     }
 
     private fun setupUpdate(docId: String) {
 
-        db.collection("6tasks").document(docId).get().addOnSuccessListener {
+        db.collection("6tasks").document(docId).get().addOnSuccessListener { doc ->
 
             cg_subject.setOnCheckedChangeListener { group, id ->
                 check()
-                if (id != -1) {addDataFromChip(group, requireView().findViewById(id))}
+                if (id != View.NO_ID) {
+                    addDataFromChip(group, requireView().findViewById(id))
+                }
             }
 
             cg_type.setOnCheckedChangeListener { group, id ->
                 check()
-                if (id != -1) {addDataFromChip(group, requireView().findViewById(id))}
+                if (id != View.NO_ID) {
+                    addDataFromChip(group, requireView().findViewById(id))
+                }
             }
 
-            cg_subject.check(it.getLong("subject_id")!!.toInt())
-            cg_type.check(it.getLong("type_id")!!.toInt())
+            chips.forEach { c ->
+                when (c.text) {
+                    doc.getString("subject") -> cg_subject.check(c.id)
+                    doc.getString("type") -> cg_type.check(c.id)
+                    //doc.getString("target") -> cg_target.check(c.id)
+                }
+            }
 
-            et_text.setText(it.getString("text"))
+            et_text.setText(doc.getString("text"))
 
-            doc_time = it.getTimestamp("deadline")!!
+            doc_time = doc.getTimestamp("deadline") !!
 
-            calendar_i.date = doc_time!!.toDate().toInstant().toEpochMilli()
+            calendar_i.date = doc_time !!.toDate().toInstant().toEpochMilli()
 
             check()
 
@@ -197,7 +220,7 @@ class CreateHomework : Fragment(), CoroutineScope {
         if (group == cg_subject) {
             data["subject"] = chip.text
             data["subject_id"] = chip.id
-            calendar_i.date  = gactivity!!.getNextLesson(data["subject"] as String)*1000
+            calendar_i.date = act!!.getNextLesson(data["subject"].toString()) * 1000
             date = Date(calendar_i.date)
         }
 
@@ -206,7 +229,7 @@ class CreateHomework : Fragment(), CoroutineScope {
             data["type_id"] = chip.id
         }
 
-        if (group == cg_target){
+        if (group == cg_target) {
             //TODO: data["groups"] =
         }
 
@@ -215,16 +238,17 @@ class CreateHomework : Fragment(), CoroutineScope {
     }
 
     private fun setupChips() {
-        if (requireArguments()["edit"] == true) {
-            db.collection("6tasks").document(doc_id!!).get().addOnSuccessListener {
-                for (c in chips) { // поиск нужного чипа
-                    if (c.text == it.getString("subject")) {
-                        c.isChecked = true
-                    }
-                    if (c.text == it.getString("type")) {
-                        c.isChecked = true
-                    }
+        db.collection("6tasks").document(doc_id !!).get().addOnSuccessListener {
+            for (c in chips) { // поиск нужного чипа
+
+                if (c.text == it.getString("subject")) {
+                    c.isChecked = true
                 }
+
+                if (c.text == it.getString("type")) {
+                    c.isChecked = true
+                }
+
             }
         }
     }
@@ -242,7 +266,7 @@ class CreateHomework : Fragment(), CoroutineScope {
             data["text"] = et_text.text.toString()
             //data["owner"] = user
 
-            db.collection("6tasks").document(doc_id!!).update(data).addOnCompleteListener {
+            db.collection("6tasks").document(doc_id !!).update(data).addOnCompleteListener {
 
                 requireFragmentManager()
                     .beginTransaction()
@@ -250,9 +274,10 @@ class CreateHomework : Fragment(), CoroutineScope {
                     .replace(R.id.nav_host_fragment_content_main, TasksFragment())
                     .commitAllowingStateLoss()
 
-                Toast.makeText(requireContext(), "Уведомление создано", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Уведомление обновлено", Toast.LENGTH_SHORT).show()
 
             }.addOnFailureListener {
+                act!!.alert("Error.F", it.message.toString(), "completeUpdate()")
                 btn_complete.isEnabled = true
             }
 
@@ -267,19 +292,21 @@ class CreateHomework : Fragment(), CoroutineScope {
             data["deadline"] = com.google.firebase.Timestamp(date)
         } else {
             data["deadline"] = Timestamp(System.currentTimeMillis())
-            gactivity!!.alert("Ошибка!", "Не удалось установить дату, будет записана текущая", "completeAdd")
+            act !!.alert(
+                "Ошибка!",
+                "Не удалось установить дату, будет записана текущая",
+                "completeAdd"
+            )
         }
 
         if (et_text.text.isNotEmpty() && data.contains("subject") && data.contains("type")) {
 
-            data["school"] = gactivity!!.user.getGroupByType("school")
-            data["class"] = gactivity!!.user.getGroupByType("class")
+            data["school"] = act !!.user.getGroupByType("school").id !!
+            data["class"] = act !!.user.getGroupByType("class").id !!
             data["text"] = et_text.text.toString()
-            data["owner"] = gactivity!!.uid!!
+            data["owner"] = act !!.uid !!
 
             btn_complete.isEnabled = false
-
-            data
 
             db.collection("6tasks").add(data).addOnCompleteListener {
 

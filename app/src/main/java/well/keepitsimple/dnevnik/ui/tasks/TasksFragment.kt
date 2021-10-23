@@ -70,7 +70,7 @@ class TasksFragment : Fragment(), CoroutineScope {
         btnCreateHomework.setOnClickListener {
             val bundle = Bundle()
             bundle.putBoolean("edit", false)
-            bundle.putString("user", act!!.uid)
+            bundle.putString("user", act !!.uid)
             val fragment: Fragment = CreateHomework()
             fragment.arguments = bundle
             val trans: FragmentTransaction = requireFragmentManager()
@@ -91,15 +91,15 @@ class TasksFragment : Fragment(), CoroutineScope {
 
         launch {
             Log.d("TEST", "Launch coroutine")
-            if (act!!.user.getAllPermissions() != ArrayList<String>()){
+            if (act !!.user.getAllPermissions() != ArrayList<String>()) {
                 Log.d("TEST", "SetUI")
-                setUIFromPermissions(act!!.user.getAllPermissions())
+                setUIFromPermissions(act !!.user.getAllPermissions())
             } else {
-                while (act!!.user.getAllPermissions() == ArrayList<String>()) {
+                while (act !!.user.getAllPermissions() == ArrayList<String>()) {
                     delay(50)
-                    if (act!!.user.getAllPermissions() != ArrayList<String>()) {
+                    if (act !!.user.getAllPermissions() != ArrayList<String>()) {
                         Log.d("TEST", "SetUI")
-                        setUIFromPermissions(act!!.user.getAllPermissions())
+                        setUIFromPermissions(act !!.user.getAllPermissions())
                     }
                 }
             }
@@ -108,58 +108,50 @@ class TasksFragment : Fragment(), CoroutineScope {
     }
 
     private fun setUIFromPermissions(perms: ArrayList<String>) {
-        val user = act!!.user
+        val user = act !!.user
         btnCreateHomework.isVisible = perms.contains("docCreate")
         if (perms.contains("docView")) {
-                getTasks(user.getGroupByType("school"), user.getGroupByType("class"))
+            getTasks(user.getGroupByType("school"), user.getGroupByType("class"))
         }
     }
 
     private fun getTasks(school: Group, schoolClass: Group) {
         db.collection("6tasks")
-            .whereEqualTo("school", school.id)
+            //.whereEqualTo("school", school.id)
             .whereEqualTo("class", schoolClass.id)
             .get()
             .addOnSuccessListener { querySnapshot ->
-
-            querySnapshot.forEach { doc -> // проходим по каждому документу
-                if (getDeadlineInDays(doc.getTimestamp("deadline")) > -1 && !tasks.contains(
-                        TaskItem(
-                            (getDeadlineInDays(doc.getTimestamp("deadline"))), doc)
-                    )
-                ) {
-                    tasks.add(
-                        TaskItem
-                            ((getDeadlineInDays(doc.getTimestamp("deadline"))), doc)
-                    )
+                querySnapshot.forEach { doc -> // проходим по каждому документу
+                    if (getDeadlineInDays(doc.getTimestamp("deadline")) >= 0) {
+                        tasks.add(TaskItem((getDeadlineInDays(doc.getTimestamp("deadline"))), doc))
+                    }
                 }
+                setList(tasks)
             }
-            setList(tasks)
-        }
     }
 
     private fun getDeadlineInDays(timestamp: Timestamp?): Double {
-        return ceil(((timestamp!!.seconds.toDouble()) - System.currentTimeMillis() / 1000) / DAY_S)
+        return ceil(((timestamp !!.seconds.toDouble()) - System.currentTimeMillis() / 1000) / DAY_S)
     }
 
     private fun setList(list: ArrayList<TaskItem>) {
         lv_tasks.adapter = TasksAdapter(ctx.baseContext, R.layout.task_item, list)
-            if (act!!.user.checkPermission("docEdit")) {
-                lv_tasks.setOnItemClickListener { parent, view, position, id ->
-                    val bundle = Bundle()
-                    val fragment = CreateHomework()
-                    bundle.putBoolean("edit", true)
-                    bundle.putString("doc_id", tasks[position].doc.id)
-                    bundle.putString("user", act!!.uid)
-                    fragment.arguments = bundle
-                    val trans: FragmentTransaction = requireFragmentManager()
-                        .beginTransaction()
-                        .setTransition(TRANSIT_FRAGMENT_OPEN)
-                        .addToBackStack(null)
-                    trans.replace(R.id.nav_host_fragment_content_main, fragment)
-                    trans.commit()
-                }
+        if (act !!.user.checkPermission("docEdit")) {
+            lv_tasks.setOnItemClickListener { parent, view, position, id ->
+                val bundle = Bundle()
+                val fragment = CreateHomework()
+                bundle.putBoolean("edit", true)
+                bundle.putString("doc_id", tasks[position].doc.id)
+                bundle.putString("user", act !!.uid)
+                fragment.arguments = bundle
+                val trans: FragmentTransaction = requireFragmentManager()
+                    .beginTransaction()
+                    .setTransition(TRANSIT_FRAGMENT_OPEN)
+                    .addToBackStack(null)
+                trans.replace(R.id.nav_host_fragment_content_main, fragment)
+                trans.commit()
             }
-            pb.visibility = View.GONE
         }
+        pb.visibility = View.GONE
+    }
 }

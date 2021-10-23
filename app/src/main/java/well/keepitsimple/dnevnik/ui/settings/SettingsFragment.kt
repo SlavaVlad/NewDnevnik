@@ -16,6 +16,7 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.tasks.await
 import well.keepitsimple.dnevnik.MainActivity
 import well.keepitsimple.dnevnik.R
 import kotlin.coroutines.CoroutineContext
@@ -47,95 +48,28 @@ class SettingsFragment : Fragment() {
 
     }
 
+    /*fun launch() {
+        db.collection("users").get().addOnSuccessListener { querySnapshot ->
+            log("getDocuments")
+            val users = ArrayList<String>()
+            querySnapshot.documents.forEach { doc ->
+                users.add(doc.id)
+                log("user added ${doc.id}")
+            }
+
+            var index = 0
+            querySnapshot.documents.forEach{
+                db.collection("users").document(it.id).update("uid", users[index])
+                index++
+            }
+
+        }
+    }*/
+
     private fun log(t: String){
         val text = TextView(requireContext().applicationContext)
         text.setText(t)
         lay_log.addView(text)
     }
-
-    /*private fun launch() {
-
-        log("Start")
-
-        //script
-
-        val data = ArrayList<DocumentSnapshot>()
-
-        db.collection("lessons")
-            .get()
-            .addOnSuccessListener { query ->
-
-                query.documents.forEach { doc ->
-                    data.add(doc)
-                }
-
-                var d = mapOf<String, Any>()
-
-                d = data[0].data !!
-                log("Start setting doc ${data[0].id}")
-                db.collection("lessonsgroups")
-                    .document(act.user.getGroupByType("school").id.toString())
-                    .collection("lessons")
-                    .document()
-                    .set(d)
-                    .addOnSuccessListener {
-                        log("Set ${d.size}")
-                    }
-                d = data[1].data!!
-                log("Start setting doc ${data[1].id}")
-                db.collection("lessonsgroups")
-                    .document(act.user.getGroupByType("school").id.toString())
-                    .collection("lessons")
-                    .document()
-                    .set(d)
-                    .addOnSuccessListener {
-                        log("Set ${d.size}")
-                    }
-                d = data[2].data!!
-                log("Start setting doc ${data[2].id}")
-                db.collection("lessonsgroups")
-                    .document(act.user.getGroupByType("school").id.toString())
-                    .collection("lessons")
-                    .document()
-                    .set(d)
-                    .addOnSuccessListener {
-                        log("Set ${d.size}")
-                    }
-                d = data[3].data!!
-                log("Start setting doc ${data[3].id}")
-                db.collection("lessonsgroups")
-                    .document(act.user.getGroupByType("school").id.toString())
-                    .collection("lessons")
-                    .document()
-                    .set(d)
-                    .addOnSuccessListener {
-                        log("Set ${d.size}")
-                    }
-                d = data[4].data!!
-                log("Start setting doc ${data[4].id}")
-                db.collection("lessonsgroups")
-                    .document(act.user.getGroupByType("school").id.toString())
-                    .collection("lessons")
-                    .document()
-                    .set(d)
-                    .addOnSuccessListener {
-                        log("Set ${d.size}")
-                    }
-                d = data[5].data!!
-                log("Start setting doc ${data[5].id}")
-                db.collection("lessonsgroups")
-                    .document(act.user.getGroupByType("school").id.toString())
-                    .collection("lessons")
-                    .document()
-                    .set(d)
-                    .addOnSuccessListener {
-                        log("Set ${d.size}")
-                    }
-
-            }
-
-
-
-    }*/
 
 }

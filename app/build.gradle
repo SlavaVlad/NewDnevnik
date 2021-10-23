@@ -61,7 +61,6 @@ dependencies {
     // When using the BoM, you don't specify versions in Firebase library dependencies
     implementation 'com.google.firebase:firebase-crashlytics-ktx'
     implementation 'com.google.firebase:firebase-analytics-ktx'
-
 }
 
 apply plugin: 'com.onesignal.androidsdk.onesignal-gradle-plugin'
@@ -75,8 +74,6 @@ apply plugin: 'com.onesignal.androidsdk.onesignal-gradle-plugin'
 
 // Apply the Crashlytics Gradle plugin
 apply plugin: 'com.google.firebase.crashlytics'
-
-
 
 dependencies {
     implementation 'com.google.firebase:firebase-firestore-ktx:23.0.3'
@@ -107,9 +104,16 @@ dependencies {
 
 
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
-    implementation 'androidx.work:work-runtime-ktx:2.6.0'
+    implementation 'androidx.work:work-runtime-ktx:2.7.0'
     implementation 'com.google.firebase:firebase-auth-ktx:21.0.1'
     implementation 'com.google.android.gms:play-services-base:17.6.0'
     implementation 'androidx.annotation:annotation:1.2.0'
     implementation 'com.google.android.gms:play-services-auth:19.2.0'
+    //Zoom layout
+    implementation 'com.otaliastudios:zoomlayout:1.8.0'
+}
+
+dependencies {
+    implementation 'dev.bandb.graphview:graphview:0.8.1'
+    implementation 'com.github.bmelnychuk:atv:1.2.9'
 }

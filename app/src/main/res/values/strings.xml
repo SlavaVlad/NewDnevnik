@@ -16,6 +16,12 @@
     <string name="title_activity_view_document">ViewDocument</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="dow_1">ПН</string>
+    <string name="dow_2">ВТ</string>
+    <string name="dow_3">СР</string>
+    <string name="dow_4">ЧТ</string>
+    <string name="dow_5">ПТ</string>
+    <string name="dow_6">СБ</string>
     <!-- Strings used for fragments for navigation -->
     <string-array name="lessonsSelect">
         <item>Следующий урок</item>

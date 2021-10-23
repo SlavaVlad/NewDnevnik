@@ -37,7 +37,11 @@
         android:id="@+id/nav_createhw"
         android:name="well.keepitsimple.dnevnik.ui.lk.LkFragment"
         android:label="@string/menu_gallery"
-        tools:layout="@layout/fragment_create_homework" />
+        tools:layout="@layout/fragment_create_homework" >
+        <action
+            android:id="@+id/action_nav_createhw_to_nav_tasks"
+            app:destination="@id/nav_tasks" />
+    </fragment>
 
     <fragment
         android:id="@+id/nav_settings"
@@ -62,6 +66,15 @@
     <fragment
         android:id="@+id/nav_groups"
         android:name="well.keepitsimple.dnevnik.ui.groups.GroupsFragment"
-        android:label="SettingsFragment" />
+        android:label="SettingsFragment" >
+        <action
+            android:id="@+id/action_nav_groups_to_createGroup"
+            app:destination="@id/createGroup" />
+    </fragment>
+    <fragment
+        android:id="@+id/createGroup"
+        android:name="well.keepitsimple.dnevnik.ui.groups.CreateGroup"
+        android:label="fragment_create_group"
+        tools:layout="@layout/fragment_create_group" />
 
 </navigation>

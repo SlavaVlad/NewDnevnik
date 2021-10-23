@@ -114,16 +114,14 @@ class MainActivity : AppCompatActivity() {
     private fun getTimetables() {
         val tmp_list_lessons = ArrayList<Lesson>()
         // запрос документов расписания
-        db
-            .collection("lessonstime")
+        db.collection("lessonstime")
             .document("LxTrsAIg81E96zMSg0SL")
             .get()
             .addOnSuccessListener { lesson_time -> // расписание звонков
-                db
-                    .collection("lessonsgroups")
+                db.collection("lessonsgroups")
                     .document(user.getGroupByType("school").id!!)
                     .collection("lessons")
-                    .whereEqualTo("class", user.getGroupByType("class").id !!)
+                    .whereEqualTo("class", user.getGroupByType("class").id!!) // хдета тут проблема
                     .get()
                     .addOnSuccessListener { lesson_query -> // получаем всё расписание на все дни
                         lesson_query.forEach { // проходимся по каждому документу
@@ -178,12 +176,12 @@ class MainActivity : AppCompatActivity() {
                                 }
                             }
                         }
+
+                        list_lessons.sortByDescending { list_lessons -> list_lessons.day }
+
+                        Log.d("TEST", list_lessons.toString())
+
                     }
-
-                list_lessons.sortByDescending { list_lessons -> list_lessons.day }
-
-                Log.d("TEST", list_lessons.toString())
-
             }
     } // Получили расписание
 
@@ -226,7 +224,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     // Конец взаимодействия с фрагментами
-
 
     // Сервисные глобальные методы
     fun alert(title: String, message: String, source: String) {
@@ -304,6 +301,7 @@ class MainActivity : AppCompatActivity() {
 
     class User(
         val email: String? = null,
+        var uid: String? = null,
         val groups: ArrayList<Group> = ArrayList()
     ) {
 
@@ -338,14 +336,15 @@ class MainActivity : AppCompatActivity() {
         db.collection("users").document(fire_user.uid).get().addOnSuccessListener {
             if (it.exists()) {
 
-                user = it.toObject<User>() !!
+                user = it.toObject<User>()!!
 
                 getRights()
 
             } else {
 
                 val data = hashMapOf<String, Any>(
-                    "email" to fire_user.email !!
+                    "email" to fire_user.email!!,
+                    "uid" to fire_user.uid
                 )
 
                 val docRef = db.collection("users").document(fire_user.uid)

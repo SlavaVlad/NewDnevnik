@@ -8,7 +8,6 @@ import android.widget.ArrayAdapter
 import android.widget.TextView
 import well.keepitsimple.dnevnik.R
 import well.keepitsimple.dnevnik.ui.timetables.Lesson
-import well.keepitsimple.dnevnik.ui.timetables.TimetablesFragment
 
 
 class LessonsAdapter(var ctx: Context, var ressource: Int, var d_item: ArrayList<Lesson>) :
@@ -19,7 +18,7 @@ class LessonsAdapter(var ctx: Context, var ressource: Int, var d_item: ArrayList
 
         val item = d_item[position]
 
-        val name = view.findViewById<TextView>(R.id.name)
+        val name = view.findViewById<TextView>(R.id.subj)
         val time = view.findViewById<TextView>(R.id.time)
         val cab = view.findViewById<TextView>(R.id.cab)
 

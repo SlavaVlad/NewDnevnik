@@ -11,18 +11,33 @@ import android.widget.ListView
 import android.widget.Toast
 import com.google.android.material.tabs.TabLayout
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import well.keepitsimple.dnevnik.*
 import well.keepitsimple.dnevnik.ui.timetables.lessons.LessonsAdapter
 import kotlin.collections.ArrayList
+import kotlin.coroutines.CoroutineContext
 
 
-class TimetablesFragment : Fragment() {
+class TimetablesFragment : Fragment(), CoroutineScope {
     val db = FirebaseFirestore.getInstance()
     lateinit var list: ListView
     lateinit var tabs: TabLayout
     lateinit var ctx: Activity
     val lessons = ArrayList<Lesson>()
     var gactivity: MainActivity? = null
+
+    private var job: Job = Job()
+
+    override val coroutineContext: CoroutineContext
+        get() = Dispatchers.Main + job
+
+    override fun onDestroy() {
+        super.onDestroy()
+        job.cancel()
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?,
@@ -32,7 +47,6 @@ class TimetablesFragment : Fragment() {
         list = view.findViewById(R.id.list)
         tabs = view.findViewById(R.id.tab)
         gactivity = activity as MainActivity?
-        setup(gactivity!!.list_lessons)
 
         return view
     }

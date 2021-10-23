@@ -31,15 +31,6 @@
                 android:text="Предмет"
                 android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
 
-            <ProgressBar
-                android:id="@+id/pb_subj"
-                style="@style/Widget.AppCompat.ProgressBar"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:max="100"
-                android:progress="0"
-                android:progressTint="@color/teal_200" />
-
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
@@ -69,15 +60,6 @@
                 android:layout_height="match_parent"
                 android:orientation="vertical"
                 android:visibility="visible">
-
-                <ProgressBar
-                    android:id="@+id/pb_tgt"
-                    style="@style/Widget.AppCompat.ProgressBar"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:max="100"
-                    android:progress="0"
-                    android:progressTint="@color/teal_200" />
 
                 <com.google.android.material.chip.ChipGroup
                     android:id="@+id/cg_target"
@@ -111,29 +93,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
                     app:singleLine="false"
-                    app:singleSelection="true">
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip21"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checkable="true"
-                        android:text="Д/з" />
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip22"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checkable="true"
-                        android:text="Работа на оценку" />
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/chip23"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:checkable="true"
-                        android:text="TEST" />
-                </com.google.android.material.chip.ChipGroup>
+                    app:singleSelection="true"/>
             </LinearLayout>
 
             <com.google.android.material.textfield.TextInputLayout
