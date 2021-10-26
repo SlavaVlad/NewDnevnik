@@ -5,8 +5,8 @@ buildscript {
         google()
         mavenCentral()
         gradlePluginPortal()
-        jcenter()
     }
+
     dependencies {
         classpath 'com.android.tools.build:gradle:7.0.3'
         classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:1.5.31'
@@ -15,6 +15,12 @@ buildscript {
         classpath 'gradle.plugin.com.onesignal:onesignal-gradle-plugin:0.13.4'
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
+
+        // To benefit from the latest Performance Monitoring plugin features,
+        // update your Android Gradle Plugin dependency to at least v3.4.0
+
+        // Add the dependency for the Performance Monitoring plugin
+        classpath 'com.google.firebase:perf-plugin:1.4.0'  // Performance Monitoring plugin
     }
 }
 

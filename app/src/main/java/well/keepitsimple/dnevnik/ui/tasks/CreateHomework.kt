@@ -14,6 +14,7 @@ import com.google.android.material.chip.ChipGroup
 import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import io.grpc.Metadata
 import kotlinx.coroutines.*
 import kotlinx.coroutines.tasks.await
 import well.keepitsimple.dnevnik.MainActivity
@@ -80,8 +81,8 @@ class CreateHomework : Fragment(), CoroutineScope {
                 chips.add(c)
                 cg_subject.addView(c)
             }
-            repeat(act!!.user.groups.size) {
-                if (act!!.user.groups[it].type == "class") {
+            repeat(act !!.user.groups.size) {
+                if (act !!.user.groups[it].type == "class") {
                     val c = Chip(act)
                     c.text = act !!.user.groups[it].name
                     c.isCheckable = true
@@ -125,18 +126,7 @@ class CreateHomework : Fragment(), CoroutineScope {
             date = Date(year - 1900, month, dayOfMonth)
         }
 
-        if (requireArguments().getBoolean("edit")) {
-            doc_id = requireArguments().getString("doc_id")
-            btn_complete.text = "Обновить уведомление"
-            setupChips()
-            btn_complete.setOnClickListener {
-                completeUpdate()
-            }
-        } else {
-            btn_complete.setOnClickListener {
-                completeAdd()
-            }
-        }
+        launch { isEdit() }
 
         et_text.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable) {
@@ -152,6 +142,21 @@ class CreateHomework : Fragment(), CoroutineScope {
         })
 
         return view
+    }
+
+    private suspend fun isEdit() {
+        if (requireArguments().getBoolean("edit")) {
+            doc_id = requireArguments().getString("doc_id")
+            btn_complete.text = "Обновить уведомление"
+            setupChips()
+            btn_complete.setOnClickListener {
+                completeUpdate()
+            }
+        } else {
+            btn_complete.setOnClickListener {
+                launch{ completeAdd() }
+            }
+        }
     }
 
     private suspend fun getChips(): ArrayList<String> {
@@ -220,7 +225,7 @@ class CreateHomework : Fragment(), CoroutineScope {
         if (group == cg_subject) {
             data["subject"] = chip.text
             data["subject_id"] = chip.id
-            calendar_i.date = act!!.getNextLesson(data["subject"].toString()) * 1000
+            calendar_i.date = act !!.getNextLesson(data["subject"].toString()) * 1000
             date = Date(calendar_i.date)
         }
 
@@ -277,7 +282,7 @@ class CreateHomework : Fragment(), CoroutineScope {
                 Toast.makeText(requireContext(), "Уведомление обновлено", Toast.LENGTH_SHORT).show()
 
             }.addOnFailureListener {
-                act!!.alert("Error.F", it.message.toString(), "completeUpdate()")
+                act !!.alert("Error.F", it.message.toString(), "completeUpdate()")
                 btn_complete.isEnabled = true
             }
 
@@ -305,6 +310,7 @@ class CreateHomework : Fragment(), CoroutineScope {
             data["class"] = act !!.user.getGroupByType("class").id !!
             data["text"] = et_text.text.toString()
             data["owner"] = act !!.uid !!
+            data["complete"] = hashMapOf<String, Any>()
 
             btn_complete.isEnabled = false
 

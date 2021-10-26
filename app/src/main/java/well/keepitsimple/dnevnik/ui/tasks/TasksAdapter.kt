@@ -8,8 +8,8 @@ import android.widget.ArrayAdapter
 import android.widget.TextView
 import well.keepitsimple.dnevnik.R
 
-class TasksAdapter(var ctx: Context, var ressource: Int, var item: ArrayList<TaskItem>) :
-    ArrayAdapter<TaskItem>(ctx, ressource, item) {
+class TasksAdapter(var ctx: Context, var ressource: Int, var item: ArrayList<Task>) :
+    ArrayAdapter<Task>(ctx, ressource, item) {
 
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
         val layoutInflater = LayoutInflater.from(ctx)
@@ -17,10 +17,10 @@ class TasksAdapter(var ctx: Context, var ressource: Int, var item: ArrayList<Tas
 
         val item = item[position].doc
 
-        val subject = view.findViewById<TextView>(R.id.i_group_name)
-        val deadline = view.findViewById<TextView>(R.id.i_type)
-        val text = view.findViewById<TextView>(R.id.i_users)
-        val type = view.findViewById<TextView>(R.id.i_id)
+        val subject = view.findViewById<TextView>(R.id.subject)
+        val deadline = view.findViewById<TextView>(R.id.deadline)
+        val text = view.findViewById<TextView>(R.id.text)
+        val type = view.findViewById<TextView>(R.id.type)
 
         subject.text = item.getString("subject")
         type.text = item.getString("type")

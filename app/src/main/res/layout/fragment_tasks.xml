@@ -6,8 +6,31 @@
     android:layout_height="match_parent"
     tools:context=".ui.tasks.TasksFragment">
 
+    <com.google.android.gms.ads.AdView
+        android:id="@+id/adBanner_tasks"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:visibility="visible"
+        app:adSize="BANNER"
+        app:adUnitId="ca-app-pub-3940256099942544/6300978111"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:visibility="visible" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_tasks"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@+id/adBanner_tasks"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tilSortBy_tasks" />
+
     <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fab_addhw"
+        android:id="@+id/fabAddHomework_tasks"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="16dp"
@@ -15,31 +38,84 @@
         android:clickable="true"
         android:src="@drawable/ic_plus"
         android:visibility="invisible"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/adBanner_tasks"
         app:layout_constraintEnd_toEndOf="parent"
-        tools:ignore="SpeakableTextPresentCheck" />
+        tools:ignore="SpeakableTextPresentCheck"
+        tools:visibility="visible" />
 
     <ProgressBar
-        android:id="@+id/pb_loading"
+        android:id="@+id/pbLoading_tasks"
         style="@android:style/Widget.DeviceDefault.ProgressBar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginBottom="272dp"
+        app:layout_constraintBottom_toTopOf="@+id/adBanner_tasks"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="@+id/rv_tasks"
+        app:layout_constraintVertical_bias="0.934" />
 
-    <ListView
-        android:id="@+id/lv_tasks"
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilSortBy_tasks"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu"
+        android:layout_width="320dp"
+        android:layout_height="60dp"
+        android:hint="Сортировать"
+        app:boxBackgroundMode="filled"
+        app:boxStrokeWidth="2dp"
+        app:hintTextAppearance="@style/TextAppearance.AppCompat.Small"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <AutoCompleteTextView
+            android:id="@+id/etSortBy_tasks"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:backgroundTint="@color/material_on_surface_stroke"
+            android:focusable="auto"
+            android:focusableInTouchMode="false"
+            android:inputType="none"
+            android:text="Дедлайн"
+            android:textAppearance="@style/TextAppearance.AppCompat.Body2" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilSortType_tasks"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense.ExposedDropdownMenu"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:divider="@color/fui_transparent"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:hint="По"
+        app:boxBackgroundMode="filled"
+        app:boxStrokeWidth="2dp"
+        app:hintTextAppearance="@style/TextAppearance.AppCompat.Small"
+        app:layout_constraintBottom_toBottomOf="@+id/tilSortBy_tasks"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.0">
+        app:layout_constraintStart_toEndOf="@+id/tilSortBy_tasks"
+        app:layout_constraintTop_toTopOf="parent">
 
-    </ListView>
+        <AutoCompleteTextView
+            android:id="@+id/etSortType_tasks"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:backgroundTint="@color/material_on_surface_stroke"
+            android:focusable="auto"
+            android:focusableInTouchMode="false"
+            android:inputType="none"
+            android:text="▼"
+            android:textAppearance="@style/TextAppearance.AppCompat.Body2" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <View
+        android:id="@+id/divider2"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:background="?android:attr/listDivider"
+        app:layout_constraintBottom_toTopOf="@+id/rv_tasks"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tilSortBy_tasks" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

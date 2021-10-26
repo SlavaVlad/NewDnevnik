@@ -20,22 +20,25 @@ import com.google.android.material.navigation.NavigationView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
-import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
-import com.google.firebase.firestore.core.OrderBy
 import com.google.firebase.firestore.ktx.toObject
 import com.onesignal.OneSignal
 import kotlinx.coroutines.*
 import well.keepitsimple.dnevnik.databinding.ActivityMainBinding
 import well.keepitsimple.dnevnik.login.Group
-import well.keepitsimple.dnevnik.ui.tasks.TaskItem
+import well.keepitsimple.dnevnik.ui.tasks.Task
 import well.keepitsimple.dnevnik.ui.timetables.Lesson
 import java.util.*
 import java.util.Calendar.DAY_OF_MONTH
 import java.util.Calendar.DAY_OF_WEEK
 import kotlin.collections.ArrayList
 import kotlin.coroutines.CoroutineContext
+import com.google.android.gms.ads.initialization.InitializationStatus
+
+import com.google.android.gms.ads.initialization.OnInitializationCompleteListener
+
+import com.google.android.gms.ads.MobileAds
+
 
 const val ONESIGNAL_APP_ID = "b5aa6c76-4619-4497-9b1e-2e7a1ef4095f"
 const val DAY_S = 86400
@@ -55,7 +58,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     val db = FirebaseFirestore.getInstance()
     var list_lessons = ArrayList<Lesson>()
-    val tasks = ArrayList<TaskItem>()
+    val tasks = ArrayList<Task>()
 
     private var job: Job = Job()
 
@@ -112,7 +115,6 @@ class MainActivity : AppCompatActivity() {
     // Взаимодействие с фрагментами
 
     private fun getTimetables() {
-        val tmp_list_lessons = ArrayList<Lesson>()
         // запрос документов расписания
         db.collection("lessonstime")
             .document("LxTrsAIg81E96zMSg0SL")
