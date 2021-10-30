@@ -1,6 +1,7 @@
 package well.keepitsimple.dnevnik.ui.tasks
 
 import android.content.ContentProvider
+import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -25,6 +26,11 @@ class TasksRecyclerAdapter(private val tasks: ArrayList<Task>) :
         var deadline = itemView.findViewById<TextView>(R.id.deadline)
         var text = itemView.findViewById<TextView>(R.id.text)
         var type = itemView.findViewById<TextView>(R.id.type)
+    }
+
+    fun onItemDismiss(position: Int) {
+        tasks.removeAt(position)
+        notifyItemRemoved(position)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TaskHolder {
@@ -61,12 +67,6 @@ class TasksRecyclerAdapter(private val tasks: ArrayList<Task>) :
     override fun getItemCount() = tasks.size
 
     fun getItemDocument(v: View): DocumentSnapshot? {
-        return docs.get(v)
+        return docs[v]
     }
-
-    fun addList(newList: ArrayList<Task>) {
-        tasks.addAll(newList)
-        notifyDataSetChanged()
-    }
-
 }

@@ -24,7 +24,6 @@ import kotlin.coroutines.CoroutineContext
 class SettingsFragment : Fragment() {
 
     val db = FirebaseFirestore.getInstance()
-    lateinit var lay_log: LinearLayout
     lateinit var act: MainActivity
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -32,15 +31,7 @@ class SettingsFragment : Fragment() {
 
         val view = inflater.inflate(R.layout.fragment_settings, container, false)
 
-        lay_log = view.findViewById(R.id.lay_log)
 
-        val btn = view.findViewById<Button>(R.id.launch)
-
-        btn.setOnClickListener {
-
-            //launch()
-
-        }
 
         act = activity as MainActivity
 
@@ -48,28 +39,6 @@ class SettingsFragment : Fragment() {
 
     }
 
-    /*fun launch() {
-        db.collection("users").get().addOnSuccessListener { querySnapshot ->
-            log("getDocuments")
-            val users = ArrayList<String>()
-            querySnapshot.documents.forEach { doc ->
-                users.add(doc.id)
-                log("user added ${doc.id}")
-            }
 
-            var index = 0
-            querySnapshot.documents.forEach{
-                db.collection("users").document(it.id).update("uid", users[index])
-                index++
-            }
-
-        }
-    }*/
-
-    private fun log(t: String){
-        val text = TextView(requireContext().applicationContext)
-        text.setText(t)
-        lay_log.addView(text)
-    }
 
 }

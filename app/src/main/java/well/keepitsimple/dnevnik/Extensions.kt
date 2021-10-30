@@ -18,3 +18,11 @@ fun <E> ArrayList<E>.addSwitch(value: E){
 fun DocumentSnapshot.getListOfStrings(field: String): List<String> {
     return this[field] as List<String>
 }
+
+fun List<DocumentSnapshot>.stringToReadableByField(field: String): String {
+    val toReturn: String = ""
+    this.forEach {
+        toReturn.plus("${it.getString(field)}, ")
+    }
+    return toReturn
+}

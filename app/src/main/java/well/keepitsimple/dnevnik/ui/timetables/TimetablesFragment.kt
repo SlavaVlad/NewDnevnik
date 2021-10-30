@@ -1,22 +1,21 @@
 package well.keepitsimple.dnevnik.ui.timetables
 
 import android.app.Activity
+import android.icu.util.Calendar
 import android.os.Bundle
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ListView
-import android.widget.Toast
 import com.google.android.material.tabs.TabLayout
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 import well.keepitsimple.dnevnik.*
 import well.keepitsimple.dnevnik.ui.timetables.lessons.LessonsAdapter
+import java.util.Calendar.DAY_OF_WEEK
 import kotlin.collections.ArrayList
 import kotlin.coroutines.CoroutineContext
 
@@ -27,7 +26,7 @@ class TimetablesFragment : Fragment(), CoroutineScope {
     lateinit var tabs: TabLayout
     lateinit var ctx: Activity
     val lessons = ArrayList<Lesson>()
-    var gactivity: MainActivity? = null
+    var act: MainActivity? = null
 
     private var job: Job = Job()
 
@@ -46,7 +45,9 @@ class TimetablesFragment : Fragment(), CoroutineScope {
 
         list = view.findViewById(R.id.list)
         tabs = view.findViewById(R.id.tab)
-        gactivity = activity as MainActivity?
+        act = activity as MainActivity
+
+        setup(act!!.list_lessons)
 
         return view
     }
@@ -58,18 +59,24 @@ class TimetablesFragment : Fragment(), CoroutineScope {
 
     private fun setup(list_lessons: ArrayList<Lesson>) {
 
-        setList(0, list_lessons) // Вызываем создание расписания на сегодняшний день TODO: Определение дня по системе автоматически
+        tabs.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener{ // выбрали расписание на другой день
+            override fun onTabSelected(tab: TabLayout.Tab?) {
+                setList(tab!!.position, list_lessons)
+            }
+            override fun onTabUnselected(tab: TabLayout.Tab?) {
+            }
+            override fun onTabReselected(tab: TabLayout.Tab?) {
+            }
+        })
+        val calendar = Calendar.getInstance()
+        val dow = calendar.get(DAY_OF_WEEK)
 
-                tabs.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener{ // выбрали расписание на другой день
-                    override fun onTabSelected(tab: TabLayout.Tab?) {
-                        setList(tab!!.position, list_lessons)
-                    }
-                    override fun onTabUnselected(tab: TabLayout.Tab?) {
-                    }
-                    override fun onTabReselected(tab: TabLayout.Tab?) {
-                    }
-                })
-                }
+        if (dow-1 <= tabs.tabCount) {
+            tabs.selectTab(tabs.getTabAt(dow - 1))
+        } else {
+            tabs.selectTab(tabs.getTabAt(5))
+        }
+    }
 
     private fun setList(dayOfWeek: Int, lr: ArrayList<Lesson>) {
 
