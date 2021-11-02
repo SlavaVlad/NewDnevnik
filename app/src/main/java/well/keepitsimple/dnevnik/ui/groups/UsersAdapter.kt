@@ -26,12 +26,12 @@ class UsersAdapter(private val users: ArrayList<MainActivity.User>) :
 
     override fun onBindViewHolder(holder: UsersViewHolder, position: Int) {
 
-        holder.name.text = users[position].email
+        holder.name.text = users[position].uid  // TODO: NAME
 
         holder.name.setOnCheckedChangeListener { btn, b ->
             users.forEach {
-                it.email
-                if (btn.text == it.email) {
+                it.uid
+                if (btn.text == it.uid) {
                     checkedUsersID.addSwitch(it.uid!!)
                 }
             }

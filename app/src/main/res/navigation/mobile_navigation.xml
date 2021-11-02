@@ -25,6 +25,9 @@
         <action
             android:id="@+id/action_nav_tasks_to_settingsFragment"
             app:destination="@id/nav_groups" />
+        <action
+            android:id="@+id/action_nav_tasks_to_viewHomework"
+            app:destination="@id/viewHomework" />
     </fragment>
 
     <fragment
@@ -76,5 +79,10 @@
         android:name="well.keepitsimple.dnevnik.ui.groups.CreateGroup"
         android:label="fragment_create_group"
         tools:layout="@layout/fragment_create_group" />
+    <fragment
+        android:id="@+id/viewHomework"
+        android:name="well.keepitsimple.dnevnik.ui.tasks.ViewHomework"
+        android:label="fragment_view_homework"
+        tools:layout="@layout/fragment_view_homework" />
 
 </navigation>

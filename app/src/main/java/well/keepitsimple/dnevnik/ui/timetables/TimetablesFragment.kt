@@ -2,23 +2,26 @@ package well.keepitsimple.dnevnik.ui.timetables
 
 import android.app.Activity
 import android.icu.util.Calendar
+import android.icu.util.TimeZone
 import android.os.Bundle
-import androidx.fragment.app.Fragment
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ListView
+import androidx.fragment.app.Fragment
 import com.google.android.material.tabs.TabLayout
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import well.keepitsimple.dnevnik.*
+import well.keepitsimple.dnevnik.MainActivity
+import well.keepitsimple.dnevnik.R
 import well.keepitsimple.dnevnik.ui.timetables.lessons.LessonsAdapter
-import java.util.Calendar.DAY_OF_WEEK
-import kotlin.collections.ArrayList
+import java.util.Calendar.*
 import kotlin.coroutines.CoroutineContext
 
+const val TAG = "Timetables"
 
 class TimetablesFragment : Fragment(), CoroutineScope {
     val db = FirebaseFirestore.getInstance()
@@ -68,14 +71,21 @@ class TimetablesFragment : Fragment(), CoroutineScope {
             override fun onTabReselected(tab: TabLayout.Tab?) {
             }
         })
-        val calendar = Calendar.getInstance()
-        val dow = calendar.get(DAY_OF_WEEK)
 
-        if (dow-1 <= tabs.tabCount) {
-            tabs.selectTab(tabs.getTabAt(dow - 1))
+        val calendar = Calendar.getInstance(TimeZone.getDefault())
+        val dow = calendar.get(DAY_OF_WEEK) - 2
+        Log.d(TAG, "setup: ${calendar.get(DAY_OF_MONTH)}")
+        Log.d(TAG, "setup: ${calendar.get(DAY_OF_WEEK)}")
+        Log.d(TAG, "setup: ${calendar.get(HOUR_OF_DAY)}")
+
+        if (dow <= tabs.tabCount) {
+            tabs.selectTab(tabs.getTabAt(dow))
+            setList(tabs.selectedTabPosition, list_lessons)
         } else {
             tabs.selectTab(tabs.getTabAt(5))
+            setList(tabs.selectedTabPosition, list_lessons)
         }
+
     }
 
     private fun setList(dayOfWeek: Int, lr: ArrayList<Lesson>) {

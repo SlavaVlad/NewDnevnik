@@ -24,7 +24,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service android:name=".notifications.NotificationsMain"
+        <service android:name=".notifications.NotificationsMainService"
             android:permission="android.permission.INTERNET">
         </service>
         <!-- Sample AdMob app ID: ca-app-pub-3940256099942544~3347511713 -->

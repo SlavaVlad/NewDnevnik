@@ -6,25 +6,12 @@
     android:layout_height="match_parent"
     tools:context=".ui.tasks.TasksFragment">
 
-    <com.google.android.gms.ads.AdView
-        android:id="@+id/adBanner_tasks"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:visibility="visible"
-        app:adSize="BANNER"
-        app:adUnitId="ca-app-pub-3940256099942544/6300978111"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        tools:visibility="visible" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_tasks"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        app:layout_constraintBottom_toTopOf="@+id/adBanner_tasks"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tilSortBy_tasks" />
@@ -38,7 +25,7 @@
         android:clickable="true"
         android:src="@drawable/ic_plus"
         android:visibility="invisible"
-        app:layout_constraintBottom_toTopOf="@+id/adBanner_tasks"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         tools:ignore="SpeakableTextPresentCheck"
         tools:visibility="visible" />
@@ -48,13 +35,12 @@
         style="@android:style/Widget.DeviceDefault.ProgressBar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="272dp"
-        app:layout_constraintBottom_toTopOf="@+id/adBanner_tasks"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/rv_tasks"
-        app:layout_constraintVertical_bias="0.934" />
+        app:layout_constraintVertical_bias="0.451" />
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/tilSortBy_tasks"

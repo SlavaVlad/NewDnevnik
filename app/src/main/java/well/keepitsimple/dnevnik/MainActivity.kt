@@ -7,14 +7,15 @@ import android.util.Log
 import android.view.Menu
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdView
+import com.google.android.gms.ads.MobileAds
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
@@ -26,27 +27,16 @@ import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.toObject
 import com.onesignal.OneSignal
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Job
 import well.keepitsimple.dnevnik.databinding.ActivityMainBinding
 import well.keepitsimple.dnevnik.login.Group
+import well.keepitsimple.dnevnik.notifications.NotificationsMainService
 import well.keepitsimple.dnevnik.ui.tasks.Task
 import well.keepitsimple.dnevnik.ui.timetables.Lesson
 import java.util.*
 import java.util.Calendar.DAY_OF_MONTH
 import java.util.Calendar.DAY_OF_WEEK
 import kotlin.collections.ArrayList
-import kotlin.coroutines.CoroutineContext
-import com.google.android.gms.ads.initialization.InitializationStatus
-
-import com.google.android.gms.ads.initialization.OnInitializationCompleteListener
-
-import com.google.android.gms.ads.MobileAds
-import android.app.NotificationManager
-
-import android.app.NotificationChannel
-
-import android.os.Build
-import well.keepitsimple.dnevnik.notifications.NotificationsMain
 
 const val ONESIGNAL_APP_ID = "b5aa6c76-4619-4497-9b1e-2e7a1ef4095f"
 const val DAY_S = 86400
@@ -67,11 +57,10 @@ class MainActivity : AppCompatActivity() {
     val db = FirebaseFirestore.getInstance()
     var list_lessons = ArrayList<Lesson>()
     val tasks = ArrayList<Task>()
+    val TAG = "MainActivity"
+    var mAdView: AdView? = null
 
     private var job: Job = Job()
-
-    val coroutineContext: CoroutineContext
-        get() = Dispatchers.Main + job
 
     override fun onDestroy() {
         super.onDestroy()
@@ -80,9 +69,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        //ca-app-pub-7054194174793904/9054046799 --
 
         //Logging set to help debug issues, remove before releasing your app.
         OneSignal.setLogLevel(OneSignal.LOG_LEVEL.VERBOSE, OneSignal.LOG_LEVEL.NONE)
@@ -118,6 +108,10 @@ class MainActivity : AppCompatActivity() {
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
 
+        MobileAds.initialize(this)
+        mAdView = findViewById(R.id.adBanner_tasks)
+        val adRequest = AdRequest.Builder().build()
+        mAdView!!.loadAd(adRequest)
     }
 
     // Взаимодействие с фрагментами
@@ -135,7 +129,7 @@ class MainActivity : AppCompatActivity() {
                     .get()
                     .addOnSuccessListener { lesson_query -> // получаем всё расписание на все дни
                         lesson_query.forEach { // проходимся по каждому документу
-                            Log.d("TEST", it.getLong("day").toString())
+                            Log.d(TAG, it.getLong("day").toString())
                             val lesson = it // получаем текущий документ
                             var error = 0
                             repeat(
@@ -189,7 +183,7 @@ class MainActivity : AppCompatActivity() {
 
                         list_lessons.sortByDescending { list_lessons -> list_lessons.day }
 
-                        Log.d("TEST", list_lessons.toString())
+                        Log.d(TAG, list_lessons.toString())
 
                     }
             }
@@ -216,15 +210,15 @@ class MainActivity : AppCompatActivity() {
             tmpLessons.add(tmp)
         }
 
-        Log.d("DEBUG", tmpLessons.toString())
+        Log.d(TAG, tmpLessons.toString())
 
         // ищем совпадающий по имени предмет в списке и возвращаем его
         tmpLessons.forEach {
             if (lesson_name == it.name) {
 
-                Log.d("DEBUG", "Today: ${calendar.get(DAY_OF_MONTH)}")
-                Log.d("DEBUG", "Selected: $it")
-                Log.d("DEBUG", "Returned: ${(now + ((it.day) * DAY_S))}")
+                Log.d(TAG, "Today: ${calendar.get(DAY_OF_MONTH)}")
+                Log.d(TAG, "Selected: $it")
+                Log.d(TAG, "Returned: ${(now + ((it.day) * DAY_S))}")
 
                 return (now + ((it.day) * DAY_S))
             }
@@ -245,8 +239,8 @@ class MainActivity : AppCompatActivity() {
             .setPositiveButton("Ok") { dialog, id ->
             }
             .show()
-        Log.e("ErrorAlert", "t: $title m: $message")
-        Log.e("ErrorAlert", source)
+        Log.e(TAG, "t: $title m: $message")
+        Log.e(TAG, source)
     }
 
 
@@ -310,9 +304,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     class User(
-        val email: String? = null,
         var uid: String? = null,
-        val groups: ArrayList<Group> = ArrayList()
+        val groups: ArrayList<Group> = ArrayList(),
     ) {
 
         fun getGroupByType(type: String): Group { // TODO: сделать типы групп перечислением
@@ -349,15 +342,17 @@ class MainActivity : AppCompatActivity() {
                 user = it.toObject<User>()!!
 
                 saveString("uid", uid!!)
-                startService(Intent(this, NotificationsMain::class.java))
+
+                startService(Intent(this, NotificationsMainService::class.java))
 
                 getRights()
 
             } else {
 
                 val data = hashMapOf<String, Any>(
-                    "email" to fire_user.email!!,
-                    "uid" to fire_user.uid
+                    resources.getString(R.string.familia) to "",
+                    resources.getString(R.string.name) to "",
+                    resources.getString(R.string.otchestvo) to "",
                 )
 
                 val docRef = db.collection("users").document(fire_user.uid)
@@ -378,14 +373,14 @@ class MainActivity : AppCompatActivity() {
             .get()
             .addOnSuccessListener { querySnapshot ->
 
-                Log.d("TEST", "GROUPS: ${querySnapshot.documents.size}")
+                Log.d(TAG, "GROUPS: ${querySnapshot.documents.size}")
 
                 var index = 0
 
                 querySnapshot.documents.forEach {   // записываем группы в пользователя
                     user.groups.add(it.toObject<Group>() !!)
                     user.groups[index].id = it.id
-                    Log.w(F, user.groups.toString())
+                    Log.w(TAG, user.groups.toString())
                     index ++
                 }
 
@@ -412,5 +407,6 @@ class MainActivity : AppCompatActivity() {
         val ed: SharedPreferences.Editor = sPref.edit()
         ed.putString(key, value)
         ed.apply()
+        Log.d("sPref", "saveString: $key ; $value")
     }
 }

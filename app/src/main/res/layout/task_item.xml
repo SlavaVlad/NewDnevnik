@@ -37,12 +37,14 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
+                android:autoText="false"
                 android:elegantTextHeight="true"
                 android:lines="2"
                 android:text="Написать 1 отзыв на произведение из списка на лето. Тихий дон лучше)) Либо о герое подробнее, либо об эпизоде. Литературоведческие термины использовать. Не меньше 5. Лучше их подчеркнуть. (Объем А4, либо 2-3 страницы)"
+                android:textAlignment="viewStart"
                 android:textColor="@color/design_default_color_primary_dark"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/btn_menu"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/subject" />
 
@@ -63,6 +65,19 @@
                 android:textColor="@color/design_default_color_primary"
                 app:layout_constraintEnd_toStartOf="@+id/deadline"
                 app:layout_constraintTop_toTopOf="parent" />
+
+            <ImageButton
+                android:id="@+id/btn_menu"
+                style="@android:style/Widget.ImageButton"
+                android:layout_width="wrap_content"
+                android:layout_height="0dp"
+                android:background="@color/fui_transparent"
+                android:padding="4dp"
+                android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="@+id/text"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/text"
+                app:srcCompat="@drawable/ic_menu_three_dots" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 

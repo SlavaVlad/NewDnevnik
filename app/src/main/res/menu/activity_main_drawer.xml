@@ -15,7 +15,7 @@
             android:title="Расписание" />
         <item
             android:id="@+id/nav_lk"
-            android:icon="@drawable/ic_person"
+            android:icon="@drawable/ic_cabinet"
             android:title="@string/menu_gallery" />
         <item
             android:id="@+id/nav_groups"

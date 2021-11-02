@@ -3,19 +3,24 @@ package well.keepitsimple.dnevnik.ui.tasks
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.*
+import android.widget.Button
+import android.widget.CalendarView
+import android.widget.EditText
+import android.widget.Toast
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentTransaction
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
 import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
-import io.grpc.Metadata
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import well.keepitsimple.dnevnik.MainActivity
 import well.keepitsimple.dnevnik.R
@@ -144,7 +149,7 @@ class CreateHomework : Fragment(), CoroutineScope {
         return view
     }
 
-    private suspend fun isEdit() {
+    private fun isEdit() {
         if (requireArguments().getBoolean("edit")) {
             doc_id = requireArguments().getString("doc_id")
             btn_complete.text = "Обновить уведомление"
@@ -185,7 +190,7 @@ class CreateHomework : Fragment(), CoroutineScope {
 
     private fun setupUpdate(docId: String) {
 
-        db.collection("6tasks").document(docId).get().addOnSuccessListener { doc ->
+        db.collection(resources.getString(R.string.tasksVersion)).document(docId).get().addOnSuccessListener { doc ->
 
             cg_subject.setOnCheckedChangeListener { group, id ->
                 check()
@@ -243,7 +248,7 @@ class CreateHomework : Fragment(), CoroutineScope {
     }
 
     private fun setupChips() {
-        db.collection("6tasks").document(doc_id !!).get().addOnSuccessListener {
+        db.collection(resources.getString(R.string.tasksVersion)).document(doc_id !!).get().addOnSuccessListener {
             for (c in chips) { // поиск нужного чипа
 
                 if (c.text == it.getString("subject")) {
@@ -271,7 +276,7 @@ class CreateHomework : Fragment(), CoroutineScope {
             data["text"] = et_text.text.toString()
             //data["owner"] = user
 
-            db.collection("6tasks").document(doc_id !!).update(data).addOnCompleteListener {
+            db.collection(resources.getString(R.string.tasksVersion)).document(doc_id !!).update(data).addOnCompleteListener {
 
                 requireFragmentManager()
                     .beginTransaction()
@@ -311,10 +316,11 @@ class CreateHomework : Fragment(), CoroutineScope {
             data["text"] = et_text.text.toString()
             data["owner"] = act !!.uid !!
             data["complete"] = hashMapOf<String, Any>()
+            data["isDeleted"] = false
 
             btn_complete.isEnabled = false
 
-            db.collection("6tasks").add(data).addOnCompleteListener {
+            db.collection(resources.getString(R.string.tasksVersion)).add(data).addOnCompleteListener {
 
                 requireFragmentManager()
                     .beginTransaction()

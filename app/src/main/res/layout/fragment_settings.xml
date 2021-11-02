@@ -34,6 +34,12 @@
                 android:layout_height="wrap_content"
                 android:text="Задано на завтра" />
 
+            <Button
+                android:id="@+id/btnDeadlineIsNear"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Время" />
+
         </LinearLayout>
     </ScrollView>
 </androidx.constraintlayout.widget.ConstraintLayout>

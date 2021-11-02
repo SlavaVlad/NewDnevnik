@@ -3,7 +3,7 @@ package well.keepitsimple.dnevnik
 import com.google.firebase.firestore.DocumentSnapshot
 
 fun <E> ArrayList<E>.addUnique(value: E){
-    if (this.contains(value)) {
+    if (!this.contains(value)) {
         this.add(value)
     }
 }

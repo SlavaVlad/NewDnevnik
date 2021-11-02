@@ -9,32 +9,32 @@ import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import well.keepitsimple.dnevnik.R
+import androidx.work.*
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentChange
-import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.toObject
 import kotlinx.coroutines.*
 import well.keepitsimple.dnevnik.MainActivity
-import well.keepitsimple.dnevnik.addUnique
+import well.keepitsimple.dnevnik.R
 import well.keepitsimple.dnevnik.login.Group
 import well.keepitsimple.dnevnik.ui.timetables.Lesson
 import java.util.*
 import java.util.Calendar.*
+import java.util.concurrent.TimeUnit
 import kotlin.collections.ArrayList
 import kotlin.coroutines.CoroutineContext
+import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
 
-
-const val NEW_TASKS = "Новые домашние задания"
+const val NEW_TASKS = "Добавлено задание"
 const val NEXT_LESSON = "Следующий урок"
-const val DEADLINE = "Домашние задания на завтра"
 
-class NotificationsMain : Service(), CoroutineScope {
+class NotificationsMainService : Service(), CoroutineScope {
+
+    val TAG = "Service"
 
     override fun onBind(p0: Intent?): IBinder? = null
 
@@ -45,17 +45,19 @@ class NotificationsMain : Service(), CoroutineScope {
 
     val db = FirebaseFirestore.getInstance()
 
-    val notify_hour_deadline = 22
-    val notify_min_deadline = 56
+    private var notify_min_deadline: Int = 30
+    private var notify_hour_deadline: Int = 16
 
     var uid = ""
     var user: MainActivity.User = MainActivity.User()
-    val list_lessons = ArrayList<Lesson>()
+    private val list_lessons = ArrayList<Lesson>()
 
     @ExperimentalTime
     override fun onCreate() {
         super.onCreate()
         uid = loadText("uid").toString()
+        notify_min_deadline  = loadInt("btnDeadlineIsNear_minute", 30)
+        notify_hour_deadline = loadInt("btnDeadlineIsNear_hour", 16)
 
         db.collection("users").document(uid).get().addOnSuccessListener { userDoc ->
             user = userDoc.toObject<MainActivity.User>() !!
@@ -65,14 +67,31 @@ class NotificationsMain : Service(), CoroutineScope {
     }
 
     @ExperimentalTime
-    private fun getRights() {
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        if (intent!!.extras != null) {
+            if (intent.extras!!.containsKey("settingsUpdate")) {
+                when (intent.extras?.getString("settingsUpdate")) {
+                    "btnDeadlineIsNear_hour" -> {
+                        notify_hour_deadline = loadInt("btnDeadlineIsNear_hour", 16)
+                    }
+                    "btnDeadlineIsNear_minute" -> {
+                        notify_min_deadline = loadInt("btnDeadlineIsNear_minute", 30)
+                    }
+                }
+            }
+        }
+        return super.onStartCommand(intent, flags, startId)
+    }
+
+    @ExperimentalTime
+    fun getRights() {
         db
             .collectionGroup("groups")
             .whereArrayContains("users", uid)
             .get()
             .addOnSuccessListener { querySnapshot ->
 
-                Log.d("Service", "GROUPS: ${querySnapshot.documents.size}")
+                Log.d(TAG, "GROUPS: ${querySnapshot.documents.size}")
 
                 var index = 0
                 querySnapshot.documents.forEach {   // записываем группы в пользователя
@@ -83,33 +102,61 @@ class NotificationsMain : Service(), CoroutineScope {
 
                 getTimetables()
                 setNotification_NewTask()
-                launch{ await_day_setNotification_DeadlineIsNear(notify_hour_deadline, notify_min_deadline) }
+                setNotification_DeadlineIsNear()
 
             }
     }
 
     @ExperimentalTime
+    private fun setNotification_DeadlineIsNear() {
+
+        val data = Data
+            .Builder()
+            .putString("uid", uid)
+            .build()
+
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+
+        val calendar = Calendar.getInstance(TimeZone.getDefault())
+        val nowh = calendar.get(HOUR_OF_DAY)
+        val nowm = calendar.get(MINUTE)
+
+        WorkManager.getInstance().cancelAllWorkByTag("notificationDeadline")
+
+        val notificationDeadline = PeriodicWorkRequest.Builder(NotifyDeadlineWorker::class.java, 1438, TimeUnit.MINUTES, 1442, TimeUnit.MINUTES)
+            .setInitialDelay(java.time.Duration.ofMinutes(abs(nowh - notify_hour_deadline).toLong() + abs(nowm - notify_min_deadline).toLong()))
+            .setInputData(data)
+            .addTag("notificationDeadline")
+            .setConstraints(constraints)
+            .build()
+
+        WorkManager.getInstance().enqueueUniquePeriodicWork("notificationDeadline", ExistingPeriodicWorkPolicy.KEEP, notificationDeadline)
+    }
+
+    @ExperimentalTime
     private fun getTimetables() {
-        user.getGroupByType("school").id !!
+        user.getGroupByType("school").id!!
         db.collection("lessonstime")
             .document("LxTrsAIg81E96zMSg0SL")
             .get()
             .addOnSuccessListener { lesson_time -> // расписание звонков
                 db.collection("lessonsgroups")
-                    .document(user.getGroupByType("school").id !!) // NPE
+                    .document(user.getGroupByType("school").id!!) // NPE
                     .collection("lessons")
-                    .whereEqualTo("class", user.getGroupByType("class").id !!) // хдета тут проблема
+                    .whereEqualTo("class", user.getGroupByType("class").id!!) // хдета тут проблема
                     .get()
                     .addOnSuccessListener { lesson_query -> // получаем всё расписание на все дни
                         lesson_query.forEach { // проходимся по каждому документу
                             val lesson = it // получаем текущий документ
                             var error = 0
                             repeat(
-                                lesson.getLong("lessonsCount") !!
+                                lesson.getLong("lessonsCount")!!
                                     .toInt()
                             ) { loop -> // проходимся по списку уроков в дне
                                 val loopindex: Int = loop + 1 // получаем не 0-based индекс
-                                var offset = lesson.getLong("timeOffset") !!
+                                var offset = lesson.getLong("timeOffset")!!
                                 when (lesson.get("${loopindex}_parent")) {
                                     null -> {
                                         offset -= error
@@ -124,7 +171,7 @@ class NotificationsMain : Service(), CoroutineScope {
                                         )
                                     }
                                     else -> {
-                                        if (lesson.getBoolean("${loopindex}_parent") !!) {
+                                        if (lesson.getBoolean("${loopindex}_parent")!!) {
                                             offset -= error
                                             list_lessons.add(
                                                 Lesson( // добавляем урок в массив
@@ -140,8 +187,8 @@ class NotificationsMain : Service(), CoroutineScope {
                                             offset -= error
                                             list_lessons.add(
                                                 Lesson( // добавляем урок в массив
-                                                    cab = lesson.getLong("${loopindex}_cab") !!, // кабинет
-                                                    name = lesson.getString("${loopindex}_name") !!, // название предмета (пример Математика)
+                                                    cab = lesson.getLong("${loopindex}_cab")!!, // кабинет
+                                                    name = lesson.getString("${loopindex}_name")!!, // название предмета (пример Математика)
                                                     startAt = lesson_time.getString("${loopindex + offset}_startAt") !!, // время начала урока 09:15, например
                                                     endAt = lesson_time.getString("${loopindex + offset}_endAt") !!, // время конца урока
                                                     day = lesson.getLong("day") !! // номер дня в неделе, ПН=1, СБ=6
@@ -164,7 +211,7 @@ class NotificationsMain : Service(), CoroutineScope {
             .whereEqualTo("class", user.getGroupByType("class").id)
             .whereNotEqualTo("complete", uid)
             .addSnapshotListener { value, error ->
-                Log.e("Service", "startNotify: ${value !!.documents.size}")
+                Log.e(TAG, "startNotify: ${value !!.documents.size}")
                 value.documentChanges.forEach {
                     if (it.type == DocumentChange.Type.ADDED && it.document.getString("owner") != uid) {
                         notify_NewTask("Новое Д/з!",
@@ -182,7 +229,7 @@ class NotificationsMain : Service(), CoroutineScope {
                 }
             }
     }
-    private fun notify_NewTask(title: String, text: String, bigText: String, icon: Int, priority: Int, id: Int, channelId: String, uid: String, docUid: String, ) {
+    private fun notify_NewTask(title: String, text: String, bigText: String, icon: Int, priority: Int, id: Int, channelId: String, uid: String, docUid: String) {
 
         val contentIntent = Intent(this, MainActivity::class.java)
         val contentAction = PendingIntent.getActivity(this, 0, contentIntent, 0)
@@ -201,71 +248,6 @@ class NotificationsMain : Service(), CoroutineScope {
             .setPriority(priority)
             .addAction(R.drawable.ic_ok_img, "Выполнено", buttonAction)
             .setContentIntent(contentAction)
-
-        val notificationChannel =
-            NotificationChannel(channelId, channelId, priority)
-        NotificationManagerCompat.from(this).createNotificationChannel(notificationChannel)
-
-        with(NotificationManagerCompat.from(this)) {
-            this.notify(id, builder.build()) // посылаем уведомление
-        }
-    }
-
-    @ExperimentalTime
-    private suspend fun await_day_setNotification_DeadlineIsNear(h: Int, m: Int) {
-        val c = getInstance(TimeZone.getDefault())
-        if ((c.get(DAY_OF_WEEK)-1) != 7 && c.get(HOUR_OF_DAY) == h && c.get(MINUTE) == m) {
-            setNotification_DeadlineIsNear()
-            delay(Duration.hours(23.5))
-            await_day_setNotification_DeadlineIsNear(notify_hour_deadline, notify_min_deadline)
-        } else {
-            delay(Duration.seconds(1))
-            await_day_setNotification_DeadlineIsNear(notify_hour_deadline, notify_min_deadline)
-        }
-    }
-
-    private fun setNotification_DeadlineIsNear() {
-        db.collection("6tasks")
-            .whereEqualTo("school", user.getGroupByType("school").id)
-            .whereEqualTo("class", user.getGroupByType("class").id)
-            .whereNotEqualTo("complete", uid)
-            .orderBy("complete")
-            .orderBy("deadline", Query.Direction.ASCENDING)
-            .get()
-            .addOnSuccessListener { query ->
-                val docs: ArrayList<DocumentSnapshot> = ArrayList()
-                query.documents.forEach {
-                    if (getDeadlineInDays(it.getTimestamp("deadline")) == 1.0) {
-                        docs.add(it)
-                    }
-                }
-                if (docs.size > 0) {
-                    var text = ""
-                    docs.forEach {
-                        text += ("\n${it.getString("subject")}, ")
-                    }
-                    text.substring(text.length - 2, text.length)
-                    notify_DeadlineIsNear("Д/з на завтра",
-                        "Не сделаны Д/з по предметам: $text",
-                        R.drawable.ic_clock,
-                        NotificationManager.IMPORTANCE_HIGH,
-                        3,
-                        DEADLINE)
-                }
-            }
-    }
-    private fun notify_DeadlineIsNear(title: String, text: String, icon: Int, priority: Int, id: Int, channelId: String, ) {
-        val contentIntent = Intent(this, MainActivity::class.java)
-        val contentAction = PendingIntent.getActivity(this, 0, contentIntent, 0)
-
-        val builder = NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(icon)
-            .setContentTitle(title)
-            .setContentText(text)
-            .setAutoCancel(true)
-            .setPriority(priority)
-            .setContentIntent(contentAction)
-            .setStyle(NotificationCompat.BigTextStyle().bigText(text))
 
         val notificationChannel =
             NotificationChannel(channelId, channelId, priority)
@@ -298,16 +280,16 @@ class NotificationsMain : Service(), CoroutineScope {
                         )
                     }
                 }
-                Log.d("Service", "setNotification_NextLesson: check ${it.day}")
+                Log.d(TAG, "setNotification_NextLesson: check ${it.day}")
             }
             index ++
         }
         index = 0
         delay(Duration.seconds(30))
-        Log.d("Service", "setNotification_NextLesson: checkNearLesson")
+        Log.d(TAG, "setNotification_NextLesson: checkNearLesson")
         setNotification_NextLesson()
     }
-    private fun notify_NextLesson(title: String, text: String, icon: Int, priority: Int, id: Int, channelId: String, ) {
+    private fun notify_NextLesson(title: String, text: String, icon: Int, priority: Int, id: Int, channelId: String) {
 
         val builder = NotificationCompat.Builder(this, channelId)
             .setSmallIcon(icon)
@@ -334,9 +316,14 @@ class NotificationsMain : Service(), CoroutineScope {
         return ceil(((timestamp !!.seconds.toDouble()) - System.currentTimeMillis() / 1000) / 86400)
     }
 
+    fun loadInt(key: String, defValue: Int): Int {
+        val sPref = getSharedPreferences("uid", MODE_PRIVATE)
+        return sPref.getInt(key , defValue)
+    }
+
     override fun onDestroy() {
         super.onDestroy()
-        Log.e("Service", "onDestroy: service destroyed")
+        Log.e(TAG, "onDestroy: service destroyed")
     }
 
 }

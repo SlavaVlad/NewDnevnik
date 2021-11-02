@@ -1,9 +1,10 @@
 <resources>
-    <string name="app_name">Дневник</string>
+    <string name="app_name">Твой Дневник</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
-    <string name="nav_header_title">Мой дневник</string>
-    <string name="nav_header_subtitle" translatable="false">Well, Keep it simple</string>
+    <string name="nav_header_title">Твой дневник</string>
+    <!-- <string name="nav_header_subtitle" translatable="false">Well, Keep it simple</string> -->
+    <string name="nav_header_subtitle" translatable="false">©Владимиров Владислав</string>
     <string name="nav_header_desc">Navigation header</string>
     <string name="action_settings">Настройки</string>
 
@@ -32,5 +33,13 @@
         <item>▲</item>
         <item>▼</item>
     </string-array>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <string name="edit">Изменить</string>
+    <string name="delete">Удалить</string>
+    <string name="view">Просмотреть</string>
+
+    <string name="tasksVersion">6tasks</string>
 
 </resources>

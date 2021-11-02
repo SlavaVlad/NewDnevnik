@@ -1,41 +1,25 @@
 package well.keepitsimple.dnevnik.ui.tasks
 
-import android.content.ContentProvider
-import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import androidx.core.content.ContentProviderCompat.requireContext
-import androidx.core.content.res.ResourcesCompat.getColor
-import androidx.core.graphics.toColor
 import androidx.recyclerview.widget.RecyclerView
-import com.google.firebase.firestore.DocumentSnapshot
 import well.keepitsimple.dnevnik.R
-import androidx.recyclerview.widget.ItemTouchHelper.Callback.makeMovementFlags
 
-import androidx.recyclerview.widget.ItemTouchHelper
-
-class TasksRecyclerAdapter(private val tasks: ArrayList<Task>) :
+class TasksRecyclerAdapter(private val tasks: ArrayList<Task>, private val onClickListener: TaskOnClickListener, private val onLongClickListener: TaskOnLongClickListener) :
     RecyclerView.Adapter<TasksRecyclerAdapter.TaskHolder>() {
 
-    val docs = mutableMapOf<View, DocumentSnapshot>()
+    class TaskHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val subject = itemView.findViewById<TextView>(R.id.subject)
+        val deadline = itemView.findViewById<TextView>(R.id.deadline)
+        val text = itemView.findViewById<TextView>(R.id.text)
+        val type = itemView.findViewById<TextView>(R.id.type)
 
-    inner class TaskHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        var subject = itemView.findViewById<TextView>(R.id.subject)
-        var deadline = itemView.findViewById<TextView>(R.id.deadline)
-        var text = itemView.findViewById<TextView>(R.id.text)
-        var type = itemView.findViewById<TextView>(R.id.type)
-    }
-
-    fun onItemDismiss(position: Int) {
-        tasks.removeAt(position)
-        notifyItemRemoved(position)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TaskHolder {
-        val itemView =
-            LayoutInflater.from(parent.context).inflate(R.layout.task_item, parent, false)
+        val itemView = LayoutInflater.from(parent.context).inflate(R.layout.task_item, parent, false)
         return TaskHolder(itemView)
     }
 
@@ -56,17 +40,29 @@ class TasksRecyclerAdapter(private val tasks: ArrayList<Task>) :
             }
             else -> { // deadline > 1 -> Сдача через Н дней
                 h.deadline.text = ((t.deadline).toInt().toString() + " дн.")
-                //h.deadline.setTextColor(context.getColor(R.color.design_default_color_secondary))
+                //h.deadline.setTextColor(getColor(R.color.design_default_color_secondary))
             }
         }
 
-        docs[h.itemView] = t.doc
+        h.itemView.setOnClickListener {
+            val a = tasks[position].doc
+            a
+            onClickListener.onClick(tasks[position].doc)
+        }
+
+        h.itemView.setOnLongClickListener {
+            onLongClickListener.onLongClick(tasks[position].doc.id)
+            true
+        }
 
     }
 
     override fun getItemCount() = tasks.size
 
-    fun getItemDocument(v: View): DocumentSnapshot? {
-        return docs[v]
+
+
+    interface OnItemClickListener{
+        fun onItemClicked(user: Task)
     }
+
 }
