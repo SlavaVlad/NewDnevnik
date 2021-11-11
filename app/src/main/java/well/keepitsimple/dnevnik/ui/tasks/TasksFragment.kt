@@ -7,7 +7,10 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.*
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
+import android.widget.AutoCompleteTextView
+import android.widget.ProgressBar
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
@@ -28,6 +31,7 @@ import kotlinx.coroutines.*
 import well.keepitsimple.dnevnik.DAY_S
 import well.keepitsimple.dnevnik.MainActivity
 import well.keepitsimple.dnevnik.R
+import well.keepitsimple.dnevnik.login.Rights
 import kotlin.collections.set
 import kotlin.coroutines.CoroutineContext
 import kotlin.math.ceil
@@ -57,7 +61,9 @@ class TasksFragment : Fragment(), CoroutineScope {
 
     lateinit var btnCreateHomework: FloatingActionButton
 
-    var act: MainActivity? = null
+    val act: MainActivity by lazy {
+        requireActivity() as MainActivity
+    }
 
     lateinit var ctx: Activity
 
@@ -65,13 +71,13 @@ class TasksFragment : Fragment(), CoroutineScope {
 
     override fun onAttach(activity: Activity) {
         super.onAttach(activity)
-
         ctx = activity
-
     }
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?,
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?,
     ): View? {
 
         val view = inflater.inflate(R.layout.fragment_tasks, container, false)
@@ -83,26 +89,36 @@ class TasksFragment : Fragment(), CoroutineScope {
         btnCreateHomework = view.findViewById(R.id.fabAddHomework_tasks)
         pb = view.findViewById(R.id.pbLoading_tasks)
 
-        btnCreateHomework.setOnClickListener {
-            val bundle = Bundle()
-            bundle.putBoolean("edit", false)
-            bundle.putString("user", act !!.uid)
-            val fragment: Fragment = CreateHomework()
-            fragment.arguments = bundle
-            val trans: FragmentTransaction = requireFragmentManager()
-                .beginTransaction()
-                .setTransition(TRANSIT_FRAGMENT_OPEN)
-                .addToBackStack(null)
-            trans.replace(R.id.nav_host_fragment_content_main, fragment)
-            trans.commit()
-        }
-
-        act = activity as MainActivity
-
         setFilters(etSortBy_tasks, etSortType_tasks)
 
+        btnCreateHomework.setOnClickListener {
+            launch {
+                if (act.isTimetablesComplete) {
+                    val fragment: Fragment = CreateHomework()
+                    val trans: FragmentTransaction = requireFragmentManager()
+                        .beginTransaction()
+                        .setTransition(TRANSIT_FRAGMENT_OPEN)
+                        .addToBackStack(null)
+                    trans.replace(R.id.nav_host_fragment_content_main, fragment)
+                    trans.commit()
+                } else {
+                    while (! act.isTimetablesComplete) {
+                        delay(10)
+                        if (act.isTimetablesComplete) {
+                            Log.d("TEST", "SetUI")
+                            val fragment: Fragment = CreateHomework()
+                            val trans: FragmentTransaction = requireFragmentManager()
+                                .beginTransaction()
+                                .setTransition(TRANSIT_FRAGMENT_OPEN)
+                                .addToBackStack(null)
+                            trans.replace(R.id.nav_host_fragment_content_main, fragment)
+                            trans.commit()
+                        }
+                    }
+                }
+            }
+        }
         return view
-
     }
 
     override fun onStart() {
@@ -110,23 +126,26 @@ class TasksFragment : Fragment(), CoroutineScope {
 
         launch {
             Log.d("TEST", "Launch coroutine")
-            if (act !!.user.getAllPermissions() != ArrayList<String>()) {
+            if (act.user.getAllPermissions() != ArrayList<String>()) {
                 Log.d("TEST", "SetUI")
-                setUIFromPermissions(act !!.user.getAllPermissions())
+                setUIFromPermissions()
             } else {
-                while (act !!.user.getAllPermissions() == ArrayList<String>()) {
-                    delay(10)
-                    if (act !!.user.getAllPermissions() != ArrayList<String>()) {
+                while (act.user.getAllPermissions() == ArrayList<String>()) {
+                    delay(50)
+                    if (act.user.getAllPermissions() != ArrayList<String>()) {
                         Log.d("TEST", "SetUI")
-                        setUIFromPermissions(act !!.user.getAllPermissions())
+                        act.user = act.user
+                        setUIFromPermissions()
                     }
                 }
             }
         }
-
     }
 
-    private fun setFilters(etSortBy_tasks: AutoCompleteTextView, etSortType_tasks: AutoCompleteTextView) {
+    private fun setFilters(
+        etSortBy_tasks: AutoCompleteTextView,
+        etSortType_tasks: AutoCompleteTextView,
+    ) {
 
         // фильтры 1 ===============================================================================
         val SortBy = resources.getStringArray(R.array.sortBy)
@@ -135,98 +154,119 @@ class TasksFragment : Fragment(), CoroutineScope {
         )
         etSortBy_tasks.setAdapter(adapterBy)
         // Обработчик щелчка
-        etSortBy_tasks.onItemClickListener = AdapterView.OnItemClickListener { parent, _, position, id ->
-            val selectedItem = parent.getItemAtPosition(position).toString()
-            val direction = when (etSortType_tasks.text.toString()) {
-                "▲" -> {
-                    Query.Direction.ASCENDING
+        etSortBy_tasks.onItemClickListener =
+            AdapterView.OnItemClickListener { parent, _, position, id ->
+                val selectedItem = parent.getItemAtPosition(position).toString()
+                val direction = when (etSortType_tasks.text.toString()) {
+                    "▲" -> {
+                        Query.Direction.ASCENDING
+                    }
+                    else -> {
+                        Query.Direction.DESCENDING
+                    }
                 }
-                else -> {
-                    Query.Direction.DESCENDING
-                }
+                // Выводим выбранное слово
+                getTasksWithFilters(selectedItem, direction)
             }
-            // Выводим выбранное слово
-            getTasksWithFilters(selectedItem, direction)
-        }
         // конец фильтров 1 ========================================================================
 
         // фильтры 2 ===============================================================================
         val SortType = resources.getStringArray(R.array.sortType)
         val adapterType = ArrayAdapter(
-            requireContext().applicationContext, android.R.layout.simple_dropdown_item_1line, SortType
+            requireContext().applicationContext,
+            android.R.layout.simple_dropdown_item_1line,
+            SortType
         )
         etSortType_tasks.setAdapter(adapterType)
         // Обработчик щелчка
-        etSortType_tasks.onItemClickListener = AdapterView.OnItemClickListener { parent, _, position, id ->
-            val selectedItem = parent.getItemAtPosition(position).toString()
-            // Выводим выбранное слово
-            when (selectedItem) {
-                "▲" -> {
-                    getTasksWithFilters(etSortBy_tasks.text.toString(), Query.Direction.DESCENDING)
-                }
-                "▼" -> {
-                    getTasksWithFilters(etSortBy_tasks.text.toString(), Query.Direction.ASCENDING)
+        etSortType_tasks.onItemClickListener =
+            AdapterView.OnItemClickListener { parent, _, position, id ->
+                val selectedItem = parent.getItemAtPosition(position).toString()
+                // Выводим выбранное слово
+                when (selectedItem) {
+                    "▲" -> {
+                        getTasksWithFilters(
+                            etSortBy_tasks.text.toString(),
+                            Query.Direction.DESCENDING
+                        )
+                    }
+                    "▼" -> {
+                        getTasksWithFilters(
+                            etSortBy_tasks.text.toString(),
+                            Query.Direction.ASCENDING
+                        )
+                    }
                 }
             }
-        }
         // конец фильтров 2 ========================================================================
     }
 
-    private fun setUIFromPermissions(perms: ArrayList<String>) {
-        btnCreateHomework.isVisible = perms.contains("docCreate")
-        if (perms.contains("docView")) {
+    private fun setUIFromPermissions() {
+        btnCreateHomework.isVisible = true
+        if (act.user.isAllowedInGroup(Rights.Doc.CREATE.r, act.user.getGroupByType("class"))) {
             getTasks()
         }
     }
 
-    private fun getTasksWithFilters(sortBy: String, direction: Query.Direction){
+    private fun getTasksWithFilters(sortBy: String, direction: Query.Direction) {
 
-        var docRef = db.collection(resources.getString(R.string.tasksVersion))
-            .whereEqualTo("school", act!!.user.getGroupByType("school").id)
-            .whereEqualTo("class", act!!.user.getGroupByType("class").id)
-            .whereNotEqualTo("complete", act!!.uid!!)
-            .orderBy("complete")
+        if (act.isTimetablesComplete) {
 
-        when (sortBy){
-            "Дедлайн" -> { docRef = docRef.orderBy("deadline", direction) }
-            "Предмет" -> { docRef = docRef.orderBy("subject", direction) }
-            "Тип" ->     { docRef = docRef.orderBy("type", direction) }
-        }
+            var docRef = db.collection("groups")
+                .document(act.user.getGroupByType("school").id !!)
+                .collection("groups")
+                .document(act.user.getGroupByType("class").id !!)
+                .collection("tasks")
+                .whereNotEqualTo("completed", act.uid)
+                .orderBy("completed")
 
-        docRef.get().addOnSuccessListener { querySnapshot ->
-            querySnapshot.documents
-            tasks.clear()
-            Log.d("TEST", "getTasksWithFilters: success")
-            querySnapshot.forEach { doc -> // проходим по каждому документу
-                if (getDeadlineInDays(doc.getTimestamp("deadline")!!) >= 0) {
-                    tasks.add(Task((getDeadlineInDays(doc.getTimestamp("deadline")!!)), doc))
+            when (sortBy) {
+                "Дедлайн" -> {
+                    docRef = docRef.orderBy("deadline", direction)
+                }
+                "Предмет" -> {
+                    docRef = docRef.orderBy("subject", direction)
+                }
+                "Тип" -> {
+                    docRef = docRef.orderBy("type", direction)
                 }
             }
-            setList(tasks)
-        }.addOnFailureListener {
-            act!!.alert("Ошибка запроса", "Ошибка: ${it.message}", "getTasks()")
-        }
 
-    }
-
-    private fun getTasks() {
-        tasks.clear()
-        db.collection(resources.getString(R.string.tasksVersion))
-            .whereEqualTo("school", act!!.user.getGroupByType("school").id)
-            .whereEqualTo("class", act!!.user.getGroupByType("class").id)
-            .whereNotEqualTo("complete", act!!.uid!!)
-            .orderBy("complete")
-            .orderBy("deadline", Query.Direction.ASCENDING)
-            .get()
-            .addOnSuccessListener { querySnapshot ->
-                querySnapshot.forEach { doc -> // проходим по каждому документу
-                    if (getDeadlineInDays(doc.getTimestamp("deadline")!!) >= 0) {
-                        tasks.add(Task((getDeadlineInDays(doc.getTimestamp("deadline")!!)), doc))
+            docRef.get().addOnSuccessListener { querySnapshot ->
+                tasks.clear()
+                Log.d("TEST", "getTasksWithFilters: success")
+                querySnapshot.forEach { doc ->
+                    if (getDeadlineInDays(doc.getTimestamp("deadline") !!) >= 0) {
+                        tasks.add(Task((getDeadlineInDays(doc.getTimestamp("deadline") !!)), doc))
                     }
                 }
                 setList(tasks)
             }.addOnFailureListener {
-                act!!.alert("Ошибка запроса", "Ошибка: ${it.message}", "getTasks()")
+                act.alert("Ошибка запроса", it.message.toString(), "getTasks()")
+            }
+        }
+    }
+
+    private fun getTasks() {
+        tasks.clear()
+        db.collection("groups")
+            .document(act.user.getGroupByType("school").id !!)
+            .collection("groups")
+            .document(act.user.getGroupByType("class").id !!)
+            .collection("tasks")
+            .whereNotEqualTo("completed", act.user.uid)
+            .orderBy("completed")
+            .orderBy("deadline", Query.Direction.ASCENDING)
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                querySnapshot.documents.forEach { doc -> // проходим по каждому документу
+                    if (getDeadlineInDays(doc.getTimestamp("deadline") !!) >= 0) {
+                        tasks.add(Task((getDeadlineInDays(doc.getTimestamp("deadline") !!)), doc))
+                    }
+                }
+                setList(tasks)
+            }.addOnFailureListener {
+                act.alert("Ошибка запроса", "Ошибка: ${it.message}", "getTasks()")
             }
     }
 
@@ -235,51 +275,40 @@ class TasksFragment : Fragment(), CoroutineScope {
     }
 
     private fun setList(list: ArrayList<Task>) {
+        val adapter = TasksRecyclerAdapter(
+            list,
+            object : TaskOnClickListener {
+                override fun onClick(doc: DocumentSnapshot) {
+                    val fragment = ViewHomework()
+                    val trans: FragmentTransaction = requireFragmentManager()
+                        .beginTransaction()
+                        .setTransition(TRANSIT_FRAGMENT_OPEN)
+                        .addToBackStack(null)
+                    trans.replace(R.id.nav_host_fragment_content_main, fragment)
+                    trans.commit()
+                }
+            },
+            object : TaskOnLongClickListener {
+                override fun onLongClick(doc: DocumentSnapshot) {
 
-        val adapter = TasksRecyclerAdapter(list, object : TaskOnClickListener{
-            override fun onClick(doc: DocumentSnapshot) {
-                val bundle = Bundle()
-                val fragment = ViewHomework()
+                    act.toEdit = doc
+                    val bundle = Bundle()
+                    val fragment = EditHomework()
+                    fragment.arguments = bundle
+                    val trans: FragmentTransaction = requireFragmentManager()
+                        .beginTransaction()
+                        .setTransition(TRANSIT_FRAGMENT_OPEN)
+                        .addToBackStack(null)
 
-                bundle.putString("subject", doc.getString("subject"))
-                bundle.putString("text", doc.getString("text"))
-                bundle.putString("type", doc.getString("type"))
-                bundle.putString("deadline", "${getDeadlineInDays(doc.getTimestamp("deadline")!!)} дн.")
-
-                //bundle.putString("user", act!!.user.uid)
-
-                fragment.arguments = bundle
-                val trans: FragmentTransaction = requireFragmentManager()
-                    .beginTransaction()
-                    .setTransition(TRANSIT_FRAGMENT_OPEN)
-                    .addToBackStack(null)
-
-                trans.replace(R.id.nav_host_fragment_content_main, fragment)
-                trans.commit()
+                    trans.replace(R.id.nav_host_fragment_content_main, fragment)
+                    trans.commit()
+                }
             }
-        }, object : TaskOnLongClickListener {
-            override fun onLongClick(docId: String) {
-                val bundle = Bundle()
-                val fragment = CreateHomework()
-                bundle.putBoolean("edit", true)
-                bundle.putString("doc_id", docId)
-                bundle.putString("user", act!!.user.uid)
+        )
 
-                fragment.arguments = bundle
-                val trans: FragmentTransaction = requireFragmentManager()
-                    .beginTransaction()
-                    .setTransition(TRANSIT_FRAGMENT_OPEN)
-                    .addToBackStack(null)
-
-                trans.replace(R.id.nav_host_fragment_content_main, fragment)
-                trans.commit()
-            }
-        })
-
-        rv_tasks.layoutManager = LinearLayoutManager(requireContext().applicationContext)
+        rv_tasks.layoutManager = LinearLayoutManager(requireActivity())
         rv_tasks.adapter = adapter
 
-        var hwToUndoDelete: Task
         var hwToUndoComplete: Task
 
         val simpleCallback: ItemTouchHelper.SimpleCallback = object :
@@ -298,135 +327,182 @@ class TasksFragment : Fragment(), CoroutineScope {
                 val position = viewHolder.bindingAdapterPosition
 
                 when (direction) {
-                    
+
                     ItemTouchHelper.LEFT -> {
-                        val builder = AlertDialog.Builder(activity!!)
+                        val builder = AlertDialog.Builder(requireActivity())
                         builder
-                            .setTitle("Вы уверены?")
-                            .setMessage("Удалить задание по предмету ${list[position].doc.getString("subject")}?")
+                            .setTitle("Это действие невозможно отменить!")
+                            .setMessage(
+                                "Удалить задание по предмету ${
+                                list[position].doc.getString("subject")
+                                }?"
+                            )
                             .setCancelable(false)
                             .setPositiveButton("Удалить") { dialog, id ->
-                                hwToUndoDelete = list[position]
                                 hwDelete(list, position, adapter)
-                                Snackbar.make(rv_tasks, "Удалено задание ${list[position].doc.getString("text")!!}", Snackbar.LENGTH_LONG)
-                                    .setAction("Undo") {
-                                        hwUndoDelete(list, position, adapter, hwToUndoDelete)
-                                    }.show()
+                                Snackbar.make(
+                                    rv_tasks,
+                                    "Удалено ${list[position].doc.getString("text") !!}",
+                                    Snackbar.LENGTH_LONG
+                                )
+                                    .show()
                             }
-                            .setNegativeButton("Не удалять"){ dialog, id ->
+                            .setNegativeButton("Не удалять") { dialog, id ->
+                                adapter.notifyItemChanged(position)
+                            }
+                            .setOnDismissListener {
                                 adapter.notifyItemChanged(position)
                             }
                             .show()
                     }
-                    
+
                     ItemTouchHelper.RIGHT -> {
                         hwToUndoComplete = list[position]
                         hwComplete(list, position, adapter)
-                        Snackbar.make(rv_tasks, "Выполнено задание ${list[position].doc.getString("text")!!}", Snackbar.LENGTH_LONG)
+                        Snackbar.make(
+                            rv_tasks,
+                            "Выполнено ${list[position].doc.getString("text") !!}",
+                            Snackbar.LENGTH_LONG
+                        )
                             .setAction("Undo") {
                                 hwUndoComplete(list, position, adapter, hwToUndoComplete)
-                            }.show()
+                            }
+                            .show()
                     }
-                    
                 }
             }
 
-            override fun onChildDraw(c: Canvas, recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, dX: Float, dY: Float, actionState: Int, isCurrentlyActive: Boolean) {
-                super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
-                RecyclerViewSwipeDecorator.Builder(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
-
-                    .addSwipeRightBackgroundColor(ContextCompat.getColor(requireContext().applicationContext, R.color.design_default_color_secondary))
+            override fun onChildDraw(
+                c: Canvas,
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                dX: Float,
+                dY: Float,
+                actionState: Int,
+                isCurrentlyActive: Boolean,
+            ) {
+                super.onChildDraw(
+                    c,
+                    recyclerView,
+                    viewHolder,
+                    dX,
+                    dY,
+                    actionState,
+                    isCurrentlyActive
+                )
+                RecyclerViewSwipeDecorator.Builder(
+                    c,
+                    recyclerView,
+                    viewHolder,
+                    dX,
+                    dY,
+                    actionState,
+                    isCurrentlyActive
+                )
+                    .addSwipeRightBackgroundColor(
+                        ContextCompat.getColor(
+                            requireContext().applicationContext,
+                            R.color.design_default_color_secondary
+                        )
+                    )
                     .addSwipeRightActionIcon(R.drawable.ic_check_circle)
                     .setSwipeRightActionIconTint(R.color.design_default_color_secondary)
-
-                    .addSwipeLeftBackgroundColor(ContextCompat.getColor(requireContext().applicationContext, R.color.colorAccent))
+                    .addSwipeLeftBackgroundColor(
+                        ContextCompat.getColor(
+                            requireContext().applicationContext,
+                            R.color.colorAccent
+                        )
+                    )
                     .addSwipeLeftActionIcon(R.drawable.ic_delete)
                     .setSwipeLeftActionIconTint(R.color.design_default_color_error)
-
                     .create()
                     .decorate()
             }
-
         }
 
         val itemTouchHelper = ItemTouchHelper(simpleCallback)
         itemTouchHelper.attachToRecyclerView(rv_tasks)
 
-            pb.visibility = View.GONE
+        pb.visibility = View.GONE
+    }
 
-        }
+    private fun hwUndoComplete(
+        list: ArrayList<Task>,
+        pos: Int,
+        adapter: TasksRecyclerAdapter,
+        undo: Task,
+    ) {
 
-    private fun hwUndoDelete(list: java.util.ArrayList<Task>, pos: Int, adapter: TasksRecyclerAdapter, undo: Task) {
-        db.collection(resources.getString(R.string.tasksVersion))
+        val data = undo.doc.get("completed") as HashMap<String, Any>
+        data.remove(act.uid !!)
+
+        db.collection("groups")
+            .document(act.user.getGroupByType("school").id !!)
+            .collection("groups")
+            .document(act.user.getGroupByType("class").id !!)
+            .collection("tasks")
             .document(undo.doc.id)
-            .update("isDeleted", false)
+            .update("completed", data)
             .addOnSuccessListener {
                 list.add(pos, undo)
                 adapter.notifyItemInserted(pos)
-                if (pos == 0){ rv_tasks.scrollToPosition(0) }
-            }.addOnFailureListener { exception ->
-                act!!.alert("Ошибка запроса", "Не удалось отменить удаление: ${exception.message}", "hwUndoDelete()")
-            }
-    }
-
-    private fun hwUndoComplete(list: ArrayList<Task>, pos: Int, adapter: TasksRecyclerAdapter, undo: Task) {
-        db.collection(resources.getString(R.string.tasksVersion)).document(list[pos].doc.id).get().addOnSuccessListener { refDoc ->
-
-            val data = refDoc.get("complete") as HashMap<String, Any>
-            data.remove(act!!.uid!!)
-
-            db.collection(resources.getString(R.string.tasksVersion)).document(list[pos].doc.id).update("completed", data).addOnSuccessListener {
-                list.add(pos, undo)
-                adapter.notifyItemInserted(pos)
-                if (pos == 0){ rv_tasks.scrollToPosition(0) }
-            }.addOnFailureListener { exception ->
-                act!!.alert("Ошибка запроса", "Не удалось пометить как выполненное: ${exception.message}", "hwComplete()")
-            }
-
-        }
-    }
-
-    private fun hwComplete(list: java.util.ArrayList<Task>, pos: Int, adapter: TasksRecyclerAdapter) {
-
-        db.collection(resources.getString(R.string.tasksVersion)).document(list[pos].doc.id).get().addOnSuccessListener { refDoc ->
-            if (refDoc.contains("completed")) {
-
-                val data = refDoc.get("complete") as HashMap<String, Any>
-                data[act!!.uid!!] = true
-
-                db.collection(resources.getString(R.string.tasksVersion)).document(list[pos].doc.id).update("completed", data).addOnSuccessListener {
-                    list.removeAt(pos)
-                    adapter.notifyItemRemoved(pos)
-                }.addOnFailureListener { exception ->
-                    act!!.alert("Ошибка запроса", "Не удалось пометить как выполненное по причине ${exception.message}", "hwComplete()")
+                if (pos == 0) {
+                    rv_tasks.scrollToPosition(0)
                 }
-
-            } else {
-
-                val data = hashMapOf<String, Any>(
-                    "complete" to hashMapOf<String, Any>(
-                        act!!.uid!! to true
-                    )
+            }.addOnFailureListener { exception ->
+                act.alert(
+                    "Ошибка запроса",
+                    "Не удалось пометить как выполненное: ${exception.message}",
+                    "hwComplete()"
                 )
-
-                db.collection(resources.getString(R.string.tasksVersion)).document(list[pos].doc.id).update(data).addOnSuccessListener {
-                    Toast.makeText(requireContext().applicationContext, "Помечено как выполненное", Toast.LENGTH_SHORT).show()
-                    list.removeAt(pos)
-                    adapter.notifyItemRemoved(pos)
-                }.addOnFailureListener { exception ->
-                    act!!.alert("Ошибка запроса", "Не удалось пометить как выполненное по причине ${exception.message}", "hwComplete()")
-                }
-
             }
-        }
+    }
+
+    private fun hwComplete(
+        list: java.util.ArrayList<Task>,
+        pos: Int,
+        adapter: TasksRecyclerAdapter,
+    ) {
+
+        val data = list[pos].doc.get("completed") as HashMap<String, Any>
+        data[act.uid !!] = true
+
+        db.collection("groups")
+            .document(act.user.getGroupByType("school").id !!)
+            .collection("groups")
+            .document(act.user.getGroupByType("class").id !!)
+            .collection("tasks")
+            .document(list[pos].doc.id)
+            .update("completed", data)
+            .addOnSuccessListener {
+                list.removeAt(pos)
+                adapter.notifyItemRemoved(pos)
+            }.addOnFailureListener { exception ->
+                act.alert(
+                    "Ошибка запроса",
+                    "Не удалось пометить как выполненное по причине ${exception.message}",
+                    "hwComplete()"
+                )
+            }
     }
 
     private fun hwDelete(list: java.util.ArrayList<Task>, pos: Int, adapter: TasksRecyclerAdapter) {
-        db.collection(resources.getString(R.string.tasksVersion)).document(list[pos].doc.id).update("isDeleted", false).addOnSuccessListener {
-            list.removeAt(pos)
-            adapter.notifyItemRemoved(pos)
-        }.addOnFailureListener { exception ->
-            act!!.alert("Ошибка запроса", "Не удалось пометить как выполненное по причине ${exception.message}", "hwDelete()")
-        }
+        db.collection("groups")
+            .document(act.user.getGroupByType("school").id !!)
+            .collection("groups")
+            .document(act.user.getGroupByType("class").id !!)
+            .collection("tasks")
+            .document(list[pos].doc.id)
+            .delete()
+            .addOnSuccessListener {
+                list.removeAt(pos)
+                adapter.notifyItemRemoved(pos)
+            }.addOnFailureListener { exception ->
+                act.alert(
+                    "Ошибка запроса",
+                    "Не удалось пометить как выполненное по причине ${exception.message}",
+                    "hwDelete()"
+                )
+            }
     }
 }

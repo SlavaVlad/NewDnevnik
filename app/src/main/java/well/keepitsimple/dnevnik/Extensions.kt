@@ -1,5 +1,7 @@
 package well.keepitsimple.dnevnik
 
+import android.content.Context
+import com.google.android.material.chip.Chip
 import com.google.firebase.firestore.DocumentSnapshot
 
 fun <E> ArrayList<E>.addUnique(value: E){
@@ -19,10 +21,9 @@ fun DocumentSnapshot.getListOfStrings(field: String): List<String> {
     return this[field] as List<String>
 }
 
-fun List<DocumentSnapshot>.stringToReadableByField(field: String): String {
-    val toReturn: String = ""
-    this.forEach {
-        toReturn.plus("${it.getString(field)}, ")
-    }
-    return toReturn
+fun createCheckableChip(ctx: Context, text: String): Chip {
+    val c = Chip(ctx)
+    c.isCheckable = true
+    c.text = text
+    return c
 }

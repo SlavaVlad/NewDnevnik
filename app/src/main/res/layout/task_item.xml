@@ -20,7 +20,8 @@
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="wrap_content"
+            android:padding="8dp">
 
             <TextView
                 android:id="@+id/subject"
@@ -28,7 +29,7 @@
                 android:layout_height="wrap_content"
                 android:text="Химия"
                 android:textAppearance="@style/TextAppearance.AppCompat.Body2"
-                android:textColor="@color/design_default_color_primary_variant"
+                android:textColor="@color/design_default_color_secondary"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
@@ -37,12 +38,10 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:autoText="false"
                 android:elegantTextHeight="true"
-                android:lines="2"
+                android:lines="1"
                 android:text="Написать 1 отзыв на произведение из списка на лето. Тихий дон лучше)) Либо о герое подробнее, либо об эпизоде. Литературоведческие термины использовать. Не меньше 5. Лучше их подчеркнуть. (Объем А4, либо 2-3 страницы)"
                 android:textAlignment="viewStart"
-                android:textColor="@color/design_default_color_primary_dark"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toStartOf="@+id/btn_menu"
                 app:layout_constraintStart_toStartOf="parent"
@@ -53,6 +52,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="3 дн."
+                android:textColor="@color/design_default_color_secondary"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
@@ -62,7 +62,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="8dp"
                 android:text="Д/з"
-                android:textColor="@color/design_default_color_primary"
+                android:textColor="@color/design_default_color_secondary"
                 app:layout_constraintEnd_toStartOf="@+id/deadline"
                 app:layout_constraintTop_toTopOf="parent" />
 

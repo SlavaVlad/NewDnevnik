@@ -1,12 +1,12 @@
 package well.keepitsimple.dnevnik.ui.groups
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
+import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.chip.Chip
@@ -20,6 +20,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import well.keepitsimple.dnevnik.MainActivity
 import well.keepitsimple.dnevnik.R
+import well.keepitsimple.dnevnik.createCheckableChip
 import well.keepitsimple.dnevnik.getListOfStrings
 import kotlin.coroutines.CoroutineContext
 
@@ -46,7 +47,7 @@ class CreateGroup : Fragment(), CoroutineScope {
     lateinit var et_type: EditText
     var users: Array<MainActivity.User> = emptyArray()
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?,
     ): View? {
 
         val view = inflater.inflate(R.layout.fragment_create_group, container, false)
@@ -64,17 +65,18 @@ class CreateGroup : Fragment(), CoroutineScope {
                     .get()
                     .await()
                     .getListOfStrings("rights")
-            rights.forEach {
-                val c = Chip(act)
-                c.text = it
-                c.isCheckable = true
+            rights.forEach { right ->
+                val c = createCheckableChip(requireContext(), right)
+                val def = c.chipBackgroundColor
+                c.isCheckedIconVisible = false
+                c.chipBackgroundColor = requireContext().getColorStateList(R.color.bg_chip_state_list)
                 cg_rights.addView(c)
             }
         }
 
         addUsers()
 
-        btn_add_group.setOnClickListener{
+        btn_add_group.setOnClickListener {
             val data = HashMap<String, Any>()
 
             data["name"] = et_name.text.toString()
@@ -107,6 +109,6 @@ class CreateGroup : Fragment(), CoroutineScope {
                 }
                 rv_users.layoutManager = LinearLayoutManager(requireContext().applicationContext)
                 rv_users.adapter = UsersAdapter(tmp)
-        }
+            }
     }
 }

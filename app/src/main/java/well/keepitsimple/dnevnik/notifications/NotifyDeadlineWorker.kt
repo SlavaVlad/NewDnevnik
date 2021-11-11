@@ -12,9 +12,10 @@ import androidx.work.Worker
 import androidx.work.WorkerParameters
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.toObject
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import well.keepitsimple.dnevnik.MainActivity
 import well.keepitsimple.dnevnik.R
 import well.keepitsimple.dnevnik.addUnique
@@ -85,10 +86,12 @@ class NotifyDeadlineWorker(context: Context, workerParams: WorkerParameters) :
     }
 
     private fun setNotification_DeadlineIsNear() {
-        db.collection("6tasks")
-            .whereEqualTo("school", user.getGroupByType("school").id)
-            .whereEqualTo("class", user.getGroupByType("class").id)
-            .whereNotEqualTo("complete", user.uid)
+        db.collection("groups")
+            .document(user.getGroupByType("school").id !!)
+            .collection("groups")
+            .document(user.getGroupByType("class").id !!)
+            .collection("tasks")
+            .whereNotEqualTo("completed", user.uid)
             .get()
             .addOnSuccessListener { query ->
 

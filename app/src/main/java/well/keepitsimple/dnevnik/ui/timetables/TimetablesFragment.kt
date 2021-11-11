@@ -18,7 +18,7 @@ import kotlinx.coroutines.Job
 import well.keepitsimple.dnevnik.MainActivity
 import well.keepitsimple.dnevnik.R
 import well.keepitsimple.dnevnik.ui.timetables.lessons.LessonsAdapter
-import java.util.Calendar.*
+import java.util.Calendar.DAY_OF_WEEK
 import kotlin.coroutines.CoroutineContext
 
 const val TAG = "Timetables"
@@ -29,7 +29,9 @@ class TimetablesFragment : Fragment(), CoroutineScope {
     lateinit var tabs: TabLayout
     lateinit var ctx: Activity
     val lessons = ArrayList<Lesson>()
-    var act: MainActivity? = null
+    val act: MainActivity by lazy {
+        requireActivity() as MainActivity
+    }
 
     private var job: Job = Job()
 
@@ -42,15 +44,16 @@ class TimetablesFragment : Fragment(), CoroutineScope {
     }
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?,
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?,
     ): View? {
         val view = inflater.inflate(R.layout.fragment_timetables, container, false)
 
         list = view.findViewById(R.id.list)
         tabs = view.findViewById(R.id.tab)
-        act = activity as MainActivity
 
-        setup(act!!.list_lessons)
+        setup(act.list_lessons)
 
         return view
     }
@@ -62,30 +65,27 @@ class TimetablesFragment : Fragment(), CoroutineScope {
 
     private fun setup(list_lessons: ArrayList<Lesson>) {
 
-        tabs.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener{ // выбрали расписание на другой день
+        tabs.addOnTabSelectedListener(object :
+            TabLayout.OnTabSelectedListener { // выбрали расписание на другой день
             override fun onTabSelected(tab: TabLayout.Tab?) {
-                setList(tab!!.position, list_lessons)
+                setList(tab !!.position, list_lessons)
             }
+
             override fun onTabUnselected(tab: TabLayout.Tab?) {
             }
+
             override fun onTabReselected(tab: TabLayout.Tab?) {
             }
         })
 
         val calendar = Calendar.getInstance(TimeZone.getDefault())
-        val dow = calendar.get(DAY_OF_WEEK) - 2
-        Log.d(TAG, "setup: ${calendar.get(DAY_OF_MONTH)}")
-        Log.d(TAG, "setup: ${calendar.get(DAY_OF_WEEK)}")
-        Log.d(TAG, "setup: ${calendar.get(HOUR_OF_DAY)}")
+        val dow = calendar.get(DAY_OF_WEEK)-1
+        Log.d(TAG, "setup: $dow")
 
         if (dow <= tabs.tabCount) {
-            tabs.selectTab(tabs.getTabAt(dow))
-            setList(tabs.selectedTabPosition, list_lessons)
-        } else {
-            tabs.selectTab(tabs.getTabAt(5))
-            setList(tabs.selectedTabPosition, list_lessons)
+            tabs.selectTab(tabs.getTabAt(dow-1))
+            setList(dow-1, list_lessons)
         }
-
     }
 
     private fun setList(dayOfWeek: Int, lr: ArrayList<Lesson>) {
@@ -93,7 +93,7 @@ class TimetablesFragment : Fragment(), CoroutineScope {
         lessons.clear()
 
         repeat(lr.size) {
-            if (lr[it].day.toInt() == dayOfWeek) {
+            if (lr[it].day.toInt()-1 == dayOfWeek) {
                 lessons.add(lr[it])
             }
         }
@@ -101,6 +101,5 @@ class TimetablesFragment : Fragment(), CoroutineScope {
         val lessonsAdapter = LessonsAdapter(ctx.baseContext, R.layout.lesson_item, lessons)
 
         list.adapter = lessonsAdapter
-
     }
 }

@@ -5,6 +5,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.google.firebase.firestore.DocumentSnapshot
 import well.keepitsimple.dnevnik.R
 
 class TasksRecyclerAdapter(private val tasks: ArrayList<Task>, private val onClickListener: TaskOnClickListener, private val onLongClickListener: TaskOnLongClickListener) :
@@ -15,7 +16,6 @@ class TasksRecyclerAdapter(private val tasks: ArrayList<Task>, private val onCli
         val deadline = itemView.findViewById<TextView>(R.id.deadline)
         val text = itemView.findViewById<TextView>(R.id.text)
         val type = itemView.findViewById<TextView>(R.id.type)
-
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TaskHolder {
@@ -45,13 +45,11 @@ class TasksRecyclerAdapter(private val tasks: ArrayList<Task>, private val onCli
         }
 
         h.itemView.setOnClickListener {
-            val a = tasks[position].doc
-            a
             onClickListener.onClick(tasks[position].doc)
         }
 
         h.itemView.setOnLongClickListener {
-            onLongClickListener.onLongClick(tasks[position].doc.id)
+            onLongClickListener.onLongClick(tasks[position].doc)
             true
         }
 
@@ -59,7 +57,14 @@ class TasksRecyclerAdapter(private val tasks: ArrayList<Task>, private val onCli
 
     override fun getItemCount() = tasks.size
 
-
+    fun getDocument(id: String): DocumentSnapshot? {
+        tasks.forEach {
+            if (it.doc.id == id){
+                return it.doc
+            }
+        }
+        return null
+    }
 
     interface OnItemClickListener{
         fun onItemClicked(user: Task)
