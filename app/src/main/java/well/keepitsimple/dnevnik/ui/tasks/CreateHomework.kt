@@ -21,10 +21,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import well.keepitsimple.dnevnik.MainActivity
-import well.keepitsimple.dnevnik.R
-import well.keepitsimple.dnevnik.addUnique
-import well.keepitsimple.dnevnik.createCheckableChip
+import well.keepitsimple.dnevnik.*
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.set
@@ -73,20 +70,15 @@ class CreateHomework : Fragment(), CoroutineScope {
         et_text = view.findViewById(R.id.et_text)
         calendar = view.findViewById(R.id.calendar)
         calendar.firstDayOfWeek = 2
-
+        calendar.minDate = System.currentTimeMillis() + DAY_S*1000
         btn_complete.setOnClickListener {
             btn_complete.isEnabled = false
             send()
         }
 
-        data["deadline"] = Timestamp.now()
-
         calendar.setOnDateChangeListener { view, y, m, d ->
-            data["deadline"] = Timestamp(Date(y, m+1, d))
-            Toast.makeText(requireContext().applicationContext, "$y  ${m+1}  $d", Toast.LENGTH_SHORT).show()
+            data["deadline"] = Timestamp(Date(y - 1970, m + 1, d))
         }
-        data["deadline"] = Timestamp(Calendar.getInstance(TimeZone.getDefault()).timeInMillis/1000, 0)
-        Toast.makeText(requireContext().applicationContext, data["deadline"].toString(), Toast.LENGTH_SHORT).show()
 
 
         loadAllChips()
@@ -98,7 +90,16 @@ class CreateHomework : Fragment(), CoroutineScope {
                 textLength = s.length
             }
         })
+
+        var x = true
         return view
+    }
+
+    private fun setDate(mills: Long) {
+        calendar.date = mills
+        data["deadline"] = Timestamp(Date(calendar.date / 1000))
+        val debug = data["deadline"] as Timestamp
+        Toast.makeText(requireContext(), debug.toString(), Toast.LENGTH_SHORT).show()
     }
 
     private fun check(): Boolean {
@@ -132,7 +133,7 @@ class CreateHomework : Fragment(), CoroutineScope {
         val uniqueLessons = ArrayList<String>()
 
         act.list_lessons.forEach { lesson ->
-            if (lesson.day.toInt() == sysCalendar.get(Calendar.DAY_OF_WEEK) && ! uniqueLessons.contains(
+            if (lesson.day.toInt() == sysCalendar.get(Calendar.DAY_OF_WEEK) - 1 && ! uniqueLessons.contains(
                     lesson.name
                 )
             ) {
@@ -140,7 +141,7 @@ class CreateHomework : Fragment(), CoroutineScope {
                 cg_subjects.addView(c)
                 c.setOnClickListener { v ->
                     val cc = v as Chip
-                    calendar.date = act.getNextLesson(cc.text.toString()) * 1000
+                    setDate(act.getNextLesson(cc.text.toString()) * 1000)
                 }
                 uniqueLessons.add(lesson.name)
             }
@@ -168,14 +169,14 @@ class CreateHomework : Fragment(), CoroutineScope {
             cg_subjects.addView(c)
             c.setOnClickListener {
                 val cc = it as Chip
-                calendar.date =
-                    act.getNextLesson(cc.text.toString()) * 1000
+                setDate(act.getNextLesson(cc.text.toString()) * 1000)
             }
         }
     }
 
     private fun send() {
         if (check()) {
+
             data["text"] = et_text.text.toString()
             data["subject"] =
                 requireView().findViewById<Chip>(cg_subjects.checkedChipId).text.toString()
@@ -183,43 +184,35 @@ class CreateHomework : Fragment(), CoroutineScope {
             data["completed"] = emptyMap<String, Any>()
             data["owner"] = act.user.uid !!
 
-            if (Date(calendar.date).day != Calendar.getInstance(TimeZone.getDefault())
-                    .get(Calendar.DAY_OF_WEEK)
-            ) {
-
-                data["deadline"] = Timestamp(Date(calendar.date))
-
-                db.collection("groups")
-                    .document(act.user.getGroupByType("school").id !!)
-                    .collection("groups")
-                    .document(act.user.getGroupByType("class").id !!)
-                    .collection("tasks")
-                    .document()
-                    .set(data)
-                    .addOnSuccessListener {
-                        val trans: FragmentTransaction = requireFragmentManager()
-                            .beginTransaction()
-                            .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_CLOSE)
-                            .addToBackStack(null)
-                        trans.replace(R.id.nav_host_fragment_content_main, TasksFragment())
-                        trans.commit()
-                        Snackbar.make(requireView(),
-                            "Задание создано успешно",
-                            Snackbar.LENGTH_LONG).show()
-                    }
-                    .addOnFailureListener {
-                        btn_complete.isEnabled = true
-                        Toast.makeText(context, "Ошибка", Toast.LENGTH_SHORT).show()
-                        Log.e(TAG, "send: $it")
-                    }
-            } else {
-                act.alert("Ошибка даты",
-                    "Задание не может быть задано на сегодняшний день",
-                    "send()")
-                btn_complete.isEnabled = true
-            }
+            db.collection("groups")
+                .document(act.user.getGroupByType("school").id !!)
+                .collection("groups")
+                .document(act.user.getGroupByType("class").id !!)
+                .collection("tasks")
+                .document()
+                .set(data)
+                .addOnSuccessListener {
+                    val trans: FragmentTransaction = requireFragmentManager()
+                        .beginTransaction()
+                        .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_CLOSE)
+                        .addToBackStack(null)
+                    trans.replace(R.id.nav_host_fragment_content_main, TasksFragment())
+                    trans.commit()
+                    Snackbar.make(requireView(),
+                        "Задание создано успешно",
+                        Snackbar.LENGTH_LONG).show()
+                }
+                .addOnFailureListener {
+                    btn_complete.isEnabled = true
+                    Toast.makeText(context, "Ошибка", Toast.LENGTH_SHORT).show()
+                    Log.e(TAG, "send: $it")
+                }
         } else {
+            act.alert("Ошибка даты",
+                "Задание не может быть задано на сегодняшний день",
+                "send()")
             btn_complete.isEnabled = true
         }
+
     }
 }

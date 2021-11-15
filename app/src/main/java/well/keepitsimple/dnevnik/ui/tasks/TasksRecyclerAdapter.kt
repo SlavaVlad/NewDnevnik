@@ -49,7 +49,7 @@ class TasksRecyclerAdapter(private val tasks: ArrayList<Task>, private val onCli
         }
 
         h.itemView.setOnLongClickListener {
-            onLongClickListener.onLongClick(tasks[position].doc)
+            onLongClickListener.onLongClick(tasks[position].doc, position, )
             true
         }
 

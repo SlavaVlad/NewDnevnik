@@ -11,15 +11,19 @@
         android:layout_height="wrap_content"
         android:theme="@style/Theme.Дневник.AppBarOverlay">
 
-        <androidx.appcompat.widget.Toolbar
-            android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="@color/purple_700"
-            app:popupTheme="@style/Theme.Дневник.PopupOverlay" />
-
     </com.google.android.material.appbar.AppBarLayout>
 
-    <include layout="@layout/content_main" />
+    <include
+        android:id="@+id/include"
+        layout="@layout/content_main" />
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="55dp"
+        android:background="@color/purple_700"
+        app:layout_anchor="@+id/include"
+        app:layout_anchorGravity="top|center"
+        app:popupTheme="@style/Theme.Дневник.PopupOverlay" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

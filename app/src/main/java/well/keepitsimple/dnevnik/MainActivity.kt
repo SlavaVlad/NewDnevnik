@@ -31,6 +31,8 @@ import com.google.firebase.firestore.ktx.toObject
 import com.instabug.library.Instabug
 import com.instabug.library.invocation.InstabugInvocationEvent
 import com.onesignal.OneSignal
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import well.keepitsimple.dnevnik.databinding.ActivityMainBinding
 import well.keepitsimple.dnevnik.login.Group
@@ -40,12 +42,13 @@ import well.keepitsimple.dnevnik.ui.timetables.Lesson
 import java.util.*
 import java.util.Calendar.DAY_OF_WEEK
 import kotlin.collections.ArrayList
+import kotlin.coroutines.CoroutineContext
 
 const val ONESIGNAL_APP_ID = "b5aa6c76-4619-4497-9b1e-2e7a1ef4095f"
 const val DAY_S = 86400
 const val WEEK = 7
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), CoroutineScope {
 
     lateinit var auth: FirebaseAuth
     lateinit var googleSignInClient: GoogleSignInClient
@@ -68,9 +71,36 @@ class MainActivity : AppCompatActivity() {
 
     private var job: Job = Job()
 
+    override val coroutineContext: CoroutineContext
+        get() = Dispatchers.Main + job
+
     override fun onDestroy() {
         super.onDestroy()
         job.cancel()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        // Check if user is signed in (non-null) and update UI accordingly.
+        val currentUser = auth.currentUser
+        if (currentUser == null) {
+            signIn()
+        } else {
+            checkUserInDatabase(currentUser)
+            uid = currentUser.uid
+        }
+
+        val navView: NavigationView = binding.navView
+        val navController = findNavController(R.id.nav_host_fragment_content_main)
+
+        setupActionBarWithNavController(navController, appBarConfiguration)
+        navView.setupWithNavController(navController)
+
+        MobileAds.initialize(this)
+        mAdView = findViewById(R.id.adBanner_tasks)
+        val adRequest = AdRequest.Builder().build()
+        mAdView !!.loadAd(adRequest)
+
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -111,8 +141,6 @@ class MainActivity : AppCompatActivity() {
         setSupportActionBar(binding.appBarMain.toolbar)
 
         val drawerLayout: DrawerLayout = binding.drawerLayout
-        val navView: NavigationView = binding.navView
-        val navController = findNavController(R.id.nav_host_fragment_content_main)
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
         appBarConfiguration = AppBarConfiguration(
@@ -121,16 +149,8 @@ class MainActivity : AppCompatActivity() {
             ),
             drawerLayout
         )
-        setupActionBarWithNavController(navController, appBarConfiguration)
-        navView.setupWithNavController(navController)
 
-        MobileAds.initialize(this)
-        mAdView = findViewById(R.id.adBanner_tasks)
-        val adRequest = AdRequest.Builder().build()
-        mAdView !!.loadAd(adRequest)
     }
-
-    // Взаимодействие с фрагментами
 
     private fun getTimetables() {
         // запрос документов расписания
@@ -263,9 +283,6 @@ class MainActivity : AppCompatActivity() {
         return 0
     }
 
-    // Конец взаимодействия с фрагментами
-
-    // Сервисные глобальные методы
     fun alert(title: String, message: String, source: String) {
         val builder = AlertDialog.Builder(this)
         builder
@@ -277,19 +294,6 @@ class MainActivity : AppCompatActivity() {
             .show()
         Log.e(TAG, "t: $title m: $message")
         Log.e(TAG, source)
-    }
-
-    // START LOGIN
-    override fun onStart() {
-        super.onStart()
-        // Check if user is signed in (non-null) and update UI accordingly.
-        val currentUser = auth.currentUser
-        if (currentUser == null) {
-            signIn()
-        } else {
-            checkUserInDatabase(currentUser)
-            uid = currentUser.uid
-        }
     }
 
     private fun signIn() {
@@ -394,6 +398,7 @@ class MainActivity : AppCompatActivity() {
             }
             return permissions
         }
+
     }
 
     private fun checkUserInDatabase(fire_user: FirebaseUser) {
@@ -439,7 +444,8 @@ class MainActivity : AppCompatActivity() {
                 Log.d(TAG, "GROUPS: ${querySnapshot.documents.size}")
                 var index = 0
                 querySnapshot.documents.forEach { // записываем группы в пользователя
-                    user.groups.add(it.toObject<Group>() !!)
+                    user.groups.add(it.toObject<Group>()!!)
+                    user.groups[index].doc = it
                     user.groups[index].id = it.id
                     it.id
                     Log.w(TAG, user.groups.toString())
@@ -465,8 +471,6 @@ class MainActivity : AppCompatActivity() {
             }
     }
 
-    // END LOGIN
-
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
         menuInflater.inflate(R.menu.main, menu)
@@ -485,4 +489,5 @@ class MainActivity : AppCompatActivity() {
         ed.apply()
         Log.d("sPref", "saveString: $key ; $value")
     }
+
 }

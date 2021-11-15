@@ -9,7 +9,7 @@ import androidx.recyclerview.widget.RecyclerView
 import well.keepitsimple.dnevnik.R
 import well.keepitsimple.dnevnik.login.Group
 
-class GroupsAdapter(private val names: List<Group>) :
+class GroupsAdapter(private val groups: List<Group>, private val onClickListener: GroupOnClickListener) :
     RecyclerView.Adapter<GroupsAdapter.GroupsViewHolder>() {
 
     class GroupsViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -39,27 +39,36 @@ class GroupsAdapter(private val names: List<Group>) :
         return GroupsViewHolder(itemView)
     }
 
-    override fun onBindViewHolder(holder: GroupsViewHolder, position: Int) {
+    override fun onBindViewHolder(h: GroupsViewHolder, position: Int) {
 
-        val item = names[position]
+        val item = groups[position]
 
-        item.users?.forEach {
-            holder.users?.isVisible = true
-            holder.label_users?.isVisible = true
-            holder.users?.text = it
+        if (item.users != null) {
+            var users = ""
+            item.users !!.forEach {
+                users = "${users}${it}\n"
+            }
+            h.users?.isVisible = true
+            h.users!!.text = users
+            h.label_users?.isVisible = true
         }
-
-        item.admins?.forEach {
-            holder.admins?.isVisible = true
-            holder.label_admins?.isVisible = true
-            holder.admins?.text = it.key
+        if (item.admins != emptyMap<String, Any>()) {
+            var admins = ""
+            item.admins !!.forEach {
+                admins = "${admins}${it.key}\n"
+            }
+            h.admins?.isVisible = true
+            h.admins!!.text = admins
+            h.label_admins?.isVisible = true
         }
+        h.name !!.text = item.name
+        h.type !!.text = item.type
+        h.id !!.text = item.id
 
-        holder.name !!.text = item.name
-        holder.type !!.text = item.type
-        holder.id !!.text = item.id
-
+        h.itemView.setOnClickListener {
+            onClickListener.onClick(groups[position])
+        }
     }
 
-    override fun getItemCount() = names.size
+    override fun getItemCount() = groups.size
 }

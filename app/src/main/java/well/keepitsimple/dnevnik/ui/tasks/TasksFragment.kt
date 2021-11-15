@@ -1,32 +1,26 @@
 package well.keepitsimple.dnevnik.ui.tasks
 
 import android.app.Activity
-import android.graphics.Canvas
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.AdapterView
-import android.widget.ArrayAdapter
-import android.widget.AutoCompleteTextView
-import android.widget.ProgressBar
+import android.widget.*
 import androidx.appcompat.app.AlertDialog
-import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentTransaction
 import androidx.fragment.app.FragmentTransaction.TRANSIT_FRAGMENT_OPEN
-import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
-import it.xabaras.android.recyclerview.swipedecorator.RecyclerViewSwipeDecorator
 import kotlinx.coroutines.*
 import well.keepitsimple.dnevnik.DAY_S
 import well.keepitsimple.dnevnik.MainActivity
@@ -35,6 +29,7 @@ import well.keepitsimple.dnevnik.login.Rights
 import kotlin.collections.set
 import kotlin.coroutines.CoroutineContext
 import kotlin.math.ceil
+
 
 const val TAG = "TasksFragment"
 
@@ -275,6 +270,8 @@ class TasksFragment : Fragment(), CoroutineScope {
     }
 
     private fun setList(list: ArrayList<Task>) {
+        var hwToUndoComplete: Task
+        rv_tasks.layoutManager = LinearLayoutManager(requireActivity())
         val adapter = TasksRecyclerAdapter(
             list,
             object : TaskOnClickListener {
@@ -289,52 +286,54 @@ class TasksFragment : Fragment(), CoroutineScope {
                 }
             },
             object : TaskOnLongClickListener {
-                override fun onLongClick(doc: DocumentSnapshot) {
-
-                    act.toEdit = doc
-                    val bundle = Bundle()
-                    val fragment = EditHomework()
-                    fragment.arguments = bundle
-                    val trans: FragmentTransaction = requireFragmentManager()
-                        .beginTransaction()
-                        .setTransition(TRANSIT_FRAGMENT_OPEN)
-                        .addToBackStack(null)
-
-                    trans.replace(R.id.nav_host_fragment_content_main, fragment)
-                    trans.commit()
-                }
-            }
-        )
-
-        rv_tasks.layoutManager = LinearLayoutManager(requireActivity())
-        rv_tasks.adapter = adapter
-
-        var hwToUndoComplete: Task
-
-        val simpleCallback: ItemTouchHelper.SimpleCallback = object :
-            ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
-
-            override fun onMove(
-                recyclerView: RecyclerView,
-                viewHolder: RecyclerView.ViewHolder,
-                target: RecyclerView.ViewHolder,
-            ): Boolean {
-                return false
-            }
-
-            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-
-                val position = viewHolder.bindingAdapterPosition
-
-                when (direction) {
-
-                    ItemTouchHelper.LEFT -> {
+                override fun onLongClick(doc: DocumentSnapshot, position: Int) {
+                    val bottomActionDialog = BottomSheetDialog(
+                        requireActivity(), R.style.ThemeOverlay_MaterialComponents_BottomSheetDialog
+                    )
+                    val bottomView = LayoutInflater.from(requireActivity())
+                        .inflate(R.layout.modal_bottom_sheet_content,
+                            requireView().findViewById(R.id.bs_container))
+                    bottomView.findViewById<Button>(R.id.complete).setOnClickListener {
+                        it as Button
+                        Toast.makeText(requireContext(), "Сщьздуеу!!!", Toast.LENGTH_SHORT).show()
+                        bottomActionDialog.dismiss()
+                    }
+                    bottomActionDialog.setContentView(bottomView)
+                    bottomView.findViewById<Button>(R.id.complete).setOnClickListener {
+                        hwToUndoComplete = list[position]
+                        hwComplete(list, position, rv_tasks.adapter as TasksRecyclerAdapter)
+                        Snackbar.make(
+                            rv_tasks,
+                            "Выполнено ${list[position].doc.getString("text") !!}",
+                            Snackbar.LENGTH_LONG
+                        )
+                            .setAction("Undo") {
+                                hwUndoComplete(list,
+                                    position,
+                                    rv_tasks.adapter as TasksRecyclerAdapter,
+                                    hwToUndoComplete)
+                            }
+                            .show()
+                        bottomActionDialog.dismiss()
+                    }
+                    bottomView.findViewById<Button>(R.id.edit).setOnClickListener {
+                        act.toEdit = doc
+                        val trans: FragmentTransaction = requireFragmentManager()
+                            .beginTransaction()
+                            .setTransition(TRANSIT_FRAGMENT_OPEN)
+                            .addToBackStack(null)
+                        trans.replace(R.id.nav_host_fragment_content_main, EditHomework())
+                        trans.commit()
+                        bottomActionDialog.dismiss()
+                    }
+                    bottomView.findViewById<Button>(R.id.delete).setOnClickListener {
+                        val adapter = rv_tasks.adapter as TasksRecyclerAdapter
                         val builder = AlertDialog.Builder(requireActivity())
                         builder
                             .setTitle("Это действие невозможно отменить!")
                             .setMessage(
                                 "Удалить задание по предмету ${
-                                list[position].doc.getString("subject")
+                                    list[position].doc.getString("subject")
                                 }?"
                             )
                             .setCancelable(false)
@@ -354,74 +353,13 @@ class TasksFragment : Fragment(), CoroutineScope {
                                 adapter.notifyItemChanged(position)
                             }
                             .show()
+                        bottomActionDialog.dismiss()
                     }
-
-                    ItemTouchHelper.RIGHT -> {
-                        hwToUndoComplete = list[position]
-                        hwComplete(list, position, adapter)
-                        Snackbar.make(
-                            rv_tasks,
-                            "Выполнено ${list[position].doc.getString("text") !!}",
-                            Snackbar.LENGTH_LONG
-                        )
-                            .setAction("Undo") {
-                                hwUndoComplete(list, position, adapter, hwToUndoComplete)
-                            }
-                            .show()
-                    }
+                    bottomActionDialog.show()
                 }
             }
-
-            override fun onChildDraw(
-                c: Canvas,
-                recyclerView: RecyclerView,
-                viewHolder: RecyclerView.ViewHolder,
-                dX: Float,
-                dY: Float,
-                actionState: Int,
-                isCurrentlyActive: Boolean,
-            ) {
-                super.onChildDraw(
-                    c,
-                    recyclerView,
-                    viewHolder,
-                    dX,
-                    dY,
-                    actionState,
-                    isCurrentlyActive
-                )
-                RecyclerViewSwipeDecorator.Builder(
-                    c,
-                    recyclerView,
-                    viewHolder,
-                    dX,
-                    dY,
-                    actionState,
-                    isCurrentlyActive
-                )
-                    .addSwipeRightBackgroundColor(
-                        ContextCompat.getColor(
-                            requireContext().applicationContext,
-                            R.color.design_default_color_secondary
-                        )
-                    )
-                    .addSwipeRightActionIcon(R.drawable.ic_check_circle)
-                    .setSwipeRightActionIconTint(R.color.design_default_color_secondary)
-                    .addSwipeLeftBackgroundColor(
-                        ContextCompat.getColor(
-                            requireContext().applicationContext,
-                            R.color.colorAccent
-                        )
-                    )
-                    .addSwipeLeftActionIcon(R.drawable.ic_delete)
-                    .setSwipeLeftActionIconTint(R.color.design_default_color_error)
-                    .create()
-                    .decorate()
-            }
-        }
-
-        val itemTouchHelper = ItemTouchHelper(simpleCallback)
-        itemTouchHelper.attachToRecyclerView(rv_tasks)
+        )
+        rv_tasks.adapter = adapter
 
         pb.visibility = View.GONE
     }

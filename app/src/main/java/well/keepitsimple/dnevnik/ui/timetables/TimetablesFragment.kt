@@ -50,7 +50,7 @@ class TimetablesFragment : Fragment(), CoroutineScope {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_timetables, container, false)
 
-        list = view.findViewById(R.id.list)
+        list = view.findViewById(R.id.vp_parents)
         tabs = view.findViewById(R.id.tab)
 
         setup(act.list_lessons)

@@ -27,9 +27,7 @@ class GroupsFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View? {
-
         val view = inflater.inflate(R.layout.fragment_groups, container, false)
-
 
         fab_create_group = view.findViewById(R.id.fab_create_group)
         rv_groups = view.findViewById(R.id.rv_groups)
@@ -39,7 +37,6 @@ class GroupsFragment : Fragment() {
         setList()
 
         return view
-
     }
 
     private fun setList() {
@@ -51,7 +48,20 @@ class GroupsFragment : Fragment() {
                     groups.add(doc.toObject<Group>()!!)
                 }
                 rv_groups.layoutManager = LinearLayoutManager(context)
-                rv_groups.adapter = GroupsAdapter(groups)
+                val adapter = GroupsAdapter(
+                    groups,
+                    object : GroupOnClickListener {
+                        override fun onClick(group: Group) {
+                            val fragment = CreateGroup()
+                            val trans: FragmentTransaction = requireFragmentManager()
+                                .beginTransaction()
+                                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
+                                .addToBackStack(null)
+                            trans.replace(R.id.nav_host_fragment_content_main, fragment)
+                            trans.commit()
+                        }
+                    })
+                rv_groups.adapter = adapter
             }
     }
 
@@ -66,4 +76,8 @@ class GroupsFragment : Fragment() {
             trans.commit()
         }
     }
+}
+
+interface GroupOnClickListener {
+    fun onClick(group: Group)
 }
