@@ -5,7 +5,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import com.google.firebase.firestore.DocumentSnapshot
 import well.keepitsimple.dnevnik.R
 
 class TasksRecyclerAdapter(private val tasks: ArrayList<Task>, private val onClickListener: TaskOnClickListener, private val onLongClickListener: TaskOnLongClickListener) :
@@ -56,18 +55,5 @@ class TasksRecyclerAdapter(private val tasks: ArrayList<Task>, private val onCli
     }
 
     override fun getItemCount() = tasks.size
-
-    fun getDocument(id: String): DocumentSnapshot? {
-        tasks.forEach {
-            if (it.doc.id == id){
-                return it.doc
-            }
-        }
-        return null
-    }
-
-    interface OnItemClickListener{
-        fun onItemClicked(user: Task)
-    }
 
 }

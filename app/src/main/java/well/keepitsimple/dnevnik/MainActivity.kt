@@ -28,15 +28,12 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.toObject
-import com.instabug.library.Instabug
-import com.instabug.library.invocation.InstabugInvocationEvent
 import com.onesignal.OneSignal
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import well.keepitsimple.dnevnik.databinding.ActivityMainBinding
 import well.keepitsimple.dnevnik.login.Group
-import well.keepitsimple.dnevnik.notifications.NotificationsMainService
 import well.keepitsimple.dnevnik.ui.tasks.Task
 import well.keepitsimple.dnevnik.ui.timetables.Lesson
 import java.util.*
@@ -105,14 +102,6 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        val token = "9afe4d789c62e398a755bc2b0a3eb223"
-
-        Instabug.Builder(application, token)
-            .setInvocationEvents(InstabugInvocationEvent.TWO_FINGER_SWIPE_LEFT,
-                InstabugInvocationEvent.SHAKE,
-                InstabugInvocationEvent.SCREENSHOT)
-            .build()
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -408,14 +397,6 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                 user = it.toObject<User>() !!
 
                 user.uid = it.id
-
-                saveString("uid", uid !!)
-
-                val intent =
-                    Intent(this, NotificationsMainService::class.java)
-                        .putExtra("uid", uid !!)
-
-                startService(intent)
 
                 getRights()
             } else {

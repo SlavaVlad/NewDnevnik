@@ -42,6 +42,8 @@ class CreateHomework : Fragment(), CoroutineScope {
     lateinit var et_text: EditText
     lateinit var calendar: CalendarView
 
+    var gDate = Date()
+
     private var textLength = 0
 
     private val data = hashMapOf<String, Any>()
@@ -70,16 +72,18 @@ class CreateHomework : Fragment(), CoroutineScope {
         et_text = view.findViewById(R.id.et_text)
         calendar = view.findViewById(R.id.calendar)
         calendar.firstDayOfWeek = 2
-        calendar.minDate = System.currentTimeMillis() + DAY_S*1000
+        calendar.minDate = System.currentTimeMillis() + DAY_S * 1000
+
         btn_complete.setOnClickListener {
             btn_complete.isEnabled = false
             send()
         }
 
-        calendar.setOnDateChangeListener { view, y, m, d ->
-            data["deadline"] = Timestamp(Date(y - 1970, m + 1, d))
+        calendar.setOnDateChangeListener { calendarView, y, m, d ->
+            gDate = Date(y-1900,m,d)
+            Log.d(TAG, "calendar: $d ~ $m ~ $y")
+            Log.d(TAG, "calendar: ${gDate.toLocaleString()}")
         }
-
 
         loadAllChips()
 
@@ -91,15 +95,7 @@ class CreateHomework : Fragment(), CoroutineScope {
             }
         })
 
-        var x = true
         return view
-    }
-
-    private fun setDate(mills: Long) {
-        calendar.date = mills
-        data["deadline"] = Timestamp(Date(calendar.date / 1000))
-        val debug = data["deadline"] as Timestamp
-        Toast.makeText(requireContext(), debug.toString(), Toast.LENGTH_SHORT).show()
     }
 
     private fun check(): Boolean {
@@ -141,7 +137,10 @@ class CreateHomework : Fragment(), CoroutineScope {
                 cg_subjects.addView(c)
                 c.setOnClickListener { v ->
                     val cc = v as Chip
-                    setDate(act.getNextLesson(cc.text.toString()) * 1000)
+                    calendar.date = act.getNextLesson(cc.text.toString()) * 1000
+                    gDate = Date(act.getNextLesson(cc.text.toString()) * 1000)
+                    Log.d(TAG, "calendar: ${gDate.toLocaleString()}")
+                    Log.d(TAG, "calendar: ${calendar.date}")
                 }
                 uniqueLessons.add(lesson.name)
             }
@@ -169,7 +168,10 @@ class CreateHomework : Fragment(), CoroutineScope {
             cg_subjects.addView(c)
             c.setOnClickListener {
                 val cc = it as Chip
-                setDate(act.getNextLesson(cc.text.toString()) * 1000)
+                calendar.date = act.getNextLesson(cc.text.toString()) * 1000
+                gDate = Date(act.getNextLesson(cc.text.toString()) * 1000)
+                Log.d(TAG, "calendar: ${gDate.toLocaleString()}")
+                Log.d(TAG, "calendar: ${calendar.date}")
             }
         }
     }
@@ -178,11 +180,13 @@ class CreateHomework : Fragment(), CoroutineScope {
         if (check()) {
 
             data["text"] = et_text.text.toString()
-            data["subject"] =
-                requireView().findViewById<Chip>(cg_subjects.checkedChipId).text.toString()
+            data["subject"] = requireView().findViewById<Chip>(cg_subjects.checkedChipId).text.toString()
             data["type"] = requireView().findViewById<Chip>(cg_types.checkedChipId).text.toString()
             data["completed"] = emptyMap<String, Any>()
             data["owner"] = act.user.uid !!
+            data["deadline"] = Timestamp(gDate)
+            Log.d(TAG, "loadTodaySubjects: ${calendar.date}")
+            Log.d(TAG, "send: $gDate; deadline: ${data["deadline"]}")
 
             db.collection("groups")
                 .document(act.user.getGroupByType("school").id !!)

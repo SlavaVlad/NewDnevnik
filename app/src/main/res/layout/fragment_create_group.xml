@@ -5,7 +5,6 @@
     android:id="@+id/vp_create_group"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_marginHorizontal="32dp"
     tools:context=".ui.groups.CreateGroup">
 
 </androidx.viewpager2.widget.ViewPager2>

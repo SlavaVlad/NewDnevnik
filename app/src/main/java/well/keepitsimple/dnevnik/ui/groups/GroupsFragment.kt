@@ -8,7 +8,6 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentTransaction
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.toObject
 import well.keepitsimple.dnevnik.MainActivity
@@ -21,7 +20,7 @@ class GroupsFragment : Fragment() {
     val db = FirebaseFirestore.getInstance()
     lateinit var act: MainActivity
 
-    lateinit var fab_create_group: FloatingActionButton
+    lateinit var fab_create_group: com.github.clans.fab.FloatingActionButton
     lateinit var rv_groups: RecyclerView
 
     override fun onCreateView(
@@ -29,7 +28,7 @@ class GroupsFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_groups, container, false)
 
-        fab_create_group = view.findViewById(R.id.fab_create_group)
+        fab_create_group = view.findViewById(R.id.fab_create_class)
         rv_groups = view.findViewById(R.id.rv_groups)
         act = activity as MainActivity
 

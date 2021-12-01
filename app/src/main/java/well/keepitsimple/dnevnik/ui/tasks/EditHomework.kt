@@ -24,8 +24,7 @@ import well.keepitsimple.dnevnik.MainActivity
 import well.keepitsimple.dnevnik.R
 import well.keepitsimple.dnevnik.addUnique
 import well.keepitsimple.dnevnik.createCheckableChip
-import java.util.* // ktlint-disable no-wildcard-imports
-import java.util.Calendar.DAY_OF_WEEK
+import java.util.*
 import kotlin.collections.set
 import kotlin.coroutines.CoroutineContext
 
@@ -38,7 +37,7 @@ class EditHomework : Fragment(), CoroutineScope {
     }
 
     val doc: DocumentSnapshot by lazy {
-        act.toEdit!! // fixme убрать этот изврат, использовать data bus
+        act.toEdit !! // fixme убрать этот изврат, использовать data bus
     }
 
     val chips = hashMapOf<String, Chip>()
@@ -49,6 +48,10 @@ class EditHomework : Fragment(), CoroutineScope {
     lateinit var btn_complete: Button
     lateinit var et_text: EditText
     lateinit var calendar: CalendarView
+
+    var gd = 0
+    var gm = 0
+    var gy = 0
 
     private val data = hashMapOf<String, Any>()
 
@@ -82,12 +85,12 @@ class EditHomework : Fragment(), CoroutineScope {
             update()
         }
 
-        calendar.setOnDateChangeListener { view, y, m, d ->
-            data["deadline"] = Timestamp(Date(y, m+1, d))
-            Toast.makeText(requireContext().applicationContext, "$y  ${m+1}  $d", Toast.LENGTH_SHORT).show()
+        calendar.setOnDateChangeListener { calendarView, d, m, y ->
+            gd=d
+            gm=m
+            gy=y-1970
         }
-        data["deadline"] = Timestamp(Calendar.getInstance(TimeZone.getDefault()).timeInMillis/1000, 0)
-        Toast.makeText(requireContext().applicationContext, data["deadline"].toString(), Toast.LENGTH_SHORT).show()
+
 
 
         et_text.setText(doc.getString("text"))
@@ -95,7 +98,11 @@ class EditHomework : Fragment(), CoroutineScope {
         loadAllChips()
         checkChipsToEdit()
 
-        calendar.date = doc.getTimestamp("deadline")!!.toDate().toInstant().toEpochMilli()
+        calendar.date = doc.getTimestamp("deadline") !!.toDate().toInstant().toEpochMilli()
+
+        gy = doc.getTimestamp("deadline") !!.toDate().year
+        gm = doc.getTimestamp("deadline") !!.toDate().month
+        gd = doc.getTimestamp("deadline") !!.toDate().day
 
         return view
     }
@@ -106,6 +113,7 @@ class EditHomework : Fragment(), CoroutineScope {
         loadTargets()
         btn_complete.isEnabled = true
     }
+
     private fun loadTargets() {
 
         val c = createCheckableChip(requireContext(), act.user.getGroupByType("class").name !!)
@@ -113,6 +121,7 @@ class EditHomework : Fragment(), CoroutineScope {
         chips[c.text.toString()] = c
         cg_targets.addView(c)
     }
+
     private fun loadTypes() {
         val types = arrayOf("Д/з", "Работа на оценку", "Тест")
         types.forEach {
@@ -121,6 +130,7 @@ class EditHomework : Fragment(), CoroutineScope {
             cg_types.addView(c)
         }
     }
+
     private fun loadAllSubjects() {
 
         val names = arrayListOf<String>()
@@ -137,51 +147,50 @@ class EditHomework : Fragment(), CoroutineScope {
                 val cc = it as Chip
                 calendar.date =
                     act.getNextLesson(cc.text.toString()) * 1000
+                gd = Date(act.getNextLesson(cc.text.toString()) * 1000).day
+                gm = Date(act.getNextLesson(cc.text.toString()) * 1000).month
+                gy = Date(act.getNextLesson(cc.text.toString()) * 1000).year
             }
         }
     }
 
     private fun checkChipsToEdit() {
-        cg_subjects.check(chips[doc.getString("subject")]!!.id)
-        cg_types.check(chips[doc.getString("type")]!!.id)
+        cg_subjects.check(chips[doc.getString("subject")] !!.id)
+        cg_types.check(chips[doc.getString("type")] !!.id)
     }
 
     private fun update() {
         data["text"] = et_text.text.toString()
-        data["subject"] = requireView().findViewById<Chip>(cg_subjects.checkedChipId).text.toString()
+        data["subject"] =
+            requireView().findViewById<Chip>(cg_subjects.checkedChipId).text.toString()
         data["type"] = requireView().findViewById<Chip>(cg_types.checkedChipId).text.toString()
         data["completed"] = emptyMap<String, Any>()
-        data["owner"] = act.user.uid!!
+        data["owner"] = act.user.uid !!
         data["${System.currentTimeMillis()}"] = doc // для истории версий
 
-        if (Date(calendar.date).day != Calendar.getInstance(TimeZone.getDefault()).get(DAY_OF_WEEK)) {
+        data["deadline"] = Timestamp(java.sql.Date(gy, gm+1, gd))
 
-            data["deadline"] = Timestamp(Date(calendar.date))
-
-            db.collection("groups")
-                .document(act.user.getGroupByType("school").id !!)
-                .collection("groups")
-                .document(act.user.getGroupByType("class").id !!)
-                .collection("tasks")
-                .document(doc.id)
-                .update(data)
-                .addOnSuccessListener {
-                    val trans: FragmentTransaction = requireFragmentManager()
-                        .beginTransaction()
-                        .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_CLOSE)
-                        .addToBackStack(null)
-                    trans.replace(R.id.nav_host_fragment_content_main, TasksFragment())
-                    trans.commit()
-                    Snackbar.make(requireView(), "Задание обновлено успешно", Snackbar.LENGTH_LONG).show()
-                }
-                .addOnFailureListener {
-                    btn_complete.isEnabled = true
-                    Toast.makeText(context, "Ошибка", Toast.LENGTH_SHORT).show()
-                    Log.e(TAG, "send: $it")
-                }
-        } else {
-            act.alert("Ошибка даты", "Задание не может быть задано на сегодняшний день", "send()")
-            btn_complete.isEnabled = true
-        }
+        db.collection("groups")
+            .document(act.user.getGroupByType("school").id !!)
+            .collection("groups")
+            .document(act.user.getGroupByType("class").id !!)
+            .collection("tasks")
+            .document(doc.id)
+            .update(data)
+            .addOnSuccessListener {
+                val trans: FragmentTransaction = requireFragmentManager()
+                    .beginTransaction()
+                    .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_CLOSE)
+                    .addToBackStack(null)
+                trans.replace(R.id.nav_host_fragment_content_main, TasksFragment())
+                trans.commit()
+                Snackbar.make(requireView(), "Задание обновлено успешно", Snackbar.LENGTH_LONG)
+                    .show()
+            }
+            .addOnFailureListener {
+                btn_complete.isEnabled = true
+                Toast.makeText(context, "Ошибка", Toast.LENGTH_SHORT).show()
+                Log.e(TAG, "send: $it")
+            }
     }
 }

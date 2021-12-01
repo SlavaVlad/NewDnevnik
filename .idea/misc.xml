@@ -9,6 +9,7 @@
         <entry key="..\:/Android/Repository/app/src/main/res/drawable-xxhdpi/ic_baseline_delete_24.xml" value="0.3609375" />
         <entry key="..\:/Android/Repository/app/src/main/res/drawable/ic_baseline_delete_24.xml" value="0.3609375" />
         <entry key="..\:/Android/Repository/app/src/main/res/drawable/ic_baseline_work_24.xml" value="0.3609375" />
+        <entry key="..\:/Android/Repository/app/src/main/res/drawable/ic_cabinet.xml" value="0.37864583333333335" />
         <entry key="..\:/Android/Repository/app/src/main/res/drawable/ic_check_circle.xml" value="0.37864583333333335" />
         <entry key="..\:/Android/Repository/app/src/main/res/drawable/ic_clock.xml" value="0.3609375" />
         <entry key="..\:/Android/Repository/app/src/main/res/drawable/ic_delete.xml" value="0.37864583333333335" />
@@ -36,13 +37,25 @@
         <entry key="..\:/Android/Repository/app/src/main/res/layout/fragment_create_group.xml" value="0.33" />
         <entry key="..\:/Android/Repository/app/src/main/res/layout/fragment_create_homework.xml" value="0.3625" />
         <entry key="..\:/Android/Repository/app/src/main/res/layout/fragment_create_lesson.xml" value="0.3625" />
-        <entry key="..\:/Android/Repository/app/src/main/res/layout/fragment_groups.xml" value="0.3625" />
+        <entry key="..\:/Android/Repository/app/src/main/res/layout/fragment_groups.xml" value="0.15" />
         <entry key="..\:/Android/Repository/app/src/main/res/layout/fragment_item_action_sheet.xml" value="0.3625" />
+        <entry key="..\:/Android/Repository/app/src/main/res/layout/fragment_item_admins_group.xml" value="0.3625" />
+        <entry key="..\:/Android/Repository/app/src/main/res/layout/fragment_item_create_timetable_group.xml" value="0.34629629629629627" />
+        <entry key="..\:/Android/Repository/app/src/main/res/layout/fragment_item_finish_code_group.xml" value="0.34629629629629627" />
+        <entry key="..\:/Android/Repository/app/src/main/res/layout/fragment_item_finish_info.xml" value="0.3625" />
+        <entry key="..\:/Android/Repository/app/src/main/res/layout/fragment_item_list.xml" value="0.3484375" />
         <entry key="..\:/Android/Repository/app/src/main/res/layout/fragment_item_list_dialog_list_dialog_item.xml" value="0.3625" />
+        <entry key="..\:/Android/Repository/app/src/main/res/layout/fragment_item_p1_group_list.xml" value="0.25972222222222224" />
+        <entry key="..\:/Android/Repository/app/src/main/res/layout/fragment_item_p2_create_timetable_group.xml" value="0.15" />
+        <entry key="..\:/Android/Repository/app/src/main/res/layout/fragment_item_p2_group.xml" value="0.34629629629629627" />
+        <entry key="..\:/Android/Repository/app/src/main/res/layout/fragment_item_p3_finish_code_group.xml" value="0.23917525773195877" />
         <entry key="..\:/Android/Repository/app/src/main/res/layout/fragment_item_parent_group.xml" value="0.3484375" />
-        <entry key="..\:/Android/Repository/app/src/main/res/layout/fragment_item_parent_group_list.xml" value="0.3484375" />
+        <entry key="..\:/Android/Repository/app/src/main/res/layout/fragment_item_parent_group_list.xml" value="0.33" />
         <entry key="..\:/Android/Repository/app/src/main/res/layout/fragment_item_permissions_group.xml" value="0.3625" />
+        <entry key="..\:/Android/Repository/app/src/main/res/layout/fragment_item_qr_code_group.xml" value="0.3625" />
+        <entry key="..\:/Android/Repository/app/src/main/res/layout/fragment_item_user.xml" value="0.3625" />
         <entry key="..\:/Android/Repository/app/src/main/res/layout/fragment_lk.xml" value="0.34479166666666666" />
+        <entry key="..\:/Android/Repository/app/src/main/res/layout/fragment_qr.xml" value="0.3625" />
         <entry key="..\:/Android/Repository/app/src/main/res/layout/fragment_select_parent1.xml" value="0.3619791666666667" />
         <entry key="..\:/Android/Repository/app/src/main/res/layout/fragment_settings.xml" value="0.3625" />
         <entry key="..\:/Android/Repository/app/src/main/res/layout/fragment_tasks.xml" value="0.3625" />
@@ -51,10 +64,12 @@
         <entry key="..\:/Android/Repository/app/src/main/res/layout/fragment_view_homework.xml" value="0.5" />
         <entry key="..\:/Android/Repository/app/src/main/res/layout/group_item.xml" value="0.3625" />
         <entry key="..\:/Android/Repository/app/src/main/res/layout/item_one_line.xml" value="0.3625" />
+        <entry key="..\:/Android/Repository/app/src/main/res/layout/item_timetable.xml" value="0.67" />
         <entry key="..\:/Android/Repository/app/src/main/res/layout/lesson_item.xml" value="0.3625" />
-        <entry key="..\:/Android/Repository/app/src/main/res/layout/modal_bottom_sheet_content.xml" value="0.5" />
+        <entry key="..\:/Android/Repository/app/src/main/res/layout/modal_bottom_sheet_content.xml" value="0.23246492985971945" />
         <entry key="..\:/Android/Repository/app/src/main/res/layout/nav_header_main.xml" value="0.3625" />
-        <entry key="..\:/Android/Repository/app/src/main/res/layout/task_item.xml" value="0.5" />
+        <entry key="..\:/Android/Repository/app/src/main/res/layout/task_item.xml" value="0.25" />
+        <entry key="..\:/Android/Repository/app/src/main/res/layout/timetables_item.xml" value="0.34629629629629627" />
         <entry key="..\:/Android/Repository/app/src/main/res/layout/user_item.xml" value="0.3625" />
         <entry key="..\:/Android/Repository/app/src/main/res/menu/activity_main_drawer.xml" value="0.3625" />
         <entry key="..\:/Android/Repository/app/src/main/res/menu/document.xml" value="0.34479166666666666" />

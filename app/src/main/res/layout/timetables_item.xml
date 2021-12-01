@@ -27,45 +27,22 @@
             android:padding="8dp">
 
             <TextView
-                android:id="@+id/subject"
+                android:id="@+id/name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Химия"
+                android:text="Расписание для 5Б класса"
                 android:textAppearance="@style/TextAppearance.AppCompat.Body2"
-                android:textColor="@color/design_default_color_secondary"
+                android:textColor="@color/colorPrimary"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
-                android:id="@+id/text"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:elegantTextHeight="true"
-                android:lines="1"
-                android:text="Написать 1 отзыв на произведение из списка на лето. Тихий дон лучше)) Либо о герое подробнее, либо об эпизоде. Литературоведческие термины использовать. Не меньше 5. Лучше их подчеркнуть. (Объем А4, либо 2-3 страницы)"
-                android:textAlignment="viewStart"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/subject" />
-
-            <TextView
-                android:id="@+id/deadline"
+                android:id="@+id/lessons_count"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="3 дн."
-                android:textColor="@color/design_default_color_secondary"
+                android:text="Уроков: 5"
+                android:textColor="@color/colorPrimary"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <TextView
-                android:id="@+id/type"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
-                android:text="Д/з"
-                android:textColor="@color/design_default_color_secondary"
-                app:layout_constraintEnd_toStartOf="@+id/deadline"
                 app:layout_constraintTop_toTopOf="parent" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
