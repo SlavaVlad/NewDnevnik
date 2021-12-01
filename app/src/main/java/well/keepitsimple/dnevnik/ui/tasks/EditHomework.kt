@@ -49,9 +49,7 @@ class EditHomework : Fragment(), CoroutineScope {
     lateinit var et_text: EditText
     lateinit var calendar: CalendarView
 
-    var gd = 0
-    var gm = 0
-    var gy = 0
+    var gDate = Date()
 
     private val data = hashMapOf<String, Any>()
 
@@ -79,16 +77,17 @@ class EditHomework : Fragment(), CoroutineScope {
         et_text = view.findViewById(R.id.et_text)
         calendar = view.findViewById(R.id.calendar)
         calendar.firstDayOfWeek = 2
+        calendar.minDate = doc.getTimestamp("deadline") !!.toDate().toInstant().toEpochMilli()
 
         btn_complete.setOnClickListener {
             btn_complete.isEnabled = false
             update()
         }
 
-        calendar.setOnDateChangeListener { calendarView, d, m, y ->
-            gd=d
-            gm=m
-            gy=y-1970
+        calendar.setOnDateChangeListener { calendarView, y, m, d->
+            gDate = Date(y-1900,m,d)
+            Log.d(TAG, "calendar: $d ~ $m ~ $y")
+            Log.d(TAG, "calendar: ${gDate.toLocaleString()}")
         }
 
 
@@ -100,9 +99,7 @@ class EditHomework : Fragment(), CoroutineScope {
 
         calendar.date = doc.getTimestamp("deadline") !!.toDate().toInstant().toEpochMilli()
 
-        gy = doc.getTimestamp("deadline") !!.toDate().year
-        gm = doc.getTimestamp("deadline") !!.toDate().month
-        gd = doc.getTimestamp("deadline") !!.toDate().day
+        gDate = Date(doc.getTimestamp("deadline")!!.toDate().time)
 
         return view
     }
@@ -147,9 +144,7 @@ class EditHomework : Fragment(), CoroutineScope {
                 val cc = it as Chip
                 calendar.date =
                     act.getNextLesson(cc.text.toString()) * 1000
-                gd = Date(act.getNextLesson(cc.text.toString()) * 1000).day
-                gm = Date(act.getNextLesson(cc.text.toString()) * 1000).month
-                gy = Date(act.getNextLesson(cc.text.toString()) * 1000).year
+                gDate = Date(act.getNextLesson(cc.text.toString()) * 1000)
             }
         }
     }
@@ -168,7 +163,7 @@ class EditHomework : Fragment(), CoroutineScope {
         data["owner"] = act.user.uid !!
         data["${System.currentTimeMillis()}"] = doc // для истории версий
 
-        data["deadline"] = Timestamp(java.sql.Date(gy, gm+1, gd))
+        data["deadline"] = Timestamp(gDate)
 
         db.collection("groups")
             .document(act.user.getGroupByType("school").id !!)
