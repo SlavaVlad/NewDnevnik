@@ -86,11 +86,7 @@ class EditHomework : Fragment(), CoroutineScope {
 
         calendar.setOnDateChangeListener { calendarView, y, m, d->
             gDate = Date(y-1900,m,d)
-            Log.d(TAG, "calendar: $d ~ $m ~ $y")
-            Log.d(TAG, "calendar: ${gDate.toLocaleString()}")
         }
-
-
 
         et_text.setText(doc.getString("text"))
 

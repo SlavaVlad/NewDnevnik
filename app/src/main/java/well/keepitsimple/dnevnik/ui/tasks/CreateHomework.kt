@@ -1,5 +1,7 @@
 package well.keepitsimple.dnevnik.ui.tasks
 
+import android.content.Context
+import android.content.res.ColorStateList
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -7,6 +9,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.CalendarView
 import android.widget.EditText
@@ -16,6 +19,7 @@ import androidx.fragment.app.FragmentTransaction
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
 import com.google.android.material.snackbar.Snackbar
+import com.google.android.material.textfield.TextInputLayout
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
@@ -26,6 +30,7 @@ import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.set
 import kotlin.coroutines.CoroutineContext
+
 
 class CreateHomework : Fragment(), CoroutineScope {
 
@@ -41,6 +46,7 @@ class CreateHomework : Fragment(), CoroutineScope {
     lateinit var btn_complete: Button
     lateinit var et_text: EditText
     lateinit var calendar: CalendarView
+    lateinit var til_text: TextInputLayout
 
     var gDate = Date()
 
@@ -71,8 +77,15 @@ class CreateHomework : Fragment(), CoroutineScope {
         btn_complete = view.findViewById(R.id.btn_complete)
         et_text = view.findViewById(R.id.et_text)
         calendar = view.findViewById(R.id.calendar)
+        til_text = view.findViewById(R.id.til_text)
+
         calendar.firstDayOfWeek = 2
         calendar.minDate = System.currentTimeMillis() + DAY_S * 1000
+
+        val imm: InputMethodManager =
+            (requireContext().applicationContext.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager?) !!
+            imm.showSoftInput(et_text, InputMethodManager.SHOW_FORCED)
+            et_text.requestFocus()
 
         btn_complete.setOnClickListener {
             btn_complete.isEnabled = false
@@ -81,8 +94,6 @@ class CreateHomework : Fragment(), CoroutineScope {
 
         calendar.setOnDateChangeListener { calendarView, y, m, d ->
             gDate = Date(y-1900,m,d)
-            Log.d(TAG, "calendar: $d ~ $m ~ $y")
-            Log.d(TAG, "calendar: ${gDate.toLocaleString()}")
         }
 
         loadAllChips()
@@ -95,11 +106,24 @@ class CreateHomework : Fragment(), CoroutineScope {
             }
         })
 
+        til_text.isErrorEnabled = true
+
+        et_text.afterTextChanged {
+            if (it.isEmpty()) {
+                til_text.isErrorEnabled = true
+                til_text.error = "Обязательно"
+                til_text.boxStrokeErrorColor =
+                    ColorStateList.valueOf(resources.getColor(R.color.design_default_color_error))
+            } else {
+                til_text.isErrorEnabled = false
+            }
+        }
+
         return view
     }
 
     private fun check(): Boolean {
-        return textLength > 2 && cg_subjects.checkedChipIds != emptyList<Int>() && cg_targets.checkedChipIds != emptyList<Int>() && cg_types.checkedChipIds != emptyList<Int>()
+        return !til_text.isErrorEnabled && cg_subjects.checkedChipIds != emptyList<Int>() && cg_targets.checkedChipIds != emptyList<Int>() && cg_types.checkedChipIds != emptyList<Int>()
     }
 
     private fun loadAllChips() {
@@ -139,8 +163,6 @@ class CreateHomework : Fragment(), CoroutineScope {
                     val cc = v as Chip
                     calendar.date = act.getNextLesson(cc.text.toString()) * 1000
                     gDate = Date(act.getNextLesson(cc.text.toString()) * 1000)
-                    Log.d(TAG, "calendar: ${gDate.toLocaleString()}")
-                    Log.d(TAG, "calendar: ${calendar.date}")
                 }
                 uniqueLessons.add(lesson.name)
             }
@@ -170,8 +192,6 @@ class CreateHomework : Fragment(), CoroutineScope {
                 val cc = it as Chip
                 calendar.date = act.getNextLesson(cc.text.toString()) * 1000
                 gDate = Date(act.getNextLesson(cc.text.toString()) * 1000)
-                Log.d(TAG, "calendar: ${gDate.toLocaleString()}")
-                Log.d(TAG, "calendar: ${calendar.date}")
             }
         }
     }
@@ -185,8 +205,6 @@ class CreateHomework : Fragment(), CoroutineScope {
             data["completed"] = emptyMap<String, Any>()
             data["owner"] = act.user.uid !!
             data["deadline"] = Timestamp(gDate)
-            Log.d(TAG, "loadTodaySubjects: ${calendar.date}")
-            Log.d(TAG, "send: $gDate; deadline: ${data["deadline"]}")
 
             db.collection("groups")
                 .document(act.user.getGroupByType("school").id !!)
@@ -212,8 +230,8 @@ class CreateHomework : Fragment(), CoroutineScope {
                     Log.e(TAG, "send: $it")
                 }
         } else {
-            act.alert("Ошибка даты",
-                "Задание не может быть задано на сегодняшний день",
+            act.alert("Ошибка",
+                "Проверьте заполнение формы",
                 "send()")
             btn_complete.isEnabled = true
         }

@@ -7,15 +7,14 @@ import android.util.Log
 import android.view.Menu
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.isVisible
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
-import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdView
-import com.google.android.gms.ads.MobileAds
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
@@ -93,10 +92,11 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
 
-        MobileAds.initialize(this)
+        /*MobileAds.initialize(this)*/
         mAdView = findViewById(R.id.adBanner_tasks)
-        val adRequest = AdRequest.Builder().build()
-        mAdView !!.loadAd(adRequest)
+        /*val adRequest = AdRequest.Builder().build()
+        mAdView !!.loadAd(adRequest)*/
+        mAdView!!.isVisible = false
 
     }
 

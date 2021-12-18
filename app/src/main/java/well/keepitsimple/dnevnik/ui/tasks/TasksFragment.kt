@@ -26,6 +26,8 @@ import well.keepitsimple.dnevnik.DAY_S
 import well.keepitsimple.dnevnik.MainActivity
 import well.keepitsimple.dnevnik.R
 import well.keepitsimple.dnevnik.login.Rights
+import java.sql.Date
+import java.time.Instant
 import kotlin.collections.set
 import kotlin.coroutines.CoroutineContext
 import kotlin.math.ceil
@@ -244,18 +246,20 @@ class TasksFragment : Fragment(), CoroutineScope {
 
     private fun getTasks() {
         tasks.clear()
-        db.collection("groups")
+       db.collection("groups")
             .document(act.user.getGroupByType("school").id !!)
             .collection("groups")
             .document(act.user.getGroupByType("class").id !!)
             .collection("tasks")
-            .whereNotEqualTo("completed", act.user.uid)
-            .orderBy("completed")
+            .whereGreaterThan("deadline", Timestamp(Date(Instant.EPOCH.epochSecond)))
             .orderBy("deadline", Query.Direction.ASCENDING)
             .get()
             .addOnSuccessListener { querySnapshot ->
                 querySnapshot.documents.forEach { doc -> // проходим по каждому документу
-                    if (getDeadlineInDays(doc.getTimestamp("deadline") !!) >= 0) {
+                    doc.get("completed") as HashMap<String, Any>
+                    if (!(doc
+                            .get("completed") as HashMap<String, Any>)
+                            .containsKey(act.uid) && getDeadlineInDays(doc.getTimestamp("deadline")!!) > -1) {
                         tasks.add(Task((getDeadlineInDays(doc.getTimestamp("deadline") !!)), doc))
                     }
                 }
@@ -397,7 +401,7 @@ class TasksFragment : Fragment(), CoroutineScope {
     }
 
     private fun hwComplete(
-        list: java.util.ArrayList<Task>,
+        list: ArrayList<Task>,
         pos: Int,
         adapter: TasksRecyclerAdapter,
     ) {

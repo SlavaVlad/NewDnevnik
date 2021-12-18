@@ -4,7 +4,6 @@ import android.content.res.ColorStateList
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -16,7 +15,6 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 import well.keepitsimple.dnevnik.MainActivity
 import well.keepitsimple.dnevnik.R
 import well.keepitsimple.dnevnik.default.SlideAdapter
@@ -86,7 +84,6 @@ class ItemP1GroupFragment : Fragment(), CoroutineScope {
                 btn.isEnabled = false
 
                 val pf = requireParentFragment() as CreateGroup
-                pf.data["name"] = et_name.text !!.toString()
 
                 val defaultRightsClass = listOf(
                     Rights.Doc.VIEW.r,
@@ -107,26 +104,13 @@ class ItemP1GroupFragment : Fragment(), CoroutineScope {
                     )
                 )
                 val docData = hashMapOf(
-                    "name" to pf.data["name"] !!,
                     "type" to "class",
                     "rights" to defaultRightsClass,
                     "admins" to defaultAdmin,
                 )
 
-                launch {
-                    db.collection("groups")
-                        .document(act.user.getGroupByType("school").toString())
-                        .collection("groups")
-                        .document()
-                        .set(docData)
-                        .addOnSuccessListener {
-                            Log.d(TAG, "onCreateView: group created successfully")
-                            btn.isEnabled = true
-                        }.addOnFailureListener {
-                            Log.d(TAG, "onCreateView: error creating group: $it")
-                            btn.isEnabled = true
-                        }
-                }
+                pf.data = docData
+                pf.data["name"] = et_name.text !!.toString()
 
                 (pf.vpCreateGroup.adapter as SlideAdapter).insertItem(ItemP2GroupFragment())
                 pf.vpCreateGroup.setCurrentItem(1, true)

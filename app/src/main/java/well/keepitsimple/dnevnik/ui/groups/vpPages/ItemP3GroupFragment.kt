@@ -39,6 +39,8 @@ class ItemP3GroupFragment : Fragment() {
     private lateinit var btn_create_group: Button
     private lateinit var tv_info: TextView
 
+    private val invite = hashMapOf<String, Any>()
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?,
@@ -50,8 +52,11 @@ class ItemP3GroupFragment : Fragment() {
         tv_info = view.findViewById(R.id.tv_info)
         btn_create_group = view.findViewById(R.id.btn_create_group)
 
-        pf.data["owner"] = act.user.uid !!
-        pf.data["timestamp"] = Timestamp.now()
+        invite["owner"] = act.user.uid !!
+        invite["timestamp"] = Timestamp.now()
+        invite["groups_invited"] = listOf(
+            pf.data["name"]
+        )
 
         val d = pf.data
 
@@ -61,31 +66,58 @@ class ItemP3GroupFragment : Fragment() {
             setData()
         }
 
-
-
         return view
     }
 
     private fun setData() {
         val db = FirebaseFirestore.getInstance()
-        db.collection("invites")
-            .document()
+        db.collection("groups")
+            .document(act.user.getGroupByType("school").id !!)
+            .collection("groups")
+            .document(pf.data.hashCode().toString())
             .set(pf.data)
             .addOnSuccessListener {
-                db.collection("invites")
-                    .whereEqualTo("owner", act.user.uid !!)
-                    .orderBy("timestamp")
-                    .get()
-                    .addOnSuccessListener {
-                        qrImgView.setImageBitmap(QRCode.from(it.documents[0].id).bitmap())
-                        saveImage(QRCode.from(it.documents[0].id).bitmap(),
-                            requireContext(),
-                            "invites")
-                    }.addOnFailureListener {
-                        act.alert("Ошибка запроса",
-                            it.message.toString(),
-                            "onStart, ItemQrCodeGroupFragment")
-                    }
+                val batch = db.batch()
+                pf.t.forEach {
+                    val docRef = db.collection("groups")
+                        .document(act.user.getGroupByType("school").id !!)
+                        .collection("groups")
+                        .document(pf.data.hashCode().toString())
+                        .collection("lessons")
+                        .document()
+                    batch.set(docRef, it)
+                }
+                batch.commit().addOnSuccessListener {
+                    db.collection("groups")
+                        .document(act.user.getGroupByType("school").id !!)
+                        .collection("groups")
+                        .document(pf.data.hashCode().toString())
+                        .collection("tasks")
+                        .document()
+                        .set(hashMapOf(
+                            "completed" to hashMapOf<String, Any>(),
+                            "deadline" to Timestamp(System.currentTimeMillis() / 1000 + 86400, 0),
+                            "owner" to act.uid,
+                            "subject" to pf.t[0]["0_name"],
+                            "text" to "Если вы видите это задание в списке, то это значит, что группа ${pf.data["name"]} создана успешно. Вы можете удалить данную запись из списка через длинное нажатие на задание.",
+                            "type" to "Д/з"
+                        )).addOnSuccessListener {
+                            db.collection("invites")
+                                .document(invite.hashCode().toString())
+                                .set(invite)
+                                .addOnSuccessListener {
+                                    qrImgView.setImageBitmap(QRCode.from(invite.hashCode()
+                                        .toString()).bitmap())
+                                    saveImage(QRCode.from(invite.hashCode().toString()).bitmap(),
+                                        requireContext(),
+                                        "invites")
+                                }.addOnFailureListener {
+                                    act.alert("Ошибка запроса",
+                                        it.message.toString(),
+                                        "onStart, ItemQrCodeGroupFragment")
+                                }
+                        }
+                }
             }
     }
 

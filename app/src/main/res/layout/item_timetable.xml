@@ -21,11 +21,12 @@
                 android:id="@+id/imBtn_delete"
                 android:layout_width="50dp"
                 android:layout_height="0dp"
-                app:tint="@color/design_default_color_error"
+                android:clickable="true"
                 app:layout_constraintBottom_toBottomOf="@+id/textInputLayout"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:srcCompat="@drawable/ic_baseline_delete_24" />
+                app:srcCompat="@drawable/ic_baseline_delete_24"
+                app:tint="@color/design_default_color_error" />
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/textInputLayout"
@@ -43,7 +44,7 @@
                     android:id="@+id/et_lesson_name"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="textAutoCorrect|textPersonName" />
+                    android:inputType="textAutoCorrect|textPersonName|text" />
 
             </com.google.android.material.textfield.TextInputLayout>
 

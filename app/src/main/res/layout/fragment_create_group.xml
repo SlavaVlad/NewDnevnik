@@ -5,6 +5,8 @@
     android:id="@+id/vp_create_group"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:isScrollContainer="false"
+    android:nestedScrollingEnabled="false"
     tools:context=".ui.groups.CreateGroup">
 
 </androidx.viewpager2.widget.ViewPager2>

@@ -14,7 +14,6 @@ import well.keepitsimple.dnevnik.MainActivity
 import well.keepitsimple.dnevnik.R
 import well.keepitsimple.dnevnik.default.SlideAdapter
 import well.keepitsimple.dnevnik.ui.groups.vpPages.ItemP1GroupFragment
-import well.keepitsimple.dnevnik.ui.groups.vpPages.ItemP2GroupFragment
 import kotlin.coroutines.CoroutineContext
 
 class CreateGroup : Fragment(), CoroutineScope {
@@ -31,13 +30,13 @@ class CreateGroup : Fragment(), CoroutineScope {
         job.cancel()
     }
 
-    val groupId = ""
+    var t: ArrayList<HashMap<String, Any>> = ArrayList()
 
     val db = FirebaseFirestore.getInstance()
     val act: MainActivity by lazy {
         activity as MainActivity
     }
-    val data = hashMapOf<String, Any>()
+    var data = hashMapOf<String, Any>()
 
     // id документа родителя
     // название группы
@@ -57,7 +56,6 @@ class CreateGroup : Fragment(), CoroutineScope {
 
         val pagerAdapter = SlideAdapter(this, mutableListOf(
             ItemP1GroupFragment(),
-            ItemP2GroupFragment(),
         ))
 
         vpCreateGroup.adapter = pagerAdapter
