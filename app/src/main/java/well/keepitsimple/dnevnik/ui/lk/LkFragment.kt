@@ -4,17 +4,16 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.*
+import android.widget.Button
+import android.widget.EditText
+import android.widget.TextView
 import androidx.fragment.app.Fragment
-import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 import well.keepitsimple.dnevnik.MainActivity
 import well.keepitsimple.dnevnik.R
-import well.keepitsimple.dnevnik.login.Group
 import kotlin.coroutines.CoroutineContext
 
 class LkFragment : Fragment(), CoroutineScope {

@@ -1,23 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".ui.groups.vpPages.FragmentCreateTimetablePage">
+    tools:context=".ui.groups.vpPages_class.FragmentCreateTimetablePage">
 
-    <EditText
-        android:id="@+id/et_offset"
-        android:layout_width="match_parent"
-        android:layout_height="60dp"
-        android:hint="Offset"
-        android:inputType="numberSigned"
-        android:text="1" />
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rv_timetable"
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:listitem="@layout/item_timetable" />
-</LinearLayout>
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:id="@+id/lay_lessons"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/textInputLayout"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Offset"
+                android:paddingHorizontal="8dp">
+
+                <!--this is the actual edit text which takes the input-->
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_offset"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="numberSigned" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+</FrameLayout>

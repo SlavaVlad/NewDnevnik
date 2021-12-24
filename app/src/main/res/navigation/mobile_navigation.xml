@@ -76,7 +76,7 @@
     </fragment>
     <fragment
         android:id="@+id/createGroup"
-        android:name="well.keepitsimple.dnevnik.ui.groups.CreateGroup"
+        android:name="well.keepitsimple.dnevnik.ui.groups.CreateClass"
         android:label="fragment_create_group"
         tools:layout="@layout/fragment_create_group" />
     <fragment

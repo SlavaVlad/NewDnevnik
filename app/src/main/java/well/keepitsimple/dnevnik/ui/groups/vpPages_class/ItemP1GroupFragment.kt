@@ -1,4 +1,4 @@
-package well.keepitsimple.dnevnik.ui.groups.vpPages
+package well.keepitsimple.dnevnik.ui.groups.vpPages_class
 
 import android.content.res.ColorStateList
 import android.os.Bundle
@@ -19,7 +19,7 @@ import well.keepitsimple.dnevnik.MainActivity
 import well.keepitsimple.dnevnik.R
 import well.keepitsimple.dnevnik.default.SlideAdapter
 import well.keepitsimple.dnevnik.login.Rights
-import well.keepitsimple.dnevnik.ui.groups.CreateGroup
+import well.keepitsimple.dnevnik.ui.groups.CreateClass
 import kotlin.coroutines.CoroutineContext
 
 class ItemP1GroupFragment : Fragment(), CoroutineScope {
@@ -83,7 +83,7 @@ class ItemP1GroupFragment : Fragment(), CoroutineScope {
 
                 btn.isEnabled = false
 
-                val pf = requireParentFragment() as CreateGroup
+                val pf = requireParentFragment() as CreateClass
 
                 val defaultRightsClass = listOf(
                     Rights.Doc.VIEW.r,

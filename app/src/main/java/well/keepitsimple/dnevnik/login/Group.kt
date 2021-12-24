@@ -7,7 +7,7 @@ class Group(
     var rights: List<String>? = null, // Права, которые даёт эта группа всем, кто в ней состоит
     var type: String? = null, // Тип (Школа или класс)
     var id: String? = null, // ИД группы (привязан к ИД документа)
-    var users: List<String>? = null, // Список пользователей, состоящих в этой группе
+    var users: HashMap<String, Any?>? = null, // Список пользователей, состоящих в этой группе
     var admins: HashMap<String, List<String>>? = null, // ИД пользователей админов // Права админов на эту группу
     var doc: DocumentSnapshot? = null,
 )

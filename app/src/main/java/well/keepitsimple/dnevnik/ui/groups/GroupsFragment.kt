@@ -20,7 +20,8 @@ class GroupsFragment : Fragment() {
     val db = FirebaseFirestore.getInstance()
     lateinit var act: MainActivity
 
-    lateinit var fab_create_group: com.github.clans.fab.FloatingActionButton
+    lateinit var fab_create_class: com.github.clans.fab.FloatingActionButton
+    lateinit var fab_create_subclass: com.github.clans.fab.FloatingActionButton
     lateinit var rv_groups: RecyclerView
 
     override fun onCreateView(
@@ -28,7 +29,8 @@ class GroupsFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_groups, container, false)
 
-        fab_create_group = view.findViewById(R.id.fab_create_class)
+        fab_create_class = view.findViewById(R.id.fab_create_class)
+        fab_create_subclass = view.findViewById(R.id.fab_create_subclass)
         rv_groups = view.findViewById(R.id.rv_groups)
         act = activity as MainActivity
 
@@ -36,6 +38,35 @@ class GroupsFragment : Fragment() {
         setList()
 
         return view
+    }
+
+    private fun init() {
+        fab_create_subclass.setOnClickListener{
+            val fragment = CreateClass()
+            val trans: FragmentTransaction = requireFragmentManager()
+                .beginTransaction()
+                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
+                .addToBackStack(null)
+            trans.replace(R.id.nav_host_fragment_content_main, fragment)
+            trans.commit()
+        }
+
+        fab_create_class.setOnClickListener{
+
+            val fragment = CreateClass()
+
+            val args = Bundle()
+            args.putString("groupType", "class")
+            fragment.arguments = args
+
+            val trans: FragmentTransaction = requireFragmentManager()
+                .beginTransaction()
+                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
+                .addToBackStack(null)
+            trans.replace(R.id.nav_host_fragment_content_main, fragment)
+            trans.commit()
+
+        }
     }
 
     private fun setList() {
@@ -51,7 +82,7 @@ class GroupsFragment : Fragment() {
                     groups,
                     object : GroupOnClickListener {
                         override fun onClick(group: Group) {
-                            val fragment = CreateGroup()
+                            val fragment = CreateClass()
                             val trans: FragmentTransaction = requireFragmentManager()
                                 .beginTransaction()
                                 .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
@@ -62,18 +93,6 @@ class GroupsFragment : Fragment() {
                     })
                 rv_groups.adapter = adapter
             }
-    }
-
-    private fun init() {
-        fab_create_group.setOnClickListener{
-            val fragment = CreateGroup()
-            val trans: FragmentTransaction = requireFragmentManager()
-                .beginTransaction()
-                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
-                .addToBackStack(null)
-            trans.replace(R.id.nav_host_fragment_content_main, fragment)
-            trans.commit()
-        }
     }
 }
 

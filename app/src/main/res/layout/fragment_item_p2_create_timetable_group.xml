@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_marginHorizontal="16dp"
-    tools:context=".ui.groups.vpPages.ItemP2GroupFragment">
+    tools:context=".ui.groups.vpPages_class.ItemP2GroupFragment">
 
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/tabs_dow"

@@ -1,4 +1,4 @@
-package well.keepitsimple.dnevnik.ui.groups.vpPages
+package well.keepitsimple.dnevnik.ui.groups.vpPages_class
 
 import android.os.Bundle
 import android.util.Log
@@ -8,17 +8,13 @@ import android.view.ViewGroup
 import android.widget.Button
 import androidx.fragment.app.Fragment
 import androidx.viewpager2.widget.ViewPager2
-import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.tabs.TabLayout
 import com.google.firebase.firestore.FirebaseFirestore
 import well.keepitsimple.dnevnik.MainActivity
 import well.keepitsimple.dnevnik.R
 import well.keepitsimple.dnevnik.default.SlideAdapter
-import well.keepitsimple.dnevnik.ui.groups.CreateGroup
-
-class Parser {
-    
-}
+import well.keepitsimple.dnevnik.next
+import well.keepitsimple.dnevnik.ui.groups.CreateClass
 
 class ItemP2GroupFragment : Fragment() {
 
@@ -30,12 +26,10 @@ class ItemP2GroupFragment : Fragment() {
         activity as MainActivity
     }
 
-
     lateinit var tabs: TabLayout
     lateinit var vp_timetable: ViewPager2
     lateinit var btn_next: Button
     lateinit var btn_current: Button
-    lateinit var fab_create_lesson: FloatingActionButton
 
     // id документа родителя
     // название группы
@@ -57,25 +51,20 @@ class ItemP2GroupFragment : Fragment() {
         vp_timetable = view.findViewById(R.id.vp_timetable)
         btn_next = view.findViewById(R.id.btn_next_dow)
         btn_current = view.findViewById(R.id.btn_current)
-        fab_create_lesson = view.findViewById(R.id.fab_create_lesson)
 
         vp_timetable.adapter = SlideAdapter(this, mutableListOf(
+
             FragmentCreateTimetablePage(),
             FragmentCreateTimetablePage(),
             FragmentCreateTimetablePage(),
+
             FragmentCreateTimetablePage(),
             FragmentCreateTimetablePage(),
             FragmentCreateTimetablePage(),
+
         ))
 
         vp_timetable.isSaveEnabled = true
-
-        fab_create_lesson.setOnClickListener {
-            val recycler =
-                ((vp_timetable.adapter as SlideAdapter).createFragment(tabs.selectedTabPosition) as FragmentCreateTimetablePage).rv_timetable
-            (recycler.adapter as TimetableCreateAdapter).insertItem()
-            recycler.scrollToPosition((recycler.adapter as TimetableCreateAdapter).itemCount)
-        }
 
         tabs.addOnTabSelectedListener(object :
             TabLayout.OnTabSelectedListener {
@@ -106,36 +95,30 @@ class ItemP2GroupFragment : Fragment() {
         })
 
         btn_next.setOnClickListener {
-            tabs.selectTab(tabs.getTabAt(tabs.selectedTabPosition + 1))
 
-            if (tabs.selectedTabPosition == 5) {
-                val pf = requireParentFragment() as CreateGroup
-                val timetableVisual = vp_timetable.adapter as SlideAdapter
+            val item = ((vp_timetable.adapter as SlideAdapter).getItem(vp_timetable.currentItem) as FragmentCreateTimetablePage)
+            val dryData = item.lessons
 
-                var day = 1
-                repeat(timetableVisual.itemCount) { fragIndex ->
-                    val lessonsToFirestore = hashMapOf<String, Any>()
-                    val fragment =
-                        (timetableVisual.getItem(fragIndex) as FragmentCreateTimetablePage)
+            val payload = hashMapOf<String, Any>(
+                "day" to vp_timetable.currentItem + 1,
+                "timeOffset" to item.etOffset.text.toString().toInt()
+            )
 
-                    var index = 0
-                    (fragment.rv_timetable.adapter as TimetableCreateAdapter).itemsHm.forEach {
-                        if (it["name"] !!.text !!.isNotEmpty() && it["cab"] !!.text !!.isNotEmpty()) {
-                            lessonsToFirestore["${index}_name"] = it["name"] !!.text.toString()
-                            lessonsToFirestore["${index}_cab"] = it["cab"] !!.text.toString().toInt()
-                        }
-                        index ++
-                    }
-                    lessonsToFirestore["lessonsCount"] = index
-                    lessonsToFirestore["day"] = day
-                    lessonsToFirestore["timeOffset"] = fragment.et_offset.text.toString().toInt()
-                    day ++
-                    pf.t.add(lessonsToFirestore)
+            var lessonsCount = 0
+            repeat(item.lessonsCount){
+                if (dryData[it][0].text!!.isNotEmpty()){
+                    lessonsCount++
                 }
-
-                (pf.vpCreateGroup.adapter as SlideAdapter).insertItem(ItemP3GroupFragment())
-                pf.vpCreateGroup.currentItem = 2
             }
+            payload["lessonsCount"] = lessonsCount
+            repeat(lessonsCount){
+                payload["${it + 1}_name"] = item.lessons[it][0].text.toString()
+                payload["${it + 1}_cab"] = item.lessons[it][1].text.toString().toInt()
+            }
+
+            (requireParentFragment() as CreateClass).addDay(payload)
+
+            tabs.next()
 
         }
 

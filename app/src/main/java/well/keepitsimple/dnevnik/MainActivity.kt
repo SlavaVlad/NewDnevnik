@@ -1,7 +1,6 @@
 package well.keepitsimple.dnevnik
 
 import android.content.Intent
-import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
@@ -20,14 +19,21 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.android.material.navigation.NavigationView
+import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.toObject
+import com.journeyapps.barcodescanner.ScanContract
+import com.journeyapps.barcodescanner.ScanIntentResult
+import com.journeyapps.barcodescanner.ScanOptions
 import com.onesignal.OneSignal
+import io.github.tonnyl.whatsnew.WhatsNew
+import io.github.tonnyl.whatsnew.item.WhatsNewItem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -77,6 +83,27 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
 
     override fun onStart() {
         super.onStart()
+
+        val wn = WhatsNew.newInstance(
+            WhatsNewItem("Группы",
+                "Теперь можно создавать классы и добавлять в них учеников!",
+                R.drawable.ic_group),
+            WhatsNewItem("Инвайты",
+                "Вводите код, который вам дал учитель и вы без всяких затруднений становитесь учеником определённого класса",
+                R.drawable.ic_link),
+            WhatsNewItem("Скорость",
+                "Запросов стало немного меньше и они вынесены в свои потоки, поэтому приложение будет меньше тормозить при открытии вкладки меню, например",
+                R.drawable.ic_speed),
+            WhatsNewItem("Как говаривал Chrome",
+                "\"В этом обновлении мы повысили стабильность и производительность\"©",
+                R.drawable.ic_citata),
+        )
+        wn.titleText = "Что нового?"
+        wn.buttonText = "В приложение"
+        //wn.buttonBackground = R.color.design_default_color_secondary
+        //wn.buttonTextColor = R.color.white
+        wn.presentAutomatically(this@MainActivity)
+
         // Check if user is signed in (non-null) and update UI accordingly.
         val currentUser = auth.currentUser
         if (currentUser == null) {
@@ -92,11 +119,11 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
 
-        /*MobileAds.initialize(this)*/
+        //MobileAds.initialize(this)
         mAdView = findViewById(R.id.adBanner_tasks)
-        /*val adRequest = AdRequest.Builder().build()
-        mAdView !!.loadAd(adRequest)*/
-        mAdView!!.isVisible = false
+        //val adRequest = AdRequest.Builder().build()
+        //mAdView !!.loadAd(adRequest)
+        mAdView !!.isVisible = false
 
     }
 
@@ -213,7 +240,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
 
                             // list_lessons.sortByDescending { list_lessons -> list_lessons.day }
 
-                            Log.e(TAG, "getTimetables: ", )
+                            Log.e(TAG, "getTimetables: ")
 
                             isTimetablesComplete = true
 
@@ -264,10 +291,10 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                 if (today < it.day) {
                     return (now + (daysPassed * DAY_S))
                 } else {
-                    return (now + ((daysPassed +1) * DAY_S))
+                    return (now + ((daysPassed + 1) * DAY_S))
                 }
             }
-            loopindex++
+            loopindex ++
         }
         return 0
     }
@@ -391,12 +418,12 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
     }
 
     private fun checkUserInDatabase(fire_user: FirebaseUser) {
-        db.collection("users").document(fire_user.uid).get().addOnSuccessListener {
-            if (it.exists()) {
+        db.collection("users").document(fire_user.uid).get().addOnSuccessListener { doc ->
+            if (doc.exists()) {
 
-                user = it.toObject<User>() !!
+                user = doc.toObject<User>() !!
 
-                user.uid = it.id
+                user.uid = doc.id
 
                 getRights()
             } else {
@@ -418,19 +445,42 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
     }
 
     private fun getRights() {
+
+        if (intent.getStringExtra("addGroup") != "") {
+            db.collectionGroup("groups")
+                .whereEqualTo("docId", intent.getStringExtra("addGroup"))
+                .get()
+                .addOnSuccessListener { querySnapshot ->
+                    querySnapshot.documents.forEach { doc ->
+                            (doc.get("users") as HashMap<String, Any?>)[uid!!] = null
+
+                            when (doc["type"].toString()){
+                                "class" -> doc.reference.parent.parent!!.get().addOnSuccessListener {
+                                    (it.get("users") as HashMap<String, Any?>)[uid!!] = null
+                                    it.reference.update(it.data!!)
+                                }
+                            }
+
+                            doc.reference.update(doc.data!!)
+                    }
+                }
+        }
+
         db.collectionGroup("groups")
-            .whereArrayContains("users", uid !!)
+            .whereEqualTo(FieldPath.of("users", "$uid"), null)
             .get()
             .addOnSuccessListener { querySnapshot ->
-                Log.d(TAG, "GROUPS: ${querySnapshot.documents.size}")
                 var index = 0
                 querySnapshot.documents.forEach { // записываем группы в пользователя
-                    user.groups.add(it.toObject<Group>()!!)
+                    user.groups.add(it.toObject<Group>() !!)
                     user.groups[index].doc = it
                     user.groups[index].id = it.id
                     it.id
                     Log.w(TAG, user.groups.toString())
                     index ++
+                }
+                if (user.groups.isEmpty()){
+                    qr()
                 }
                 if (list_lessons.isEmpty()) {
                     getTimetables()
@@ -450,6 +500,39 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                     index ++
                 }
             }
+
+    }
+
+    private val barcodeLauncher = registerForActivityResult(
+        ScanContract()
+    ) { result: ScanIntentResult ->
+        if (result.contents != null) {
+            acceptInvite(result.contents)
+        }
+    }
+
+    // Launch
+    private fun qr() {
+        barcodeLauncher.launch(ScanOptions().setOrientationLocked(true).setPrompt("Код, который дал вам учитель"))
+    }
+
+    private fun acceptInvite(code: String) {
+        FirebaseFirestore
+            .getInstance()
+            .collectionGroup("groups")
+            .whereEqualTo("docId", code)
+            .limit(1)
+            .get()
+            .addOnSuccessListener { q ->
+                val doc = q.documents[0]
+                val data = hashMapOf<String, Any>(
+                    "users" to hashMapOf<String, Any?>(
+                        uid!! to null,
+                    )
+                )
+                doc.reference.update(data)
+                Snackbar.make(binding.root.rootView, "Вы вступили в группу ${doc["name"]}", Snackbar.LENGTH_LONG).show()
+            }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -461,14 +544,6 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
     override fun onSupportNavigateUp(): Boolean {
         val navController = findNavController(R.id.nav_host_fragment_content_main)
         return navController.navigateUp(appBarConfiguration) || super.onSupportNavigateUp()
-    }
-
-    private fun saveString(key: String, value: String) {
-        val sPref = getSharedPreferences("uid", MODE_PRIVATE)
-        val ed: SharedPreferences.Editor = sPref.edit()
-        ed.putString(key, value)
-        ed.apply()
-        Log.d("sPref", "saveString: $key ; $value")
     }
 
 }
