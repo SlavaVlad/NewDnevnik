@@ -19,6 +19,7 @@ import well.keepitsimple.dnevnik.MainActivity
 import well.keepitsimple.dnevnik.R
 import well.keepitsimple.dnevnik.default.SlideAdapter
 import well.keepitsimple.dnevnik.login.Rights
+import well.keepitsimple.dnevnik.randClass
 import well.keepitsimple.dnevnik.ui.groups.CreateClass
 import kotlin.coroutines.CoroutineContext
 
@@ -79,7 +80,7 @@ class ItemP1GroupFragment : Fragment(), CoroutineScope {
         et_name.addTextChangedListener(textWatcher)
 
         btn_ok.setOnClickListener { btn ->
-            if (et_name.text !!.isNotEmpty()) {
+            if (et_name.text!!.isNotEmpty()) {
 
                 btn.isEnabled = false
 
@@ -110,12 +111,15 @@ class ItemP1GroupFragment : Fragment(), CoroutineScope {
                 )
 
                 pf.data = docData
-                pf.data["name"] = et_name.text !!.toString()
+                pf.data["name"] = et_name.text!!.toString()
 
                 (pf.vpCreateGroup.adapter as SlideAdapter).insertItem(ItemP2GroupFragment())
                 pf.vpCreateGroup.setCurrentItem(1, true)
             }
         }
+
+        et_name.setText(randClass())
+
         return view
     }
 }

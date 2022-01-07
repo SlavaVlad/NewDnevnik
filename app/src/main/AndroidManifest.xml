@@ -39,12 +39,7 @@
             android:name="firebase_performance_logcat_enabled"
             android:value="true" />
 
-        <provider
-            android:name="androidx.core.content.FileProvider"
-            android:authorities="well.keepitsimple.dnevnik"
-            android:exported="false"
-            android:grantUriPermissions="true">
-        </provider>
+
         <activity
             android:name="com.journeyapps.barcodescanner.CaptureActivity"
             android:screenOrientation="portrait"

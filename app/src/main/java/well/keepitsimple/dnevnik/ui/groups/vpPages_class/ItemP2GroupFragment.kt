@@ -6,17 +6,24 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.tabs.TabLayout
+import com.google.android.material.textfield.TextInputEditText
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import well.keepitsimple.dnevnik.MainActivity
 import well.keepitsimple.dnevnik.R
 import well.keepitsimple.dnevnik.default.SlideAdapter
 import well.keepitsimple.dnevnik.next
 import well.keepitsimple.dnevnik.ui.groups.CreateClass
+import kotlin.coroutines.CoroutineContext
 
-class ItemP2GroupFragment : Fragment() {
+class ItemP2GroupFragment : Fragment(), CoroutineScope {
 
     val db = FirebaseFirestore.getInstance()
 
@@ -24,6 +31,16 @@ class ItemP2GroupFragment : Fragment() {
 
     val act: MainActivity by lazy {
         activity as MainActivity
+    }
+
+    private var job: Job = Job()
+
+    override val coroutineContext: CoroutineContext
+        get() = Dispatchers.Main + job
+
+    override fun onDestroy() {
+        super.onDestroy()
+        job.cancel()
     }
 
     lateinit var tabs: TabLayout
@@ -52,17 +69,17 @@ class ItemP2GroupFragment : Fragment() {
         btn_next = view.findViewById(R.id.btn_next_dow)
         btn_current = view.findViewById(R.id.btn_current)
 
-        vp_timetable.adapter = SlideAdapter(this, mutableListOf(
+        vp_timetable.adapter = SlideAdapter(
+            this, mutableListOf(
+                FragmentCreateTimetablePage(),
+                FragmentCreateTimetablePage(),
+                FragmentCreateTimetablePage(),
 
-            FragmentCreateTimetablePage(),
-            FragmentCreateTimetablePage(),
-            FragmentCreateTimetablePage(),
-
-            FragmentCreateTimetablePage(),
-            FragmentCreateTimetablePage(),
-            FragmentCreateTimetablePage(),
-
-        ))
+                FragmentCreateTimetablePage(),
+                FragmentCreateTimetablePage(),
+                FragmentCreateTimetablePage(),
+            )
+        )
 
         vp_timetable.isSaveEnabled = true
 
@@ -70,16 +87,16 @@ class ItemP2GroupFragment : Fragment() {
             TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab?) {
 
-                vp_timetable.setCurrentItem(tab !!.position, true)
-                btn_current.text = "Выбрано: ${tabs.getTabAt(tabs.selectedTabPosition) !!.text}"
+                vp_timetable.setCurrentItem(tab!!.position, true)
+                btn_current.text = "Выбрано: ${tabs.getTabAt(tabs.selectedTabPosition)!!.text}"
 
                 val tabIndex = tabs.selectedTabPosition
 
                 if (tabIndex != 5 && tabIndex != 0) { // вт-пт
-                    btn_next.text = "К ${tabs.getTabAt(tabIndex + 1) !!.text}"
+                    btn_next.text = "К ${tabs.getTabAt(tabIndex + 1)!!.text}"
                 } else {
                     if (tabIndex == 0) { // 0
-                        btn_next.text = "К ${tabs.getTabAt(tabIndex + 1) !!.text}"
+                        btn_next.text = "К ${tabs.getTabAt(tabIndex + 1)!!.text}"
                     } else { // 5
                         btn_next.text = "Завершить"
                     }
@@ -96,7 +113,8 @@ class ItemP2GroupFragment : Fragment() {
 
         btn_next.setOnClickListener {
 
-            val item = ((vp_timetable.adapter as SlideAdapter).getItem(vp_timetable.currentItem) as FragmentCreateTimetablePage)
+            val item =
+                ((vp_timetable.adapter as SlideAdapter).getItem(vp_timetable.currentItem) as FragmentCreateTimetablePage)
             val dryData = item.lessons
 
             val payload = hashMapOf<String, Any>(
@@ -105,18 +123,23 @@ class ItemP2GroupFragment : Fragment() {
             )
 
             var lessonsCount = 0
-            repeat(item.lessonsCount){
-                if (dryData[it][0].text!!.isNotEmpty()){
+            repeat(item.lessonsCount) {
+                if ((dryData[it][0] as TextInputEditText).text!!.isNotEmpty()) {
                     lessonsCount++
                 }
             }
-            payload["lessonsCount"] = lessonsCount
-            repeat(lessonsCount){
-                payload["${it + 1}_name"] = item.lessons[it][0].text.toString()
-                payload["${it + 1}_cab"] = item.lessons[it][1].text.toString().toInt()
+            //item.lessons[it][2] as TextView
+            repeat(lessonsCount) {
+                payload["${it + 1}_name"] = (item.lessons[it][0] as TextInputEditText).text.toString()
+                payload["${it + 1}_cab"] = (item.lessons[it][1] as TextInputEditText).text.toString().toInt()
+                if ((item.lessons[it][2] as TextView).text.toString().toInt() != 0) {
+                    payload["${it + 1}_group"] = (item.lessons[it][2] as TextView).text.toString()
+                }
             }
 
-            (requireParentFragment() as CreateClass).addDay(payload)
+            payload["lessonsCount"] = lessonsCount
+
+            launch { (requireParentFragment() as CreateClass).addDay(payload) }
 
             tabs.next()
 

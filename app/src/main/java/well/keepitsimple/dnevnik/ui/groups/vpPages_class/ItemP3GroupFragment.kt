@@ -45,7 +45,7 @@ class ItemP3GroupFragment : Fragment() {
 
         tv_info.text = d.toString()
 
-        createInvite(requireArguments().getString("docId", ""))
+        //createInvite(requireArguments().getString("docId", ""))
 
         btn_create_group.setOnClickListener {
             OmegaIntentBuilder.from(requireContext())

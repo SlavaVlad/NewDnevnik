@@ -14,6 +14,11 @@ fun <E> ArrayList<E>.addUnique(value: E) {
         this.add(value)
     }
 }
+fun <E> MutableList<E>.addUnique(value: E) {
+    if (! this.contains(value)) {
+        this.add(value)
+    }
+}
 
 fun <E> ArrayList<E>.addSwitch(value: E) {
     if (! this.contains(value)) {
@@ -72,4 +77,30 @@ fun <K, V> HashMap<K, V>.putUnique(key: K, value: V) {
 
 fun TabLayout.next(){
     selectTab(getTabAt(selectedTabPosition + 1))
+}
+
+fun randStr(length: Int): String {
+    val alphabet = "qwertyuiopasdfghjklzxcvbnm"
+    var res = ""
+    repeat(length) {
+        res += alphabet[(0..alphabet.length).random()]
+    }
+    return res
+}
+
+fun randCode(length: Int): String {
+    val alphabet = "1234567890"
+    var res = ""
+    repeat(length) {
+        res += alphabet[(0..alphabet.length).random()]
+    }
+    return res
+}
+
+fun randClass(): String {
+    val letters = "АБВГДЕ"
+    var res = ""
+    res += (1..11).random().toString()
+    res += letters[(0..letters.length-1).random()]
+    return res
 }

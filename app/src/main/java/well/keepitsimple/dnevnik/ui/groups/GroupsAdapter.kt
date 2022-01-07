@@ -45,23 +45,23 @@ class GroupsAdapter(private val groups: List<Group>, private val onClickListener
 
         if (item.users != null) {
             var users = ""
-            item.users !!.forEach {
+            item.users ?.forEach {
                 users = "${users}${it}\n"
             }
             h.users?.isVisible = true
-            h.users!!.text = users
+            h.users?.text = users
             h.label_users?.isVisible = true
         }
         if (item.admins != emptyMap<String, Any>()) {
             var admins = ""
-            item.admins !!.forEach {
+            item.admins?.forEach {
                 admins = "${admins}${it.key}\n"
             }
             h.admins?.isVisible = true
-            h.admins!!.text = admins
+            h.admins?.text = admins
             h.label_admins?.isVisible = true
         }
-        h.name !!.text = item.name
+        h.name ?.text = item.name
         h.type !!.text = item.type
         h.id !!.text = item.id
 
