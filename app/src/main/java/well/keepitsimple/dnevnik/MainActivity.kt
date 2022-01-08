@@ -204,7 +204,8 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                                                     name = lesson.getString("${loopindex}_name") !!, // название предмета (пример: Математика)
                                                     startAt = lesson_time.getString("${loopindex + offset}_startAt") !!, // время начала урока 09:15, например
                                                     endAt = lesson_time.getString("${loopindex + offset}_endAt") !!, // время конца урока
-                                                    day = lesson.getLong("day") !!// номер дня в неделе, ПН=1, СБ=6
+                                                    groupId = lesson.getString("${loopindex + offset}_group")!!,
+                                                    day = lesson.getLong("day") !! // номер дня в неделе, ПН=1, СБ=6
                                                 )
                                             )
                                         }
