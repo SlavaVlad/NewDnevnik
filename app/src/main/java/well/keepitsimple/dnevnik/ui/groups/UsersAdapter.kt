@@ -5,11 +5,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.CheckBox
 import androidx.recyclerview.widget.RecyclerView
-import well.keepitsimple.dnevnik.MainActivity
 import well.keepitsimple.dnevnik.R
 import well.keepitsimple.dnevnik.addSwitch
 
-class UsersAdapter(private val users: ArrayList<MainActivity.User>) :
+class UsersAdapter(private val users: ArrayList<User>) :
     RecyclerView.Adapter<UsersAdapter.UsersViewHolder>() {
 
     val checkedUsersID = ArrayList<String>()

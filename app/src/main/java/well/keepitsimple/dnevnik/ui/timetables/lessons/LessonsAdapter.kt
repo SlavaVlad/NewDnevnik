@@ -22,9 +22,9 @@ class LessonsAdapter(var ctx: Context, var ressource: Int, var d_item: ArrayList
         val cab = view.findViewById<TextView>(R.id.cab)
 
         name.text = item.name
-        cab.text = item.cab.toString()
+        cab.text = item.cab
 
-        time.text = "${item.startAt} - ${item.endAt}"
+        time.text = "${item.time.startAt} - ${item.time.endAt}"
 
         return view
     }

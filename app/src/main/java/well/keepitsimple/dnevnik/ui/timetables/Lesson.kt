@@ -1,10 +1,9 @@
 package well.keepitsimple.dnevnik.ui.timetables
 
 data class Lesson(
-    val cab: Long,
-    val name: String,
-    val startAt: String,
-    val endAt: String,
+    val cab: String,
+    val name: String? = null,
+    val time: LessonsTime,
     val day: Long,
-    var groupId: String,
+    var groupId: String? = null,
 )

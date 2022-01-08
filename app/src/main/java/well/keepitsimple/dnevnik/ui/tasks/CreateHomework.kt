@@ -153,11 +153,11 @@ class CreateHomework : Fragment(), CoroutineScope {
         val uniqueLessons = ArrayList<String>()
 
         act.list_lessons.forEach { lesson ->
-            if (lesson.day.toInt() == sysCalendar.get(Calendar.DAY_OF_WEEK) - 1 && ! uniqueLessons.contains(
+            if (lesson.day!!.toInt() == sysCalendar.get(Calendar.DAY_OF_WEEK) - 1 && ! uniqueLessons.contains(
                     lesson.name
                 )
             ) {
-                val c = createCheckableChip(requireContext(), lesson.name)
+                val c = createCheckableChip(requireContext(), lesson.name!!)
                 cg_subjects.addView(c)
                 c.setOnClickListener { v ->
                     val cc = v as Chip
@@ -182,7 +182,7 @@ class CreateHomework : Fragment(), CoroutineScope {
         val names = arrayListOf<String>()
 
         act.list_lessons.forEach {
-            names.addUnique(it.name)
+            names.addUnique(it.name!!)
         }
 
         names.forEach {

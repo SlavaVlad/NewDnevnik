@@ -26,7 +26,6 @@ import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.ktx.toObject
 import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanIntentResult
@@ -39,8 +38,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import well.keepitsimple.dnevnik.databinding.ActivityMainBinding
 import well.keepitsimple.dnevnik.login.Group
+import well.keepitsimple.dnevnik.ui.groups.User
 import well.keepitsimple.dnevnik.ui.tasks.Task
 import well.keepitsimple.dnevnik.ui.timetables.Lesson
+import well.keepitsimple.dnevnik.ui.timetables.LessonsTime
 import java.util.*
 import java.util.Calendar.DAY_OF_WEEK
 import kotlin.collections.ArrayList
@@ -85,18 +86,26 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         super.onStart()
 
         val wn = WhatsNew.newInstance(
-            WhatsNewItem("Группы",
+            WhatsNewItem(
+                "Группы",
                 "Теперь можно создавать классы и добавлять в них учеников!",
-                R.drawable.ic_group),
-            WhatsNewItem("Инвайты",
+                R.drawable.ic_group
+            ),
+            WhatsNewItem(
+                "Инвайты",
                 "Вводите код, который вам дал учитель и вы без всяких затруднений становитесь учеником определённого класса",
-                R.drawable.ic_link),
-            WhatsNewItem("Скорость",
+                R.drawable.ic_link
+            ),
+            WhatsNewItem(
+                "Скорость",
                 "Запросов стало немного меньше и они вынесены в свои потоки, поэтому приложение будет меньше тормозить при открытии вкладки меню, например",
-                R.drawable.ic_speed),
-            WhatsNewItem("Как говаривал Chrome",
+                R.drawable.ic_speed
+            ),
+            WhatsNewItem(
+                "Как говаривал Chrome",
                 "\"В этом обновлении мы повысили стабильность и производительность\"©",
-                R.drawable.ic_citata),
+                R.drawable.ic_citata
+            ),
         )
         wn.titleText = "Что нового?"
         wn.buttonText = "В приложение"
@@ -123,7 +132,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         mAdView = findViewById(R.id.adBanner_tasks)
         //val adRequest = AdRequest.Builder().build()
         //mAdView !!.loadAd(adRequest)
-        mAdView !!.isVisible = false
+        mAdView!!.isVisible = false
 
     }
 
@@ -172,84 +181,36 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         // запрос документов расписания
         try {
             db.collection("groups")
-                .document(user.getGroupByType("school").id !!)
+                .document(user.getGroupByType("school").id!!)
                 .collection("lessonstime")
                 .get()
-                .addOnSuccessListener { lesson_time_query -> // расписание звонков
+                .addOnSuccessListener { timeTmp -> // расписание звонков
+                    val time = (timeTmp.documents[0]["time"] as List<HashMap<String, String>>)
                     db.collection("groups")
-                        .document(user.getGroupByType("school").id !!)
+                        .document(user.getGroupByType("school").id!!) // Получаем уроки за определённый день
                         .collection("groups")
-                        .document(user.getGroupByType("class").id !!)
-                        .collection("lessons")
-                        .orderBy("day", Query.Direction.ASCENDING)
+                        .document(user.getGroupByType("class").id!!)
+                        .collection("timetable")
                         .get()
-                        .addOnSuccessListener { lesson_query -> // получаем всё расписание на все дни
-                            val lesson_time = lesson_time_query.documents[0]
-                            lesson_query.forEach { // проходимся по каждому документу
-                                Log.d(TAG, it.getLong("day").toString())
-                                val lesson = it // получаем текущий документ
-                                var error = 0
-                                repeat(
-                                    lesson.getLong("lessonsCount") !!
-                                        .toInt()
-                                ) { loop -> // проходимся по списку уроков в дне
-                                    val loopindex: Int = loop + 1 // получаем не 0-based индекс
-                                    var offset = lesson.getLong("timeOffset") !!
-                                    when (lesson.get("${loopindex}_parent")) {
-                                        null -> {
-                                            offset -= error
-                                            list_lessons.add(
-                                                Lesson( // добавляем урок в массив
-                                                    cab = lesson.getLong("${loopindex}_cab") !!, // кабинет
-                                                    name = lesson.getString("${loopindex}_name") !!, // название предмета (пример: Математика)
-                                                    startAt = lesson_time.getString("${loopindex + offset}_startAt") !!, // время начала урока 09:15, например
-                                                    endAt = lesson_time.getString("${loopindex + offset}_endAt") !!, // время конца урока
-                                                    groupId = lesson.getString("${loopindex + offset}_group")!!,
-                                                    day = lesson.getLong("day") !! // номер дня в неделе, ПН=1, СБ=6
-                                                )
-                                            )
-                                        }
-                                        else -> {
-                                            if (lesson.getBoolean("${loopindex}_parent") !!) {
-                                                offset -= error
-                                                list_lessons.add(
-                                                    Lesson( // добавляем урок в массив
-                                                        cab = lesson.getLong("${loopindex}_cab") !!, // кабинет
-                                                        name = lesson.getString("${loopindex}_name") !!, // название предмета (пример Математика)
-                                                        startAt = lesson_time.getString("${loopindex + offset}_startAt") !!, // время начала урока 09:15, например
-                                                        endAt = lesson_time.getString("${loopindex + offset}_endAt") !!, // время конца урока
-                                                        day = lesson.getLong("day") !!
-                                                    )
-                                                ) // номер дня в неделе, ПН=1, СБ=6))
-                                            } else {
-                                                error ++
-                                                offset -= error
-                                                list_lessons.add(
-                                                    Lesson( // добавляем урок в массив
-                                                        cab = lesson.getLong("${loopindex}_cab") !!, // кабинет
-                                                        name = lesson.getString("${loopindex}_name") !!, // название предмета (пример Математика)
-                                                        startAt = lesson_time.getString("${loopindex + offset}_startAt") !!, // время начала урока 09:15, например
-                                                        endAt = lesson_time.getString("${loopindex + offset}_endAt") !!, // время конца урока
-                                                        day = lesson.getLong("day") !!// номер дня в неделе, ПН=1, СБ=6
-                                                    )
-                                                )
-                                            }
-                                        }
-                                    }
+                        .addOnSuccessListener { q ->
+                            q.documents.forEach {
+                                (it["lessons"] as List<HashMap<String, Any>>).forEach { lesson ->
+                                    list_lessons.add(Lesson(
+                                        (lesson["cab"] as String),
+                                        (lesson["name"] as String),
+                                        LessonsTime((time[it.getLong("dow")!!.toInt()]["startAt"] as String), (time[it.getLong("dow")!!.toInt()]["endAt"] as String)),
+                                        it.getLong("dow")!!+1,
+                                        (lesson["groupId"] as String?),
+                                    ))
                                 }
                             }
-
-                            // list_lessons.sortByDescending { list_lessons -> list_lessons.day }
-
-                            Log.e(TAG, "getTimetables: ")
-
                             isTimetablesComplete = true
 
                             Log.d(TAG, list_lessons.toString())
                         }
                 }
         } catch (e: NullPointerException) {
-            throw Exception("No groups found")
+            throw Exception("No groups found or smth else null")
         }
     }
 
@@ -262,13 +223,13 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
 
         list_lessons.forEach {
             if (it.day > today) {
-                val tmp = Lesson(it.cab, it.name, it.startAt, it.endAt, it.day)
+                val tmp = Lesson(it.cab, it.name, it.time, it.day)
                 tmpLessons.add(tmp)
             }
         }
 
         list_lessons.forEach {
-            val tmp = Lesson(it.cab, it.name, it.startAt, it.endAt, it.day)
+            val tmp = Lesson(it.cab, it.name, it.time, it.day)
             tmpLessons.add(tmp)
         }
 
@@ -280,22 +241,22 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         tmpLessons.forEach {
             if (loopindex > 0) {
                 if (tmpLessons[loopindex - 1].day != it.day) {
-                    daysPassed ++
+                    daysPassed++
                 }
             }
             if (lesson_name == it.name) {
 
                 Log.d(TAG, "Today: ${calendar.get(DAY_OF_WEEK) - 1}")
                 Log.d(TAG, "Selected: $it")
-                Log.d(TAG, "Returned: ${(now + ((it.day) * DAY_S))}")
+                Log.d(TAG, "Returned: ${(now + ((it.day)!! * DAY_S))}")
 
-                if (today < it.day) {
-                    return (now + (daysPassed * DAY_S))
+                return if (today < it.day) {
+                    (now + (daysPassed * DAY_S))
                 } else {
-                    return (now + ((daysPassed + 1) * DAY_S))
+                    (now + ((daysPassed + 1) * DAY_S))
                 }
             }
-            loopindex ++
+            loopindex++
         }
         return 0
     }
@@ -328,7 +289,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                 // Google Sign In was successful, authenticate with Firebase
                 val account = task.getResult(ApiException::class.java)
                 Log.d(F, "firebaseAuthWithGoogle:" + account.id)
-                firebaseAuthWithGoogle(account.idToken !!)
+                firebaseAuthWithGoogle(account.idToken!!)
             } catch (e: ApiException) {
                 // Google Sign In failed, update UI appropriately
                 Log.w(F, "Google sign in failed", e)
@@ -343,8 +304,8 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                 if (task.isSuccessful) {
                     // Sign in success, update UI with the signed-in user's information
                     Log.d(F, "signInWithCredential:success")
-                    val user = auth.currentUser !!
-                    uid = auth.currentUser !!.uid
+                    val user = auth.currentUser!!
+                    uid = auth.currentUser!!.uid
 
                     checkUserInDatabase(user)
                 } else {
@@ -357,72 +318,11 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
             }
     }
 
-    class User(
-        var uid: String? = null,
-        val groups: ArrayList<Group> = ArrayList(),
-    ) {
-
-        val db = FirebaseFirestore.getInstance()
-
-        fun getGroupByType(type: String): Group {
-            groups.forEach {
-                if (it.type == type) {
-                    return it
-                }
-            }
-            return Group()
-        }
-
-        fun isAllowedInGroup(permission: String, group: Group): Boolean {
-            if (group.rights !!.contains(permission)) {
-                return true
-            } else if (group.admins !!.contains(this.uid)) {
-                if (group.admins !![this.uid] !!.contains(permission)) {
-                    return true
-                }
-            }
-            return false
-        }
-
-        fun isAllowedAsAdmin(permission: String, group: Group): Boolean {
-            return group.admins !![this.uid] !!.contains(permission)
-        }
-
-        fun getGroupsWhereAdmin(): List<Group> {
-            val toReturn = mutableListOf<Group>()
-
-            groups.forEach {
-                if (it.admins !!.contains(uid)) {
-                    toReturn.add(it)
-                }
-            }
-
-            return toReturn
-        }
-
-        @Deprecated("Deprecated in class Groups system", ReplaceWith("getPermissionsByGroup()"))
-        fun isAllow(p: String): Boolean {
-            return this.getAllPermissions().contains(p)
-        }
-
-        @Deprecated("Deprecated in class Groups system", ReplaceWith("getPermissionsByGroup()"))
-        fun getAllPermissions(): ArrayList<String> {
-            val permissions = ArrayList<String>()
-            repeat(groups.size) { groupIndex ->
-                repeat(groups[groupIndex].rights !!.size) { rightIndex ->
-                    permissions.add(groups[groupIndex].rights !![rightIndex])
-                }
-            }
-            return permissions
-        }
-
-    }
-
     private fun checkUserInDatabase(fire_user: FirebaseUser) {
         db.collection("users").document(fire_user.uid).get().addOnSuccessListener { doc ->
             if (doc.exists()) {
 
-                user = doc.toObject<User>() !!
+                user = doc.toObject<User>()!!
 
                 user.uid = doc.id
 
@@ -453,16 +353,16 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                 .get()
                 .addOnSuccessListener { querySnapshot ->
                     querySnapshot.documents.forEach { doc ->
-                            (doc.get("users") as HashMap<String, Any?>)[uid!!] = null
+                        (doc.get("users") as HashMap<String, Any?>)[uid!!] = null
 
-                            when (doc["type"].toString()){
-                                "class" -> doc.reference.parent.parent!!.get().addOnSuccessListener {
-                                    (it.get("users") as HashMap<String, Any?>)[uid!!] = null
-                                    it.reference.update(it.data!!)
-                                }
+                        when (doc["type"].toString()) {
+                            "class" -> doc.reference.parent.parent!!.get().addOnSuccessListener {
+                                (it.get("users") as HashMap<String, Any?>)[uid!!] = null
+                                it.reference.update(it.data!!)
                             }
+                        }
 
-                            doc.reference.update(doc.data!!)
+                        doc.reference.update(doc.data!!)
                     }
                 }
         }
@@ -473,14 +373,14 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
             .addOnSuccessListener { querySnapshot ->
                 var index = 0
                 querySnapshot.documents.forEach { // записываем группы в пользователя
-                    user.groups.add(it.toObject<Group>() !!)
+                    user.groups.add(it.toObject<Group>()!!)
                     user.groups[index].doc = it
                     user.groups[index].id = it.id
                     it.id
                     Log.w(TAG, user.groups.toString())
-                    index ++
+                    index++
                 }
-                if (user.groups.isEmpty()){
+                if (user.groups.isEmpty()) {
                     qr()
                 }
                 if (list_lessons.isEmpty()) {
@@ -489,19 +389,30 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
             }
 
         db.collectionGroup("groups")
-            .whereArrayContains("admins", uid !!)
+            .whereArrayContains("admins", uid!!)
             .get()
             .addOnSuccessListener { querySnapshot ->
                 var index = 0
                 querySnapshot.documents.forEach {
-                    user.groups.addUnique(it.toObject<Group>() !!)
+                    user.groups.addUnique(it.toObject<Group>()!!)
                     user.groups[index].id = it.id
-                    it.id
                     Log.w(TAG, user.groups.toString())
-                    index ++
+                    index++
                 }
             }
 
+    }
+
+    private fun script() {
+        val builder = AlertDialog.Builder(this)
+        builder
+            .setTitle("Written!")
+            .setMessage("Successfully written")
+            .setCancelable(true)
+            .setPositiveButton("Ok") { dialog, id ->
+                throw Exception("Script completed")
+            }
+            .show()
     }
 
     private val barcodeLauncher = registerForActivityResult(
@@ -514,13 +425,13 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
 
     // Launch
     private fun qr() {
-        barcodeLauncher.launch(ScanOptions().setOrientationLocked(true).setPrompt("Код, который дал вам учитель"))
+        barcodeLauncher.launch(
+            ScanOptions().setOrientationLocked(true).setPrompt("Код, который дал вам учитель")
+        )
     }
 
     private fun acceptInvite(code: String) {
-        FirebaseFirestore
-            .getInstance()
-            .collectionGroup("groups")
+        db.collectionGroup("groups")
             .whereEqualTo("docId", code)
             .limit(1)
             .get()
@@ -532,7 +443,11 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                     )
                 )
                 doc.reference.update(data)
-                Snackbar.make(binding.root.rootView, "Вы вступили в группу ${doc["name"]}", Snackbar.LENGTH_LONG).show()
+                Snackbar.make(
+                    binding.root.rootView,
+                    "Вы вступили в группу ${doc["name"]}",
+                    Snackbar.LENGTH_LONG
+                ).show()
             }
     }
 
