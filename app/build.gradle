@@ -11,8 +11,8 @@ android {
         applicationId "well.keepitsimple.dnevnik"
         minSdkVersion 26
         targetSdkVersion 30
-        versionCode 15
-        versionName "0.6.0"
+        versionCode 16
+        versionName "0.6.1"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -166,4 +166,6 @@ dependencies {
     // For extras
     implementation 'com.github.Omega-R.OmegaIntentBuilder:annotations:1.1.5'
     kapt 'com.github.Omega-R.OmegaIntentBuilder:processor:1.1.5'
+
+    implementation("org.greenrobot:eventbus:3.3.1")
 }

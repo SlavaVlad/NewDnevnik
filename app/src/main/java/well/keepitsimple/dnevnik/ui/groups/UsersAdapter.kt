@@ -29,9 +29,8 @@ class UsersAdapter(private val users: ArrayList<User>) :
 
         holder.name.setOnCheckedChangeListener { btn, b ->
             users.forEach {
-                it.uid
                 if (btn.text == it.uid) {
-                    checkedUsersID.addSwitch(it.uid!!)
+                    checkedUsersID.addSwitch(it.uid)
                 }
             }
         }

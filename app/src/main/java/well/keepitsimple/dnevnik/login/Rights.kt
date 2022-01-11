@@ -1,8 +1,8 @@
 package well.keepitsimple.dnevnik.login
 
-sealed class Rights {
+abstract class Rights {
 
-    enum class Doc(val r: String) {
+    enum class Doc(val string: String) {
         VIEW("docView"),
         EDIT("docEdit"),
         CREATE("docCreate"),
@@ -11,14 +11,14 @@ sealed class Rights {
         ADDFILES("docAddFiles"),
     }
 
-    enum class Lesson(val r: String) {
+    enum class Lesson(val string: String) {
         VIEW("lessonsView"),
         EDIT("lessonsEdit"),
         CREATE("lessonsCreate"),
         DELETE("lessonsDelete"),
     }
 
-    enum class Group(val r: String) {
+    enum class Group(val string: String) {
         VIEW("groupsView"),
         EDIT("groupsEdit"),
         CREATE("groupsCreate"),

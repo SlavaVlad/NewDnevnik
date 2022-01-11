@@ -113,33 +113,40 @@ class ItemP2GroupFragment : Fragment(), CoroutineScope {
 
         btn_next.setOnClickListener {
 
-            val item =
-                ((vp_timetable.adapter as SlideAdapter).getItem(vp_timetable.currentItem) as FragmentCreateTimetablePage)
+            val item = ((vp_timetable.adapter as SlideAdapter).getItem(vp_timetable.currentItem) as FragmentCreateTimetablePage)
             val dryData = item.lessons
 
-            val payload = hashMapOf<String, Any>(
-                "day" to vp_timetable.currentItem + 1,
-                "timeOffset" to item.etOffset.text.toString().toInt()
-            )
+            val lessons = mutableListOf<HashMap<String, String>>()
 
-            var lessonsCount = 0
+            //(item.lessons[it][0] as TextInputEditText).text.toString() - имя предмета
+            //(item.lessons[it][0] as TextInputEditText).text.toString() - кабинет
+            //(item.lessons[it][0] as TextInputEditText).text.toString() - индекс группы, если не "0"
+
+            var count = 0
             repeat(item.lessonsCount) {
                 if ((dryData[it][0] as TextInputEditText).text!!.isNotEmpty()) {
-                    lessonsCount++
+                    count++
                 }
-            }
-            //item.lessons[it][2] as TextView
-            repeat(lessonsCount) {
-                payload["${it + 1}_name"] = (item.lessons[it][0] as TextInputEditText).text.toString()
-                payload["${it + 1}_cab"] = (item.lessons[it][1] as TextInputEditText).text.toString().toInt()
+            } // Посчитали кол-во уроков
+
+            repeat(count) {
+                val hm = hashMapOf(
+                    "name" to (item.lessons[it][0] as TextInputEditText).text.toString(),
+                    "cab" to (item.lessons[it][1] as TextInputEditText).text.toString(),
+                )
                 if ((item.lessons[it][2] as TextView).text.toString().toInt() != 0) {
-                    payload["${it + 1}_group"] = (item.lessons[it][2] as TextView).text.toString()
+                    hm["groupId"] = (item.lessons[it][2] as TextView).text.toString()
                 }
-            }
+                lessons.add(hm)
+            } // сложили уроки как Map's в лист lessons
 
-            payload["lessonsCount"] = lessonsCount
+            val payload = hashMapOf(
+                "dow" to vp_timetable.currentItem + 1,
+                "offset" to (item.lessons[0][3] as TextView).text.toString().toInt(),
+                "lessons" to lessons
+            )
 
-            launch { (requireParentFragment() as CreateClass).addDay(payload) }
+            launch { (requireParentFragment() as CreateClass).addDay(payload, count) }
 
             tabs.next()
 

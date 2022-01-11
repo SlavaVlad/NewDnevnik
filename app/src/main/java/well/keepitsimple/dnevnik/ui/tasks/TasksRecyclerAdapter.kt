@@ -44,7 +44,7 @@ class TasksRecyclerAdapter(private val tasks: ArrayList<Task>, private val onCli
         }
 
         h.itemView.setOnClickListener {
-            onClickListener.onClick(tasks[position].doc) // fixme в очень редких случаях outOfBonds
+            onClickListener.onClick(tasks[position].doc)
         }
 
         h.itemView.setOnLongClickListener {

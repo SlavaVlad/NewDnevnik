@@ -66,16 +66,10 @@ class LkFragment : Fragment(), CoroutineScope {
         etId.setText(gactivity.uid)
 
         val gNames = ArrayList<String>()
-        gactivity.user.groups.forEach {
+        gactivity.user.groupsUser.forEach {
             gNames.add(it.name.toString())
         }
         tvGroups.text = gNames.toString()
-
-        val gPermissions = ArrayList<String>()
-        gactivity.user.getAllPermissions().forEach {
-            gPermissions.add(it)
-        }
-        tvRights.text = gPermissions.toString()
 
     }
 

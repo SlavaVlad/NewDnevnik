@@ -1,5 +1,6 @@
 package well.keepitsimple.dnevnik.login
 
+import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
 
 class Group(
@@ -8,8 +9,10 @@ class Group(
     var type: String? = null, // Тип (Школа или класс)
     var id: String? = null, // ИД группы (привязан к ИД документа)
     var users: HashMap<String, Any?>? = null, // Список пользователей, состоящих в этой группе
-    var admins: HashMap<String, List<String>>? = null, // ИД пользователей админов // Права админов на эту группу
+    var admins: HashMap<String, List<String>>? = null, // Права админов на эту группу
+    var adminsMembers: List<String>? = null, // ИД пользователей админов
     var doc: DocumentSnapshot? = null,
+    var dRef: DocumentReference? = null,
 )
 
 //docView - просмотр домашек

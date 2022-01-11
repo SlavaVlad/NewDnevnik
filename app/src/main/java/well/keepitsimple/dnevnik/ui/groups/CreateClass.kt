@@ -6,8 +6,13 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.viewpager2.widget.ViewPager2
+import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import well.keepitsimple.dnevnik.MainActivity
 import well.keepitsimple.dnevnik.R
 import well.keepitsimple.dnevnik.default.SlideAdapter
@@ -53,6 +58,7 @@ class CreateClass : Fragment(), CoroutineScope {
         val view = inflater.inflate(R.layout.fragment_create_group, container, false)
 
         vpCreateGroup = view.findViewById(R.id.vp_create_group)
+        vpCreateGroup.isUserInputEnabled = false
 
         val pagerAdapter = SlideAdapter(
             this, mutableListOf(
@@ -66,110 +72,112 @@ class CreateClass : Fragment(), CoroutineScope {
 
     }
 
-    suspend fun addDay(hm: HashMap<String, Any>) {
+    fun addDay(hm: HashMap<String, Any>, count: Int) {
 
         t.add(hm)
+
         if (t.size == 6) {
 
-            val payloadGroup = hashMapOf(
+            val ids = ArrayList<String>()
+            val info = ArrayList<String>()
+            val added = ArrayList<String>()
+
+            val user = act.user
+
+            var mainDocRef: DocumentReference
+
+            val mainGroup = hashMapOf(
                 "name" to ((vpCreateGroup.adapter as SlideAdapter).getItem(0) as ItemP1GroupFragment).groupName.editText!!.text.toString(),
                 "admins" to hashMapOf<String, Any>(
                     act.uid!! to listOf(
-                        Rights.Doc.CREATE.r,
-                        Rights.Doc.DELETE.r,
-                        Rights.Doc.EDIT.r,
-                        Rights.Doc.VIEW.r,
+                        Rights.Doc.CREATE.string,
+                        Rights.Doc.DELETE.string,
+                        Rights.Doc.EDIT.string,
+                        Rights.Doc.VIEW.string,
                     )
                 ),
                 "rights" to listOf(
-                    Rights.Doc.VIEW.r,
-                    Rights.Doc.COMPLETE.r,
+                    Rights.Doc.VIEW.string,
+                    Rights.Doc.COMPLETE.string,
                 ),
                 "type" to "class",
                 "users" to emptyMap<String, Any?>()
             )
 
-            payloadGroup["docId"] = payloadGroup.hashCode()
-
-            db.collection("groups")
-                .document(act.user.getGroupByType("school").id!!)
+            user.getSchoolRef()
                 .collection("groups")
-                .document(payloadGroup["docId"].toString()).set(payloadGroup)
-
-            val subGroups = ArrayList<HashMap<String, String>>()
-            val ids = ArrayList<String>()
-
-            coroutineScope {
-                launch {
-                    t.forEach { hm ->
-                        repeat((hm["lessonsCount"] as Int)) { i ->
-                            if (hm.containsKey("${i + 1}_group")) {
-                                val toAdd = hashMapOf(
-                                    "name" to (hm["${i + 1}_name"] as String),
-                                    "tag" to (hm["${i + 1}_group"] as String)
-                                )
-                                if (!subGroups.contains(toAdd)) {
-
-                                    val data = hashMapOf(
-                                        "admins" to hashMapOf<String, Any>(
-                                            act.uid!! to listOf(
-                                                Rights.Doc.CREATE.r,
-                                                Rights.Doc.DELETE.r,
-                                                Rights.Doc.EDIT.r,
-                                                Rights.Doc.VIEW.r,
+                .add(mainGroup)
+                .addOnSuccessListener { ref ->
+                    launch {
+                        mainDocRef = ref
+                        val data = hashMapOf<String, Any>(
+                            "id" to ref.id
+                        )
+                        ref.update(data)
+                        ids.add(mainDocRef.id)
+                        info.add(mainGroup["name"]!! as String)
+                        launch {
+                            t.forEach { day ->
+                                var i = 0
+                                (day["lessons"] as List<HashMap<String, String>>).forEach { lesson ->
+                                    if (lesson.containsKey("groupId")) {
+                                        if (!added.contains("${lesson["name"]!!}|${lesson["groupId"]}")) {
+                                            val sbClassData = hashMapOf<String, Any>(
+                                                "name" to lesson["name"]!!,
+                                                "tag" to lesson["groupId"]!!,
+                                                "admins" to hashMapOf<String, Any>(
+                                                    act.uid!! to listOf(
+                                                        Rights.Doc.CREATE.string,
+                                                        Rights.Doc.DELETE.string,
+                                                        Rights.Doc.EDIT.string,
+                                                        Rights.Doc.VIEW.string,
+                                                    )
+                                                ),
+                                                "rights" to listOf(
+                                                    Rights.Doc.VIEW.string,
+                                                    Rights.Doc.COMPLETE.string,
+                                                ),
+                                                "type" to "subclass",
+                                                "users" to emptyMap<String, Any?>()
                                             )
-                                        ),
-                                        "name" to (hm["${i + 1}_name"] as String),
-                                        "tag" to hm["${i + 1}_group"] as String,
-                                        "rights" to listOf(
-                                            Rights.Doc.VIEW.r,
-                                            Rights.Doc.COMPLETE.r,
-                                        ),
-                                        "users" to emptyMap<String, Any?>()
-                                    )
-
-                                    db.collection("groups")
-                                        .document(act.user.getGroupByType("school").id.toString())
-                                        .collection("groups")
-                                        .document(payloadGroup["docId"].toString())
-                                        .collection("groups")
-                                        .add(data)
-                                        .addOnSuccessListener { dRef ->
-                                            ids.add(dRef.id)
-                                            hm["${i + 1}_group"] = dRef.id
+                                            mainDocRef
+                                                .collection("groups")
+                                                .add(sbClassData)
+                                                .addOnSuccessListener {
+                                                    (day["lessons"] as List<HashMap<String, String>>)[i]["groupId"] =
+                                                        it.id
+                                                    val data = hashMapOf<String, Any>(
+                                                        "id" to it.id
+                                                    )
+                                                    it.update(data)
+                                                    ids.add(it.id)
+                                                    added.add("${lesson["name"]!!}|${lesson["groupId"]}")
+                                                    info.add("${lesson["name"]!!}, ${lesson["tag"]} группа")
+                                                    i++
+                                                }.await()
                                         }
-                                    subGroups.add(
-                                        hashMapOf(
-                                            "name" to (data["name"] as String),
-                                            "tag" to (data["tag"] as String)
-
-                                        )
-                                    )
+                                    }
 
                                 }
+                                mainDocRef
+                                    .collection("timetables")
+                                    .document()
+                                    .set(day)
                             }
                         }
-                        db.collection("groups")
-                            .document(act.user.getGroupByType("school").id!!)
-                            .collection("groups")
-                            .document(payloadGroup["docId"].toString())
-                            .collection("lessons")
-                            .document().set(hm)
+
+                    }.invokeOnCompletion {
+                        val p3 = ItemP3GroupFragment()
+                        val bundle = Bundle()
+                        bundle.putStringArrayList("ids", ids)
+                        bundle.putStringArrayList("info", info)
+                        p3.arguments = bundle
+                        (vpCreateGroup.adapter as SlideAdapter).insertItem(p3)
+                        vpCreateGroup.currentItem = 2
                     }
-
-
-                }.invokeOnCompletion {
-                    val p3 = ItemP3GroupFragment()
-                    val bundle = Bundle()
-                    bundle.putStringArrayList("docId", ids)
-                    bundle.putString("name", payloadGroup["name"].toString())
-                    p3.arguments = bundle
-                    (vpCreateGroup.adapter as SlideAdapter).insertItem(p3)
-                    vpCreateGroup.currentItem = 2
                 }
-            }
-
         }
     }
-
 }
+
+

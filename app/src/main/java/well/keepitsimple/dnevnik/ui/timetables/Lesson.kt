@@ -1,6 +1,6 @@
 package well.keepitsimple.dnevnik.ui.timetables
 
-data class Lesson(
+data class Lesson (
     val cab: String,
     val name: String? = null,
     val time: LessonsTime,

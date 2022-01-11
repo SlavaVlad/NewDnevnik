@@ -14,13 +14,13 @@ fun <E> ArrayList<E>.addUnique(value: E) {
         this.add(value)
     }
 }
-fun <E> MutableList<E>.addUnique(value: E) {
+fun <E> MutableCollection<E>.addUnique(value: E) {
     if (! this.contains(value)) {
         this.add(value)
     }
 }
 
-fun <E> ArrayList<E>.addSwitch(value: E) {
+fun <E> MutableCollection<E>.addSwitch(value: E) {
     if (! this.contains(value)) {
         this.add(value)
     } else {
@@ -28,7 +28,7 @@ fun <E> ArrayList<E>.addSwitch(value: E) {
     }
 }
 
-fun DocumentSnapshot.getListOfStrings(field: String): List<String> {
+fun DocumentSnapshot.getStringList(field: String): List<String> {
     return this[field] as List<String>
 }
 

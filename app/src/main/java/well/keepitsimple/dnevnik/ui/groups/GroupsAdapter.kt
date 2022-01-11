@@ -22,7 +22,7 @@ class GroupsAdapter(private val groups: List<Group>, private val onClickListener
         var label_admins: TextView? = null
 
         init {
-            name = itemView.findViewById(R.id.group_name)
+            name = itemView.findViewById(R.id.tv_group_name)
             users = itemView.findViewById(R.id.users)
             admins = itemView.findViewById(R.id.admins)
             type = itemView.findViewById(R.id.type)

@@ -8,6 +8,8 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.drawerlayout.widget.DrawerLayout
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentTransaction
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
@@ -19,7 +21,6 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.android.material.navigation.NavigationView
-import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
@@ -27,18 +28,20 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.toObject
-import com.journeyapps.barcodescanner.ScanContract
-import com.journeyapps.barcodescanner.ScanIntentResult
-import com.journeyapps.barcodescanner.ScanOptions
 import com.onesignal.OneSignal
 import io.github.tonnyl.whatsnew.WhatsNew
 import io.github.tonnyl.whatsnew.item.WhatsNewItem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import org.greenrobot.eventbus.EventBus
 import well.keepitsimple.dnevnik.databinding.ActivityMainBinding
 import well.keepitsimple.dnevnik.login.Group
+import well.keepitsimple.dnevnik.ui.groups.CodeEnterFragment
 import well.keepitsimple.dnevnik.ui.groups.User
+import well.keepitsimple.dnevnik.ui.groups.UserDataSetEvent
 import well.keepitsimple.dnevnik.ui.tasks.Task
 import well.keepitsimple.dnevnik.ui.timetables.Lesson
 import well.keepitsimple.dnevnik.ui.timetables.LessonsTime
@@ -142,6 +145,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+
         // ca-app-pub-7054194174793904/9054046799 --
 
         // Logging set to help debug issues, remove before releasing your app.
@@ -174,7 +178,6 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
             ),
             drawerLayout
         )
-
     }
 
     private fun getTimetables() {
@@ -193,20 +196,32 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                         .collection("timetable")
                         .get()
                         .addOnSuccessListener { q ->
-                            q.documents.forEach {
-                                (it["lessons"] as List<HashMap<String, Any>>).forEach { lesson ->
-                                    list_lessons.add(Lesson(
-                                        (lesson["cab"] as String),
-                                        (lesson["name"] as String),
-                                        LessonsTime((time[it.getLong("dow")!!.toInt()]["startAt"] as String), (time[it.getLong("dow")!!.toInt()]["endAt"] as String)),
-                                        it.getLong("dow")!!+1,
-                                        (lesson["groupId"] as String?),
-                                    ))
+                            var i = 0
+                            q.documents.forEach { docLessons ->
+                                val offset = docLessons.getLong("offset")!!.toInt()
+                                (docLessons["lessons"] as List<HashMap<String, Any>>).forEach { lesson ->
+                                    if (lesson["groupId"] == null || user.checkGroupById(lesson["groupId"]!! as String)) {
+                                        list_lessons.add(
+                                            Lesson(
+                                                (lesson["cab"] as String),
+                                                (lesson["name"] as String),
+                                                LessonsTime(
+                                                    (time[i + offset]["startAt"] as String),
+                                                    (time[i + offset]["endAt"] as String)
+                                                ),
+                                                docLessons.getLong("dow")!! + 1,
+                                                (lesson["groupId"] as String?),
+                                            )
+                                        )
+                                        i++
+                                    }
                                 }
                             }
+
                             isTimetablesComplete = true
 
                             Log.d(TAG, list_lessons.toString())
+
                         }
                 }
         } catch (e: NullPointerException) {
@@ -248,7 +263,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
 
                 Log.d(TAG, "Today: ${calendar.get(DAY_OF_WEEK) - 1}")
                 Log.d(TAG, "Selected: $it")
-                Log.d(TAG, "Returned: ${(now + ((it.day)!! * DAY_S))}")
+                Log.d(TAG, "Returned: ${(now + ((it.day) * DAY_S))}")
 
                 return if (today < it.day) {
                     (now + (daysPassed * DAY_S))
@@ -259,7 +274,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
             loopindex++
         }
         return 0
-    }
+    } // DO NOT TOUCH IT!!!
 
     fun alert(title: String, message: String, source: String) {
         val builder = AlertDialog.Builder(this)
@@ -311,7 +326,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                 } else {
                     alert(
                         "Ошибка входа!",
-                        "Дальнейшая работа приложения невозможна по причине: ${task.exception}",
+                        "Дальнейшая работа невозможна: ${task.exception}",
                         "firebaseAuthWithGoogle"
                     )
                 }
@@ -321,12 +336,8 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
     private fun checkUserInDatabase(fire_user: FirebaseUser) {
         db.collection("users").document(fire_user.uid).get().addOnSuccessListener { doc ->
             if (doc.exists()) {
-
-                user = doc.toObject<User>()!!
-
-                user.uid = doc.id
-
-                getRights()
+                user.setUserID(doc.id)
+                launch { reloadGroups() }
             } else {
 
                 val data = hashMapOf<String, Any>(
@@ -345,110 +356,64 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         }
     }
 
-    private fun getRights() {
-
-        if (intent.getStringExtra("addGroup") != "") {
-            db.collectionGroup("groups")
-                .whereEqualTo("docId", intent.getStringExtra("addGroup"))
-                .get()
-                .addOnSuccessListener { querySnapshot ->
-                    querySnapshot.documents.forEach { doc ->
-                        (doc.get("users") as HashMap<String, Any?>)[uid!!] = null
-
-                        when (doc["type"].toString()) {
-                            "class" -> doc.reference.parent.parent!!.get().addOnSuccessListener {
-                                (it.get("users") as HashMap<String, Any?>)[uid!!] = null
-                                it.reference.update(it.data!!)
-                            }
-                        }
-
-                        doc.reference.update(doc.data!!)
+    suspend fun reloadGroups() {
+        db.collectionGroup("groups")
+            .whereEqualTo(FieldPath.of("users", uid), null)
+            .get()
+            .addOnSuccessListener { query ->
+                val groups = mutableListOf<Group>()
+                query.documents.forEach {
+                    try {
+                        val group = it.toObject<Group>()!!
+                        group.dRef = it.reference
+                        groups.add(group)
+                    } catch (e: NullPointerException) {
+                        Log.e("User", "loadGroups() group can't be deserialized: $e")
                     }
                 }
-        }
-
+                user.groupsUser = groups
+            }.addOnFailureListener {
+                Log.e("F", "reloadGroups: $it")
+            }.await()
         db.collectionGroup("groups")
-            .whereEqualTo(FieldPath.of("users", "$uid"), null)
+            .whereArrayContains("adminsMembers", user.uid)
             .get()
-            .addOnSuccessListener { querySnapshot ->
-                var index = 0
-                querySnapshot.documents.forEach { // записываем группы в пользователя
-                    user.groups.add(it.toObject<Group>()!!)
-                    user.groups[index].doc = it
-                    user.groups[index].id = it.id
-                    it.id
-                    Log.w(TAG, user.groups.toString())
-                    index++
+            .addOnSuccessListener { query ->
+                val groups = mutableListOf<Group>()
+                query.documents.forEach {
+                    try {
+                        val group = it.toObject<Group>()!!
+                        group.dRef = it.reference
+                        groups.add(group)
+                    } catch (e: NullPointerException) {
+                        Log.e("User", "loadGroups() group can't be deserialized: $e")
+                    }
                 }
-                if (user.groups.isEmpty()) {
-                    qr()
-                }
-                if (list_lessons.isEmpty()) {
+                user.groupsAdmin = groups
+                if (user.getGroupByType("school").id == null || user.getGroupByType("class").id == null) {
+                    code(true)
+                } else {
                     getTimetables()
+                    EventBus.getDefault().post(UserDataSetEvent(user.uid, user.groupsAdmin, user.groupsUser))
                 }
-            }
+            }.addOnFailureListener {
+                Log.e("F", "reloadGroups: $it")
+            }.await()
 
-        db.collectionGroup("groups")
-            .whereArrayContains("admins", uid!!)
-            .get()
-            .addOnSuccessListener { querySnapshot ->
-                var index = 0
-                querySnapshot.documents.forEach {
-                    user.groups.addUnique(it.toObject<Group>()!!)
-                    user.groups[index].id = it.id
-                    Log.w(TAG, user.groups.toString())
-                    index++
-                }
-            }
-
-    }
-
-    private fun script() {
-        val builder = AlertDialog.Builder(this)
-        builder
-            .setTitle("Written!")
-            .setMessage("Successfully written")
-            .setCancelable(true)
-            .setPositiveButton("Ok") { dialog, id ->
-                throw Exception("Script completed")
-            }
-            .show()
-    }
-
-    private val barcodeLauncher = registerForActivityResult(
-        ScanContract()
-    ) { result: ScanIntentResult ->
-        if (result.contents != null) {
-            acceptInvite(result.contents)
-        }
     }
 
     // Launch
-    private fun qr() {
-        barcodeLauncher.launch(
-            ScanOptions().setOrientationLocked(true).setPrompt("Код, который дал вам учитель")
-        )
-    }
-
-    private fun acceptInvite(code: String) {
-        db.collectionGroup("groups")
-            .whereEqualTo("docId", code)
-            .limit(1)
-            .get()
-            .addOnSuccessListener { q ->
-                val doc = q.documents[0]
-                val data = hashMapOf<String, Any>(
-                    "users" to hashMapOf<String, Any?>(
-                        uid!! to null,
-                    )
-                )
-                doc.reference.update(data)
-                Snackbar.make(
-                    binding.root.rootView,
-                    "Вы вступили в группу ${doc["name"]}",
-                    Snackbar.LENGTH_LONG
-                ).show()
-            }
+    fun code(closeAfterEnter: Boolean) {
+        val bundle = Bundle()
+        bundle.putBoolean("close", closeAfterEnter)
+        val fragment: Fragment = CodeEnterFragment()
+        val trans: FragmentTransaction = supportFragmentManager
+            .beginTransaction()
+            .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
+            .addToBackStack(null)
+        fragment.arguments = bundle
+        trans.replace(R.id.nav_host_fragment_content_main, fragment)
+        trans.commit()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

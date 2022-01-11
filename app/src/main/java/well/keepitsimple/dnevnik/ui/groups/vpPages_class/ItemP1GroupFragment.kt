@@ -19,7 +19,6 @@ import well.keepitsimple.dnevnik.MainActivity
 import well.keepitsimple.dnevnik.R
 import well.keepitsimple.dnevnik.default.SlideAdapter
 import well.keepitsimple.dnevnik.login.Rights
-import well.keepitsimple.dnevnik.randClass
 import well.keepitsimple.dnevnik.ui.groups.CreateClass
 import kotlin.coroutines.CoroutineContext
 
@@ -87,21 +86,21 @@ class ItemP1GroupFragment : Fragment(), CoroutineScope {
                 val pf = requireParentFragment() as CreateClass
 
                 val defaultRightsClass = listOf(
-                    Rights.Doc.VIEW.r,
-                    Rights.Doc.COMPLETE.r,
+                    Rights.Doc.VIEW.string,
+                    Rights.Doc.COMPLETE.string,
                 )
                 val defaultAdmin = hashMapOf(
                     act.uid to listOf(
-                        Rights.Doc.VIEW.r,
-                        Rights.Doc.EDIT.r,
-                        Rights.Doc.DELETE.r,
-                        Rights.Doc.CREATE.r,
-                        Rights.Doc.ADDFILES.r,
+                        Rights.Doc.VIEW.string,
+                        Rights.Doc.EDIT.string,
+                        Rights.Doc.DELETE.string,
+                        Rights.Doc.CREATE.string,
+                        Rights.Doc.ADDFILES.string,
 
-                        Rights.Group.CREATE.r,
-                        Rights.Group.EDIT.r,
-                        Rights.Group.DELETE.r,
-                        Rights.Group.VIEW.r,
+                        Rights.Group.CREATE.string,
+                        Rights.Group.EDIT.string,
+                        Rights.Group.DELETE.string,
+                        Rights.Group.VIEW.string,
                     )
                 )
                 val docData = hashMapOf(
@@ -118,7 +117,7 @@ class ItemP1GroupFragment : Fragment(), CoroutineScope {
             }
         }
 
-        et_name.setText(randClass())
+        //et_name.setText(randClass())
 
         return view
     }

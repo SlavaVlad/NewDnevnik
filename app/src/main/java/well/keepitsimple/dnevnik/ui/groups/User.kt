@@ -1,17 +1,33 @@
 package well.keepitsimple.dnevnik.ui.groups
 
+import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import well.keepitsimple.dnevnik.login.Group
+import kotlin.coroutines.CoroutineContext
 
-class User(
-    var uid: String? = null,
-    val groups: ArrayList<Group> = ArrayList(),
-) {
+open class User() : CoroutineScope {
 
-    val db = FirebaseFirestore.getInstance()
+    private var job: Job = Job()
+
+    override val coroutineContext: CoroutineContext
+        get() = Dispatchers.Main + job
+
+    var groupsUser: MutableList<Group> = mutableListOf()
+    var groupsAdmin: MutableList<Group> = mutableListOf()
+
+    var uid: String = ""
+
+    fun setUserID(set: String) {
+        if (uid != set) {
+            uid = set
+        }
+    }
 
     fun getGroupByType(type: String): Group {
-        groups.forEach {
+        groupsUser.forEach {
             if (it.type == type) {
                 return it
             }
@@ -19,7 +35,43 @@ class User(
         return Group()
     }
 
+    fun getGroupsByPermission(permission: String, flags: List<MemberTypes>): List<Group> {
+        val returnIt = mutableListOf<Group>()
+        if (flags.contains(MemberTypes.ADMIN)) {
+            returnIt += groupsUser.filter { it.rights!!.contains(permission) }
+        }
+        if (flags.contains(MemberTypes.USER)) {
+            returnIt += groupsAdmin.filter { it.admins!![uid]!!.contains(permission) }
+        }
+        return returnIt.distinctBy {
+            it.id
+        }
+    }
+
+    fun getClassRef(): DocumentReference {
+        val db = FirebaseFirestore.getInstance()
+        return db.collection("group")
+            .document(getGroupByType("school").id!!)
+            .collection("groups")
+            .document(getGroupByType("class").id!!)
+    }
+
+    fun getSchoolRef(): DocumentReference {
+        val db = FirebaseFirestore.getInstance()
+        return db.collection("groups")
+            .document(getGroupByType("school").id!!)
+    }
+
+    fun checkGroupById(id: String): Boolean {
+        val ids = mutableListOf<String>()
+        groupsUser.forEach {
+            ids.add(it.id!!)
+        }
+        return ids.contains(id)
+    }
+
     fun isAllowedInGroup(permission: String, group: Group): Boolean {
+        group
         if (group.rights!!.contains(permission)) {
             return true
         } else if (group.admins!!.contains(this.uid)) {
@@ -30,33 +82,12 @@ class User(
         return false
     }
 
-    fun isAllowedAsAdmin(permission: String, group: Group): Boolean {
-        return group.admins!![this.uid]!!.contains(permission)
-    }
-
-    fun getGroupsWhereAdmin(): List<Group> {
-        val toReturn = mutableListOf<Group>()
-
-        groups.forEach {
-            if (it.admins!!.contains(uid)) {
-                toReturn.add(it)
-            }
-        }
-
-        return toReturn
-    }
-
-    @Deprecated("Deprecated in class Groups system", ReplaceWith("getPermissionsByGroup()"))
-    fun isAllow(p: String): Boolean {
-        return this.getAllPermissions().contains(p)
-    }
-
     @Deprecated("Deprecated in class Groups system", ReplaceWith("getPermissionsByGroup()"))
     fun getAllPermissions(): ArrayList<String> {
         val permissions = ArrayList<String>()
-        repeat(groups.size) { groupIndex ->
-            repeat(groups[groupIndex].rights!!.size) { rightIndex ->
-                permissions.add(groups[groupIndex].rights!![rightIndex])
+        repeat(groupsUser.size) { groupIndex ->
+            repeat(groupsUser[groupIndex].rights!!.size) { rightIndex ->
+                permissions.add(groupsUser[groupIndex].rights!![rightIndex])
             }
         }
         return permissions

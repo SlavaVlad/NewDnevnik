@@ -20,10 +20,11 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import well.keepitsimple.dnevnik.MainActivity
-import well.keepitsimple.dnevnik.R
-import well.keepitsimple.dnevnik.addUnique
-import well.keepitsimple.dnevnik.createCheckableChip
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import well.keepitsimple.dnevnik.*
+import well.keepitsimple.dnevnik.login.Rights
+import well.keepitsimple.dnevnik.ui.groups.MemberTypes
 import java.util.*
 import kotlin.collections.set
 import kotlin.coroutines.CoroutineContext
@@ -37,7 +38,7 @@ class EditHomework : Fragment(), CoroutineScope {
     }
 
     val doc: DocumentSnapshot by lazy {
-        act.toEdit !! // fixme убрать этот изврат, использовать data bus
+        act.toEdit!! // fixme убрать этот изврат, использовать data bus
     }
 
     val chips = hashMapOf<String, Chip>()
@@ -77,23 +78,22 @@ class EditHomework : Fragment(), CoroutineScope {
         et_text = view.findViewById(R.id.et_text)
         calendar = view.findViewById(R.id.calendar)
         calendar.firstDayOfWeek = 2
-        calendar.minDate = doc.getTimestamp("deadline") !!.toDate().toInstant().toEpochMilli()
+        calendar.minDate = doc.getTimestamp("deadline")!!.toDate().toInstant().toEpochMilli()
 
         btn_complete.setOnClickListener {
             btn_complete.isEnabled = false
             update()
         }
 
-        calendar.setOnDateChangeListener { calendarView, y, m, d->
-            gDate = Date(y-1900,m,d)
+        calendar.setOnDateChangeListener { calendarView, y, m, d ->
+            gDate = Date(y - 1900, m, d)
         }
 
         et_text.setText(doc.getString("text"))
 
         loadAllChips()
-        checkChipsToEdit()
 
-        calendar.date = doc.getTimestamp("deadline") !!.toDate().toInstant().toEpochMilli()
+        calendar.date = doc.getTimestamp("deadline")!!.toDate().toInstant().toEpochMilli()
 
         gDate = Date(doc.getTimestamp("deadline")!!.toDate().time)
 
@@ -101,27 +101,37 @@ class EditHomework : Fragment(), CoroutineScope {
     }
 
     private fun loadAllChips() {
-        loadTypes()
-        loadAllSubjects()
-        loadTargets()
-        btn_complete.isEnabled = true
+        launch { loadTypes() }.invokeOnCompletion {
+            loadAllSubjects()
+            loadTargets()
+            checkChipsToEdit()
+            btn_complete.isEnabled = true
+        }
     }
 
     private fun loadTargets() {
-
-        val c = createCheckableChip(requireContext(), act.user.getGroupByType("class").name !!)
-        c.isChecked = true
-        chips[c.text.toString()] = c
-        cg_targets.addView(c)
+        act.user.getGroupsByPermission(
+            Rights.Doc.CREATE.string,
+            listOf(MemberTypes.ADMIN, MemberTypes.USER)
+        ).forEach {
+            val chip = createCheckableChip(requireContext(), it.name!!)
+            chips[it.id!!] = chip
+            cg_targets.addView(chip)
+        }
     }
 
-    private fun loadTypes() {
-        val types = arrayOf("Д/з", "Работа на оценку", "Тест")
-        types.forEach {
-            val c = createCheckableChip(requireContext(), it)
-            chips[c.text.toString()] = c
-            cg_types.addView(c)
-        }
+    private suspend fun loadTypes() {
+        db.collection("constants")
+            .document("hwtags")
+            .get()
+            .addOnSuccessListener { doc ->
+                doc.getStringList("types")
+                    .forEach { type ->
+                        val c = createCheckableChip(requireContext(), type)
+                        chips[type] = c
+                        cg_types.addView(c)
+                    }
+            }.await()
     }
 
     private fun loadAllSubjects() {
@@ -146,8 +156,11 @@ class EditHomework : Fragment(), CoroutineScope {
     }
 
     private fun checkChipsToEdit() {
-        cg_subjects.check(chips[doc.getString("subject")] !!.id)
-        cg_types.check(chips[doc.getString("type")] !!.id)
+        cg_types.check(
+            chips[doc.getString("type")]
+            !!.id
+        )
+        cg_subjects.check(chips[doc.getString("subject")]!!.id)
     }
 
     private fun update() {
@@ -156,15 +169,15 @@ class EditHomework : Fragment(), CoroutineScope {
             requireView().findViewById<Chip>(cg_subjects.checkedChipId).text.toString()
         data["type"] = requireView().findViewById<Chip>(cg_types.checkedChipId).text.toString()
         data["completed"] = emptyMap<String, Any>()
-        data["owner"] = act.user.uid !!
+        data["owner"] = act.user.uid
         data["${System.currentTimeMillis()}"] = doc // для истории версий
 
         data["deadline"] = Timestamp(gDate)
 
         db.collection("groups")
-            .document(act.user.getGroupByType("school").id !!)
+            .document(act.user.getGroupByType("school").id!!)
             .collection("groups")
-            .document(act.user.getGroupByType("class").id !!)
+            .document(act.user.getGroupByType("class").id!!)
             .collection("tasks")
             .document(doc.id)
             .update(data)

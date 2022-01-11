@@ -26,6 +26,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import well.keepitsimple.dnevnik.*
+import well.keepitsimple.dnevnik.login.Rights
+import well.keepitsimple.dnevnik.ui.groups.MemberTypes
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.set
@@ -134,16 +136,23 @@ class CreateHomework : Fragment(), CoroutineScope {
     }
 
     private fun loadTargets() {
-
-        val chip = createCheckableChip(requireContext(), act.user.getGroupByType("class").name !!)
-        cg_targets.addView(chip)
+        act.user.getGroupsByPermission(Rights.Doc.CREATE.string, listOf(MemberTypes.ADMIN, MemberTypes.USER)).forEach {
+            val chip = createCheckableChip(requireContext(), it.name!!)
+            cg_targets.addView(chip)
+        }
     }
 
     private fun loadTypes() {
-        val types = arrayOf("Д/з", "Работа на оценку", "Тест")
-        types.forEach {
-            cg_types.addView(createCheckableChip(requireContext(), it))
-        }
+        db.collection("constants")
+            .document("hwtags")
+            .get()
+            .addOnSuccessListener { doc ->
+                doc
+                    .getStringList("types")
+                    .forEach { type ->
+                        cg_types.addView(createCheckableChip(requireContext(), type))
+                    }
+            }
     }
 
     private fun loadTodaySubjects() {
@@ -153,7 +162,7 @@ class CreateHomework : Fragment(), CoroutineScope {
         val uniqueLessons = ArrayList<String>()
 
         act.list_lessons.forEach { lesson ->
-            if (lesson.day!!.toInt() == sysCalendar.get(Calendar.DAY_OF_WEEK) - 1 && ! uniqueLessons.contains(
+            if (lesson.day.toInt() == sysCalendar.get(Calendar.DAY_OF_WEEK) - 1 && ! uniqueLessons.contains(
                     lesson.name
                 )
             ) {
@@ -203,7 +212,7 @@ class CreateHomework : Fragment(), CoroutineScope {
             data["subject"] = requireView().findViewById<Chip>(cg_subjects.checkedChipId).text.toString()
             data["type"] = requireView().findViewById<Chip>(cg_types.checkedChipId).text.toString()
             data["completed"] = emptyMap<String, Any>()
-            data["owner"] = act.user.uid !!
+            data["owner"] = act.user.uid
             data["deadline"] = Timestamp(gDate)
 
             db.collection("groups")

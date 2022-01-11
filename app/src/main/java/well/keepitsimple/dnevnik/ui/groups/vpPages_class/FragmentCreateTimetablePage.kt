@@ -156,10 +156,10 @@ class FragmentCreateTimetablePage : Fragment() {
             addView(plus)
         }
 
-        lessons.add(arrayListOf(etName, etCab, tvGroupNumber))
+        lessons.add(arrayListOf(etName, etCab, tvGroupNumber, etOffset))
 
         // TODO: Убрать перед релизом
-        val rnd = (0..10).random()
+        /*val rnd = (0..10).random()
         etName.setText(
             when (rnd) {
                 0 -> "Русский язык"
@@ -188,7 +188,7 @@ class FragmentCreateTimetablePage : Fragment() {
                 else -> "410"
             }
         )
-        etOffset.setText("${(0..3).random()}")
+        etOffset.setText("${(0..3).random()}")*/
     }
 }
 
