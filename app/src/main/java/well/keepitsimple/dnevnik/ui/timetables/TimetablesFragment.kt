@@ -28,7 +28,6 @@ class TimetablesFragment : Fragment(), CoroutineScope {
     lateinit var list: ListView
     lateinit var tabs: TabLayout
     lateinit var ctx: Activity
-    val lessons = ArrayList<Lesson>()
     val act: MainActivity by lazy {
         requireActivity() as MainActivity
     }
@@ -79,7 +78,7 @@ class TimetablesFragment : Fragment(), CoroutineScope {
         })
 
         val calendar = Calendar.getInstance(TimeZone.getDefault())
-        val dow = calendar.get(DAY_OF_WEEK)-1
+        val dow = calendar.get(DAY_OF_WEEK)
         Log.d(TAG, "setup: $dow")
 
         if (dow <= tabs.tabCount) {
@@ -90,11 +89,11 @@ class TimetablesFragment : Fragment(), CoroutineScope {
 
     private fun setList(dayOfWeek: Int, lr: ArrayList<Lesson>) {
 
-        lessons.clear()
+        val lessons = ArrayList<Lesson>()
 
-        repeat(lr.size) {
-            if (lr[it].day.toInt()-1 == dayOfWeek) {
-                lessons.add(lr[it])
+        lr.forEach {
+            if (it.day.toInt()-2 == dayOfWeek) {
+                lessons.add(it)
             }
         }
 

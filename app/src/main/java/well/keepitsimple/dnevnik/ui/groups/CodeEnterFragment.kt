@@ -8,7 +8,6 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentTransaction
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.CoroutineScope
@@ -62,22 +61,24 @@ class CodeEnterFragment : Fragment(), CoroutineScope {
     }
 
     private fun log(text: String) {
-        log.setText(log.text.toString() + "[" + System.currentTimeMillis() + "]: " + text + "\n")
+        log.text = log.text.toString() + "[" + System.currentTimeMillis() + "]: " + text + "\n"
     }
 
     private fun acceptInvite(id: String) {
         val db = FirebaseFirestore.getInstance()
-        log("Начали...")
+        log("Запрос.")
         db.collection("invites")
             .document(id)
             .get()
             .addOnSuccessListener {
+                log("Запрос..")
                 if (it.exists()) {
                     db.collectionGroup("groups")
                         .whereEqualTo("id", (it["inviteTo"] as String))
                         .limit(1L)
                         .get()
                         .addOnSuccessListener { q ->
+                            log("Запрос...")
                             val data = hashMapOf<String, Any?>(
                                 "users" to hashMapOf<String, Any?>(
                                     act.user.uid to null
@@ -87,16 +88,7 @@ class CodeEnterFragment : Fragment(), CoroutineScope {
                                 .addOnSuccessListener {
                                     log("Приглашение в ${q.documents[0]["name"]} принято учпешно")
                                     launch { act.reloadGroups() }.invokeOnCompletion {
-                                        log("Группы перезагружены успешно, выход")
-                                        if (arguments?.getBoolean("close") == true) {
-                                            val trans: FragmentTransaction =
-                                                requireFragmentManager()
-                                                    .beginTransaction()
-                                                    .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_CLOSE)
-                                                    .addToBackStack(null)
-                                            trans.remove(this)
-                                            trans.commit()
-                                        }
+                                        log("Группы перезагружены успешно")
                                     }
                                 }.addOnFailureListener {
                                     log("Ошибка при записи uid: ${it.message}")

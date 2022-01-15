@@ -122,7 +122,7 @@ class CreateClass : Fragment(), CoroutineScope {
                                 (day["lessons"] as List<HashMap<String, String>>).forEach { lesson ->
                                     if (lesson.containsKey("groupId")) {
                                         if (!added.contains("${lesson["name"]!!}|${lesson["groupId"]}")) {
-                                            val sbClassData = hashMapOf<String, Any>(
+                                            val sbClassData = hashMapOf(
                                                 "name" to lesson["name"]!!,
                                                 "tag" to lesson["groupId"]!!,
                                                 "admins" to hashMapOf<String, Any>(
@@ -155,6 +155,13 @@ class CreateClass : Fragment(), CoroutineScope {
                                                     info.add("${lesson["name"]!!}, ${lesson["tag"]} группа")
                                                     i++
                                                 }.await()
+                                        } else {
+                                            info.forEachIndexed { l, name ->
+                                                if ((day["lessons"] as List<HashMap<String, String>>)[i]["name"] == name) {
+                                                    (day["lessons"] as List<HashMap<String, String>>)[i]["groupId"] =
+                                                        ids[l]
+                                                }
+                                            }
                                         }
                                     }
 

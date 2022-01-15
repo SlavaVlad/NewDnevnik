@@ -21,7 +21,7 @@ import well.keepitsimple.dnevnik.R
 
 class FragmentCreateTimetablePage : Fragment() {
 
-    val lessonsCount = (6..7).random()
+    val lessonsCount = 10
 
     lateinit var lay_0: LinearLayout
     lateinit var etOffset: EditText
@@ -74,7 +74,7 @@ class FragmentCreateTimetablePage : Fragment() {
         cv_1.addView(ll_2, lp)
 
         val tvTitle = TextView(ctx)
-        tvTitle.text = "Урок №$i"
+        tvTitle.text = "Урок №${i+1}"
         tvTitle.setTextAppearance(android.R.style.TextAppearance_Material_Body2)
 
         val etName = TextInputEditText(ctx).apply {
@@ -157,38 +157,6 @@ class FragmentCreateTimetablePage : Fragment() {
         }
 
         lessons.add(arrayListOf(etName, etCab, tvGroupNumber, etOffset))
-
-        // TODO: Убрать перед релизом
-        /*val rnd = (0..10).random()
-        etName.setText(
-            when (rnd) {
-                0 -> "Русский язык"
-                1 -> "Математика"
-                2 -> "Английский язык"
-                3 -> "Литература"
-                4 -> "Физкультура"
-                5 -> "География"
-                6 -> "ОБЖ"
-                7 -> "Информатика"
-                8 -> "Экономика"
-                else -> "Физикааааа"
-            }
-        )
-        etCab.setText(
-            when (rnd) {
-                0 -> "405"
-                1 -> "405"
-                2 -> "309"
-                3 -> "405"
-                4 -> "1"
-                5 -> "405"
-                6 -> "405"
-                7 -> "408"
-                8 -> "405"
-                else -> "410"
-            }
-        )
-        etOffset.setText("${(0..3).random()}")*/
     }
 }
 

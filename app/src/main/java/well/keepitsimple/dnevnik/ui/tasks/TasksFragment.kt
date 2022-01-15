@@ -184,7 +184,17 @@ class TasksFragment : Fragment(), CoroutineScope {
             list,
             object : TaskOnClickListener {
                 override fun onClick(doc: DocumentSnapshot) {
+                    val bundle = Bundle()
+                    with(bundle){
+                        putString("subject", doc.getString("subject"))
+                        putString("type", doc.getString("type"))
+                        putString("text", doc.getString("text"))
+                        putInt("deadline",
+                            getDeadlineInDays(doc.getTimestamp("deadline")!!).toInt()
+                        )
+                    }
                     val fragment = ViewHomework()
+                    fragment.arguments = bundle
                     val trans: FragmentTransaction = requireFragmentManager()
                         .beginTransaction()
                         .setTransition(TRANSIT_FRAGMENT_OPEN)

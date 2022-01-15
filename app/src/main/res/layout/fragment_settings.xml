@@ -41,11 +41,11 @@
                 android:enabled="false"
                 android:text="Launch Script" />
 
-            <Button
-                android:id="@+id/btn_invite"
+            <androidx.fragment.app.FragmentContainerView
+                android:id="@+id/fragmentContainerView2"
+                android:name="well.keepitsimple.dnevnik.ui.groups.CodeEnterFragment"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="вести код приглашения" />
+                android:layout_height="wrap_content" />
 
         </LinearLayout>
     </ScrollView>

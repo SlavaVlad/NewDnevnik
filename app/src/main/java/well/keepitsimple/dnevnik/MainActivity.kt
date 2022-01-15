@@ -8,7 +8,6 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.drawerlayout.widget.DrawerLayout
-import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentTransaction
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
@@ -28,6 +27,8 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.toObject
+import com.instabug.library.Instabug
+import com.instabug.library.invocation.InstabugInvocationEvent
 import com.onesignal.OneSignal
 import io.github.tonnyl.whatsnew.WhatsNew
 import io.github.tonnyl.whatsnew.item.WhatsNewItem
@@ -39,9 +40,9 @@ import kotlinx.coroutines.tasks.await
 import org.greenrobot.eventbus.EventBus
 import well.keepitsimple.dnevnik.databinding.ActivityMainBinding
 import well.keepitsimple.dnevnik.login.Group
-import well.keepitsimple.dnevnik.ui.groups.CodeEnterFragment
 import well.keepitsimple.dnevnik.ui.groups.User
 import well.keepitsimple.dnevnik.ui.groups.UserDataSetEvent
+import well.keepitsimple.dnevnik.ui.settings.SettingsFragment
 import well.keepitsimple.dnevnik.ui.tasks.Task
 import well.keepitsimple.dnevnik.ui.timetables.Lesson
 import well.keepitsimple.dnevnik.ui.timetables.LessonsTime
@@ -56,8 +57,8 @@ const val WEEK = 7
 
 class MainActivity : AppCompatActivity(), CoroutineScope {
 
-    lateinit var auth: FirebaseAuth
-    lateinit var googleSignInClient: GoogleSignInClient
+    private lateinit var auth: FirebaseAuth
+    private lateinit var googleSignInClient: GoogleSignInClient
     private val RC_SIGN_IN: Int = 123
     val F: String = "Firebase"
 
@@ -145,6 +146,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        Instabug.Builder(application, "9afe4d789c62e398a755bc2b0a3eb223" ).setInvocationEvents(InstabugInvocationEvent.SCREENSHOT, InstabugInvocationEvent.TWO_FINGER_SWIPE_LEFT).build()
 
         // ca-app-pub-7054194174793904/9054046799 --
 
@@ -183,6 +185,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
     private fun getTimetables() {
         // запрос документов расписания
         try {
+            list_lessons.clear()
             db.collection("groups")
                 .document(user.getGroupByType("school").id!!)
                 .collection("lessonstime")
@@ -193,12 +196,12 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                         .document(user.getGroupByType("school").id!!) // Получаем уроки за определённый день
                         .collection("groups")
                         .document(user.getGroupByType("class").id!!)
-                        .collection("timetable")
+                        .collection("timetables")
                         .get()
                         .addOnSuccessListener { q ->
                             var i = 0
                             q.documents.forEach { docLessons ->
-                                val offset = docLessons.getLong("offset")!!.toInt()
+                                //val offset = docLessons.getLong("offset")!!.toInt()
                                 (docLessons["lessons"] as List<HashMap<String, Any>>).forEach { lesson ->
                                     if (lesson["groupId"] == null || user.checkGroupById(lesson["groupId"]!! as String)) {
                                         list_lessons.add(
@@ -206,8 +209,8 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                                                 (lesson["cab"] as String),
                                                 (lesson["name"] as String),
                                                 LessonsTime(
-                                                    (time[i + offset]["startAt"] as String),
-                                                    (time[i + offset]["endAt"] as String)
+                                                    (""),
+                                                    ("")
                                                 ),
                                                 docLessons.getLong("dow")!! + 1,
                                                 (lesson["groupId"] as String?),
@@ -220,7 +223,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
 
                             isTimetablesComplete = true
 
-                            Log.d(TAG, list_lessons.toString())
+                            Log.e(TAG, list_lessons.toString())
 
                         }
                 }
@@ -391,7 +394,27 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                 }
                 user.groupsAdmin = groups
                 if (user.getGroupByType("school").id == null || user.getGroupByType("class").id == null) {
-                    code(true)
+                    var msg = "Отсутствуют необходимые группы типа:"
+                    if (user.getGroupByType("school").id == null){
+                        msg+="\n- школа"
+                    }
+                    if (user.getGroupByType("class").id == null){
+                        msg+="\n- класс"
+                    }
+                    android.app.AlertDialog.Builder(this)
+                        .setTitle("Добавьте группы")
+                        .setMessage(msg)
+                        .setCancelable(false)
+                        .setPositiveButton("Добавить") { dialog, id ->
+                            binding.navView.setCheckedItem(R.id.nav_settings)
+                            val fragment = SettingsFragment()
+                            val trans: FragmentTransaction = supportFragmentManager
+                                .beginTransaction()
+                                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
+                                .addToBackStack(null)
+                            trans.replace(R.id.nav_host_fragment_content_main, fragment)
+                            trans.commit()
+                        }.show()
                 } else {
                     getTimetables()
                     EventBus.getDefault().post(UserDataSetEvent(user.uid, user.groupsAdmin, user.groupsUser))
@@ -403,18 +426,6 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
     }
 
     // Launch
-    fun code(closeAfterEnter: Boolean) {
-        val bundle = Bundle()
-        bundle.putBoolean("close", closeAfterEnter)
-        val fragment: Fragment = CodeEnterFragment()
-        val trans: FragmentTransaction = supportFragmentManager
-            .beginTransaction()
-            .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
-            .addToBackStack(null)
-        fragment.arguments = bundle
-        trans.replace(R.id.nav_host_fragment_content_main, fragment)
-        trans.commit()
-    }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.

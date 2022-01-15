@@ -4,6 +4,14 @@ plugins {
 }
 
 android {
+    signingConfigs {
+        release {
+            storeFile file('S:\\release.keystore')
+            storePassword '77565408790SLV'
+            keyAlias 'DnevnikMain'
+            keyPassword '77565408790SLV'
+        }
+    }
     compileSdkVersion 31
     buildToolsVersion '31.0.0'
 
@@ -11,21 +19,22 @@ android {
         applicationId "well.keepitsimple.dnevnik"
         minSdkVersion 26
         targetSdkVersion 30
-        versionCode 16
-        versionName "0.6.1"
+        versionCode 18
+        versionName "0.6.1.2"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
         debug {
-            manifestPlaceholders = [appName: "dev Твой Дневник"]
+            manifestPlaceholders = [appName: "Твой Дневник Beta"]
         }
 
         release {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             manifestPlaceholders = [appName: "Твой Дневник"]
+            signingConfig signingConfigs.release
         }
     }
     compileOptions {
@@ -135,7 +144,7 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-process:2.4.0'
     implementation 'com.github.xabaras:RecyclerViewSwipeDecorator:1.3'
     implementation 'com.instabug.library:instabug:10.10.0'
-    implementation 'org.greenrobot:eventbus:3.2.0'
+    implementation 'org.greenrobot:eventbus:3.3.1'
 //    implementation 'com.github.kenglxn.QRGen:javase:2.6.0'
     implementation 'com.github.kenglxn.QRGen:android:2.6.0'
     implementation 'com.github.clans:fab:1.6.4'
