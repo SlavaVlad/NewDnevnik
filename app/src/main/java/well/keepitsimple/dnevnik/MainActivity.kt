@@ -264,10 +264,6 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
             }
             if (lesson_name == it.name) {
 
-                Log.d(TAG, "Today: ${calendar.get(DAY_OF_WEEK) - 1}")
-                Log.d(TAG, "Selected: $it")
-                Log.d(TAG, "Returned: ${(now + ((it.day) * DAY_S))}")
-
                 return if (today < it.day) {
                     (now + (daysPassed * DAY_S))
                 } else {

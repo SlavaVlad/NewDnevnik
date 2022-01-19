@@ -37,21 +37,13 @@
         android:id="@+id/nav_lk"
         android:name="well.keepitsimple.dnevnik.ui.lk.LkFragment"
         android:label="@string/menu_gallery"
-        tools:layout="@layout/fragment_lk" >
-        <action
-            android:id="@+id/action_nav_lk_to_nav_tasks"
-            app:destination="@id/nav_tasks" />
-    </fragment>
+        tools:layout="@layout/fragment_lk" />
 
     <fragment
         android:id="@+id/nav_createhw"
         android:name="well.keepitsimple.dnevnik.ui.lk.LkFragment"
         android:label="@string/menu_gallery"
-        tools:layout="@layout/fragment_create_homework" >
-        <action
-            android:id="@+id/action_nav_createhw_to_nav_tasks"
-            app:destination="@id/nav_tasks" />
-    </fragment>
+        tools:layout="@layout/fragment_create_homework" />
 
     <fragment
         android:id="@+id/nav_settings"
@@ -77,28 +69,16 @@
         android:id="@+id/createGroup"
         android:name="well.keepitsimple.dnevnik.ui.groups.CreateClass"
         android:label="fragment_create_group"
-        tools:layout="@layout/fragment_create_group" >
-        <action
-            android:id="@+id/action_createGroup_to_nav_groups"
-            app:destination="@id/nav_groups" />
-    </fragment>
+        tools:layout="@layout/fragment_create_group" />
     <fragment
         android:id="@+id/viewHomework"
         android:name="well.keepitsimple.dnevnik.ui.tasks.ViewHomework"
         android:label="fragment_view_homework"
-        tools:layout="@layout/fragment_view_homework" >
-        <action
-            android:id="@+id/action_viewHomework_to_nav_tasks"
-            app:destination="@id/nav_tasks" />
-    </fragment>
+        tools:layout="@layout/fragment_view_homework" />
     <fragment
         android:id="@+id/nav_code"
         android:name="well.keepitsimple.dnevnik.ui.groups.CodeEnterFragment"
         android:label="fragment_code_enter"
-        tools:layout="@layout/fragment_code_enter" >
-        <action
-            android:id="@+id/action_codeEnterFragment_to_nav_tasks"
-            app:destination="@id/nav_tasks" />
-    </fragment>
+        tools:layout="@layout/fragment_code_enter" />
 
 </navigation>
