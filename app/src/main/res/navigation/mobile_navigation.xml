@@ -3,13 +3,13 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/mobile_navigation"
-    app:startDestination="@+id/nav_tasks">
+    app:startDestination="@id/nav_tasks">
 
     <fragment
         android:id="@+id/nav_tasks"
         android:name="well.keepitsimple.dnevnik.ui.tasks.TasksFragment"
         android:label="@string/menu_home"
-        tools:layout="@layout/fragment_tasks" >
+        tools:layout="@layout/fragment_tasks">
         <action
             android:id="@+id/action_nav_tasks_to_nav_createhw"
             app:destination="@id/nav_createhw" />
@@ -60,7 +60,7 @@
     <fragment
         android:id="@+id/nav_groups"
         android:name="well.keepitsimple.dnevnik.ui.groups.GroupsFragment"
-        android:label="SettingsFragment" >
+        android:label="SettingsFragment">
         <action
             android:id="@+id/action_nav_groups_to_createGroup"
             app:destination="@id/createGroup" />

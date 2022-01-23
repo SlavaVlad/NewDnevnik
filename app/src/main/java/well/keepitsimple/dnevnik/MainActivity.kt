@@ -1,6 +1,7 @@
 package well.keepitsimple.dnevnik
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
@@ -23,10 +24,14 @@ import com.google.android.material.navigation.NavigationView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.dynamiclinks.ktx.dynamicLinks
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.toObject
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.remoteconfig.ktx.remoteConfig
+import com.google.firebase.remoteconfig.ktx.remoteConfigSettings
 import com.instabug.library.Instabug
 import com.instabug.library.invocation.InstabugInvocationEvent
 import com.onesignal.OneSignal
@@ -75,6 +80,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
     val tasks = ArrayList<Task>()
     val TAG = "MainActivity"
     var mAdView: AdView? = null
+    private val remoteConfig = Firebase.remoteConfig
 
     private var job: Job = Job()
 
@@ -112,7 +118,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
             ),
         )
         wn.titleText = "Что нового?"
-        wn.buttonText = "В приложение"
+        wn.buttonText = "Хорошо"
         //wn.buttonBackground = R.color.design_default_color_secondary
         //wn.buttonTextColor = R.color.white
         wn.presentAutomatically(this@MainActivity)
@@ -143,13 +149,49 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        val configSettings = remoteConfigSettings {
+            minimumFetchIntervalInSeconds = 30
+        }
+        remoteConfig.setConfigSettingsAsync(configSettings)
+        remoteConfig.setDefaultsAsync(R.xml.remote_config_defaults)
+
+        remoteConfig.fetchAndActivate()
+            .addOnCompleteListener(this) { task ->
+                if (!task.isSuccessful) {
+                    alert(
+                        "Ошибка конфигурации",
+                        "Не удалось получить конфигурацию приложения",
+                        "OnCreate()"
+                    )
+                }
+            }
+
+        Firebase.dynamicLinks
+            .getDynamicLink(intent)
+            .addOnSuccessListener(this) { pendingDynamicLinkData ->
+                var deepLink: Uri? = null
+                if (pendingDynamicLinkData != null) {
+                    deepLink = pendingDynamicLinkData.link
+
+                    Log.e(TAG, "onCreate: $deepLink")
+                    alert(
+                        "Данные ссылки",
+                        deepLink?.getQueryParameter("hello").toString(),
+                        "OnCreate()"
+                    )
+                }
+            }
+            .addOnFailureListener(this) { e -> Log.w(TAG, "getDynamicLink:onFailure", e) }
+
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        Instabug.Builder(application, "9afe4d789c62e398a755bc2b0a3eb223" ).setInvocationEvents(InstabugInvocationEvent.SCREENSHOT, InstabugInvocationEvent.TWO_FINGER_SWIPE_LEFT).build()
+        Instabug.Builder(application, "9afe4d789c62e398a755bc2b0a3eb223").setInvocationEvents(
+            InstabugInvocationEvent.SCREENSHOT,
+            InstabugInvocationEvent.TWO_FINGER_SWIPE_LEFT
+        ).build()
 
         // ca-app-pub-7054194174793904/9054046799 --
-
         // Logging set to help debug issues, remove before releasing your app.
         OneSignal.setLogLevel(OneSignal.LOG_LEVEL.VERBOSE, OneSignal.LOG_LEVEL.NONE)
 
@@ -184,52 +226,54 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
 
     private fun getTimetables() {
         // запрос документов расписания
-        try {
-            list_lessons.clear()
-            db.collection("groups")
-                .document(user.getGroupByType("school").id!!)
-                .collection("lessonstime")
-                .get()
-                .addOnSuccessListener { timeTmp -> // расписание звонков
-                    val time = (timeTmp.documents[0]["time"] as List<HashMap<String, String>>)
-                    db.collection("groups")
-                        .document(user.getGroupByType("school").id!!) // Получаем уроки за определённый день
-                        .collection("groups")
-                        .document(user.getGroupByType("class").id!!)
-                        .collection("timetables")
-                        .get()
-                        .addOnSuccessListener { q ->
+        list_lessons.clear()
+        db.collection("groups")
+            .document(user.getGroupByType("school").id!!)
+            .collection("lessonstime")
+            .get()
+            .addOnSuccessListener { timeTmp -> // расписание звонков
+                val time = (timeTmp.documents[0]["time"] as List<HashMap<String, String>>)
+                db.collection("groups")
+                    .document(user.getGroupByType("school").id!!) // Получаем уроки за определённый день
+                    .collection("groups")
+                    .document(user.getGroupByType("class").id!!)
+                    .collection("timetables")
+                    .get()
+                    .addOnSuccessListener { q ->
+                        q.documents.forEach { docLessons ->
+                            val offset = docLessons.getLong("offset")!!.toInt()
                             var i = 0
-                            q.documents.forEach { docLessons ->
-                                //val offset = docLessons.getLong("offset")!!.toInt()
-                                (docLessons["lessons"] as List<HashMap<String, Any>>).forEach { lesson ->
-                                    if (lesson["groupId"] == null || user.checkGroupById(lesson["groupId"]!! as String)) {
-                                        list_lessons.add(
-                                            Lesson(
-                                                (lesson["cab"] as String),
-                                                (lesson["name"] as String),
-                                                LessonsTime(
-                                                    (""),
-                                                    ("")
-                                                ),
-                                                docLessons.getLong("dow")!! + 1,
-                                                (lesson["groupId"] as String?),
-                                            )
+                            (docLessons["lessons"] as List<HashMap<String, Any>>).forEach { lesson ->
+                                if (lesson["groupId"] == null || user.checkGroupById(lesson["groupId"]!! as String)) {
+
+                                    var lt = LessonsTime("", "")
+
+                                    if (remoteConfig.getBoolean("allowTimeShow")){
+                                        lt = LessonsTime(
+                                            (time[i + offset]["startAt"] as String),
+                                            (time[i + offset]["endAt"] as String)
                                         )
-                                        i++
                                     }
+                                    list_lessons.add(
+                                        Lesson(
+                                            (lesson["cab"] as String),
+                                            (lesson["name"] as String),
+                                            lt,
+                                            docLessons.getLong("dow")!! + 1,
+                                            (lesson["groupId"] as String?),
+                                        )
+                                    )
+                                    i++
                                 }
                             }
-
-                            isTimetablesComplete = true
-
-                            Log.e(TAG, list_lessons.toString())
-
                         }
-                }
-        } catch (e: NullPointerException) {
-            throw Exception("No groups found or smth else null")
-        }
+
+                        isTimetablesComplete = true
+
+                        Log.e(TAG, list_lessons.toString())
+
+                    }
+            }
     }
 
     fun getNextLesson(lesson_name: String): Long {
@@ -391,11 +435,11 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                 user.groupsAdmin = groups
                 if (user.getGroupByType("school").id == null || user.getGroupByType("class").id == null) {
                     var msg = "Отсутствуют необходимые группы типа:"
-                    if (user.getGroupByType("school").id == null){
-                        msg+="\n- школа"
+                    if (user.getGroupByType("school").id == null) {
+                        msg += "\n- школа"
                     }
-                    if (user.getGroupByType("class").id == null){
-                        msg+="\n- класс"
+                    if (user.getGroupByType("class").id == null) {
+                        msg += "\n- класс"
                     }
                     android.app.AlertDialog.Builder(this)
                         .setTitle("Добавьте группы")
@@ -413,7 +457,8 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                         }.show()
                 } else {
                     getTimetables()
-                    EventBus.getDefault().post(UserDataSetEvent(user.uid, user.groupsAdmin, user.groupsUser))
+                    EventBus.getDefault()
+                        .post(UserDataSetEvent(user.uid, user.groupsAdmin, user.groupsUser))
                 }
             }.addOnFailureListener {
                 Log.e("F", "reloadGroups: $it")
@@ -421,7 +466,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
 
     }
 
-    // Launch
+// Launch
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.

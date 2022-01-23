@@ -11,6 +11,7 @@
         <item name="colorOnSecondary">@color/white</item>
         <!-- Status bar color. -->
         <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimaryVariant</item>
+        <item name="android:windowLightNavigationBar">true</item>
         <!-- Customize your theme here. -->
     </style>
 
@@ -19,7 +20,7 @@
         <item name="windowNoTitle">true</item>
     </style>
 
-    <style name="Theme.Дневник.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+    <style name="Theme.Дневник.AppBarOverlay" parent="ThemeOverlay.AppCompat.ActionBar" />
 
     <style name="Theme.Дневник.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 

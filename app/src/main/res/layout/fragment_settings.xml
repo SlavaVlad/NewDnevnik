@@ -38,7 +38,7 @@
                 android:id="@+id/btn_script"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:enabled="false"
+                android:enabled="true"
                 android:text="Launch Script" />
 
             <androidx.fragment.app.FragmentContainerView

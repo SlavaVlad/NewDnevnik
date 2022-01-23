@@ -20,14 +20,19 @@ android {
         minSdkVersion 26
         targetSdkVersion 30
         versionCode 18
-        versionName "0.6.1.2"
+        versionName "0.6.2 Presentation"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        signingConfig signingConfigs.debug
     }
 
     buildTypes {
         debug {
             manifestPlaceholders = [appName: "Твой Дневник Beta"]
+        }
+
+        presentation {
+            manifestPlaceholders = [appName: "Дневник презентация"]
         }
 
         release {
@@ -38,8 +43,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility "1.8"
+        targetCompatibility "1.8"
     }
     kotlinOptions {
         jvmTarget = '1.8'
@@ -80,6 +85,7 @@ dependencies {
     // When using the BoM, you don't specify versions in Firebase library dependencies
     implementation 'com.google.firebase:firebase-crashlytics-ktx'
     implementation 'com.google.firebase:firebase-analytics-ktx'
+    implementation 'com.google.firebase:firebase-dynamic-links-ktx'
     implementation 'com.google.android.flexbox:flexbox:3.0.0'
 
 }
@@ -117,6 +123,8 @@ dependencies {
     // https://firebase.google.com/docs/android/setup#available-libraries
 
     implementation 'com.onesignal:OneSignal:[4.0.0, 4.99.99]'
+
+    implementation 'com.google.firebase:firebase-config-ktx'
 
     // Declare the dependencies for the Crashlytics and Analytics libraries
     // When using the BoM, you don't specify versions in Firebase library dependencies

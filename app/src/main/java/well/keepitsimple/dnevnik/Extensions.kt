@@ -1,13 +1,20 @@
 package well.keepitsimple.dnevnik
 
 import android.content.Context
+import android.net.Uri
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
 import android.widget.EditText
 import com.google.android.material.chip.Chip
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.textfield.TextInputEditText
+import com.google.firebase.dynamiclinks.ktx.androidParameters
+import com.google.firebase.dynamiclinks.ktx.dynamicLinks
+import com.google.firebase.dynamiclinks.ktx.shortLinkAsync
 import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.ktx.Firebase
+import well.keepitsimple.dnevnik.ui.settings.TAG
 
 fun <E> ArrayList<E>.addUnique(value: E) {
     if (! this.contains(value)) {
@@ -80,7 +87,7 @@ fun TabLayout.next(){
 }
 
 fun randStr(length: Int): String {
-    val alphabet = "qwertyuiopasdfghjklzxcvbnm"
+    val alphabet = "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM"
     var res = ""
     repeat(length) {
         res += alphabet[(0..alphabet.length).random()]
@@ -101,6 +108,32 @@ fun randClass(): String {
     val letters = "АБВГДЕ"
     var res = ""
     res += (1..11).random().toString()
-    res += letters[(0..letters.length-1).random()]
+    res += letters[(letters.indices).random()]
     return res
+}
+
+fun buildFirebaseLinkAsync(parameters: Map<String, Any>, onLinkCompletedListener: ShortLinkCompletedListener) {
+
+    var uriString = ""
+    uriString += "https://keepitsimple.page.link/" // добавили https://.../
+    if (parameters.isNotEmpty()) {
+        parameters.onEachIndexed { index, entry ->
+            uriString += when (index) {
+                0 -> "?${entry.key}=\"${entry.value}\""
+                else -> "&${entry.key}=\"${entry.value}\""
+            }
+        }
+    }
+
+    Firebase.dynamicLinks.shortLinkAsync {
+        link = Uri.parse(uriString)
+        domainUriPrefix = "https://keepitsimple.page.link/"
+        androidParameters {
+
+        }
+        Log.d(TAG, "script: $this")
+    }.addOnSuccessListener {
+        onLinkCompletedListener.onCompleted(it)
+    }
+
 }

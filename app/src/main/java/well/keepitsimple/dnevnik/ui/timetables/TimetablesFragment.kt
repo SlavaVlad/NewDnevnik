@@ -83,7 +83,7 @@ class TimetablesFragment : Fragment(), CoroutineScope {
 
         if (dow <= tabs.tabCount) {
             tabs.selectTab(tabs.getTabAt(dow-2))
-            setList(dow-1, list_lessons)
+            setList(dow-2, list_lessons)
         }
     }
 
