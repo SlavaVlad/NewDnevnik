@@ -17,18 +17,19 @@ import com.google.firebase.ktx.Firebase
 import well.keepitsimple.dnevnik.ui.settings.TAG
 
 fun <E> ArrayList<E>.addUnique(value: E) {
-    if (! this.contains(value)) {
+    if (!this.contains(value)) {
         this.add(value)
     }
 }
+
 fun <E> MutableCollection<E>.addUnique(value: E) {
-    if (! this.contains(value)) {
+    if (!this.contains(value)) {
         this.add(value)
     }
 }
 
 fun <E> MutableCollection<E>.addSwitch(value: E) {
-    if (! this.contains(value)) {
+    if (!this.contains(value)) {
         this.add(value)
     } else {
         this.remove(value)
@@ -77,12 +78,12 @@ fun TextInputEditText.afterTextChanged(afterTextChanged: (String) -> Unit) {
 }
 
 fun <K, V> HashMap<K, V>.putUnique(key: K, value: V) {
-    if (! this.containsKey(key)) {
+    if (!this.containsKey(key)) {
         this[key] = value
     }
 }
 
-fun TabLayout.next(){
+fun TabLayout.next() {
     selectTab(getTabAt(selectedTabPosition + 1))
 }
 
@@ -112,15 +113,17 @@ fun randClass(): String {
     return res
 }
 
-fun buildFirebaseLinkAsync(parameters: Map<String, Any>, onLinkCompletedListener: ShortLinkCompletedListener) {
-
+fun buildFirebaseLinkAsync(
+    parameters: Map<String, Any>,
+    onLinkCompletedListener: ShortLinkCompletedListener
+) {
     var uriString = ""
     uriString += "https://keepitsimple.page.link/" // добавили https://.../
     if (parameters.isNotEmpty()) {
         parameters.onEachIndexed { index, entry ->
             uriString += when (index) {
-                0 -> "?${entry.key}=\"${entry.value}\""
-                else -> "&${entry.key}=\"${entry.value}\""
+                0 -> "?${entry.key}=${entry.value}"
+                else -> "&${entry.key}=${entry.value}"
             }
         }
     }
@@ -135,5 +138,4 @@ fun buildFirebaseLinkAsync(parameters: Map<String, Any>, onLinkCompletedListener
     }.addOnSuccessListener {
         onLinkCompletedListener.onCompleted(it)
     }
-
 }

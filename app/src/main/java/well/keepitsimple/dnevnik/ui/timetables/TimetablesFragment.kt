@@ -18,6 +18,7 @@ import kotlinx.coroutines.Job
 import well.keepitsimple.dnevnik.MainActivity
 import well.keepitsimple.dnevnik.R
 import well.keepitsimple.dnevnik.ui.timetables.lessons.LessonsAdapter
+import well.keepitsimple.dnevnik.ui.timetables.objects.Lesson
 import java.util.Calendar.DAY_OF_WEEK
 import kotlin.coroutines.CoroutineContext
 
@@ -52,7 +53,7 @@ class TimetablesFragment : Fragment(), CoroutineScope {
         list = view.findViewById(R.id.vp_parents)
         tabs = view.findViewById(R.id.tabs_dow)
 
-        setup(act.list_lessons)
+        setup(act.timetable!!.lessons)
 
         return view
     }
@@ -62,12 +63,12 @@ class TimetablesFragment : Fragment(), CoroutineScope {
         ctx = activity
     }
 
-    private fun setup(list_lessons: ArrayList<Lesson>) {
+    private fun setup(listLessons: ArrayList<Lesson>) {
 
         tabs.addOnTabSelectedListener(object :
             TabLayout.OnTabSelectedListener { // выбрали расписание на другой день
             override fun onTabSelected(tab: TabLayout.Tab?) {
-                setList(tab !!.position, list_lessons)
+                setList(tab !!.position, listLessons)
             }
 
             override fun onTabUnselected(tab: TabLayout.Tab?) {
@@ -83,7 +84,7 @@ class TimetablesFragment : Fragment(), CoroutineScope {
 
         if (dow <= tabs.tabCount) {
             tabs.selectTab(tabs.getTabAt(dow-2))
-            setList(dow-2, list_lessons)
+            setList(dow-2, listLessons)
         }
     }
 

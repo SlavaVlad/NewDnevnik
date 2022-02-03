@@ -41,12 +41,6 @@
                 android:enabled="true"
                 android:text="Launch Script" />
 
-            <androidx.fragment.app.FragmentContainerView
-                android:id="@+id/fragmentContainerView2"
-                android:name="well.keepitsimple.dnevnik.ui.groups.CodeEnterFragment"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-
         </LinearLayout>
     </ScrollView>
 </androidx.constraintlayout.widget.ConstraintLayout>

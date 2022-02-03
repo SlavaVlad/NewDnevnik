@@ -161,7 +161,7 @@ class CreateHomework : Fragment(), CoroutineScope {
 
         val uniqueLessons = ArrayList<String>()
 
-        act.list_lessons.forEach { lesson ->
+        act.timetable?.lessons?.forEach { lesson ->
             if (lesson.day.toInt() == sysCalendar.get(Calendar.DAY_OF_WEEK) - 1 && ! uniqueLessons.contains(
                     lesson.name
                 )
@@ -190,8 +190,8 @@ class CreateHomework : Fragment(), CoroutineScope {
 
         val names = arrayListOf<String>()
 
-        act.list_lessons.forEach {
-            names.addUnique(it.name!!)
+        act.timetable?.lessons?.forEach {
+            names.addUnique(it.name)
         }
 
         names.forEach {

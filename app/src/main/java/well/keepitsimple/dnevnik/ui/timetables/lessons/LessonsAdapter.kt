@@ -7,7 +7,7 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.TextView
 import well.keepitsimple.dnevnik.R
-import well.keepitsimple.dnevnik.ui.timetables.Lesson
+import well.keepitsimple.dnevnik.ui.timetables.objects.Lesson
 
 class LessonsAdapter(var ctx: Context, var ressource: Int, var d_item: ArrayList<Lesson>) :
     ArrayAdapter<Lesson>(ctx, ressource, d_item) {
@@ -24,7 +24,7 @@ class LessonsAdapter(var ctx: Context, var ressource: Int, var d_item: ArrayList
         name.text = item.name
         cab.text = item.cab
 
-        time.text = "${item.time.startAt} - ${item.time.endAt}"
+        time.text = "${item.time?.startAt} - ${item.time?.endAt}"
 
         return view
     }

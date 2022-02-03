@@ -138,8 +138,8 @@ class EditHomework : Fragment(), CoroutineScope {
 
         val names = arrayListOf<String>()
 
-        act.list_lessons.forEach {
-            names.addUnique(it.name!!)
+        act.timetable?.lessons?.forEach {
+            names.addUnique(it.name)
         }
 
         names.forEach {

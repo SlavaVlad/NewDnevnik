@@ -4,7 +4,11 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.Menu
+import android.widget.Button
+import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
@@ -20,6 +24,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.navigation.NavigationView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -28,6 +33,7 @@ import com.google.firebase.dynamiclinks.ktx.dynamicLinks
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.ktx.toObject
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.remoteconfig.ktx.remoteConfig
@@ -49,8 +55,9 @@ import well.keepitsimple.dnevnik.ui.groups.User
 import well.keepitsimple.dnevnik.ui.groups.UserDataSetEvent
 import well.keepitsimple.dnevnik.ui.settings.SettingsFragment
 import well.keepitsimple.dnevnik.ui.tasks.Task
-import well.keepitsimple.dnevnik.ui.timetables.Lesson
-import well.keepitsimple.dnevnik.ui.timetables.LessonsTime
+import well.keepitsimple.dnevnik.ui.timetables.objects.Lesson
+import well.keepitsimple.dnevnik.ui.timetables.objects.LessonsTime
+import well.keepitsimple.dnevnik.ui.timetables.objects.Timetable
 import java.util.*
 import java.util.Calendar.DAY_OF_WEEK
 import kotlin.collections.ArrayList
@@ -76,8 +83,9 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainBinding
     val db = FirebaseFirestore.getInstance()
-    var list_lessons = ArrayList<Lesson>()
+    var timetable: Timetable? = null
     val tasks = ArrayList<Task>()
+    var docTime: List<HashMap<String, String>> = emptyList()
     val TAG = "MainActivity"
     var mAdView: AdView? = null
     private val remoteConfig = Firebase.remoteConfig
@@ -123,6 +131,8 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         //wn.buttonTextColor = R.color.white
         wn.presentAutomatically(this@MainActivity)
 
+        checkDeeplink()
+
         // Check if user is signed in (non-null) and update UI accordingly.
         val currentUser = auth.currentUser
         if (currentUser == null) {
@@ -146,6 +156,41 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
 
     }
 
+    private fun checkDeeplink() {
+        Firebase.dynamicLinks
+            .getDynamicLink(intent)
+            .addOnSuccessListener(this) { pendingDynamicLinkData ->
+                val link: Uri? = pendingDynamicLinkData?.link
+                if (link?.getQueryParameter("invite") != null) {
+                    val bottomActionDialog = BottomSheetDialog(
+                        this, R.style.ThemeOverlay_MaterialComponents_BottomSheetDialog
+                    )
+                    val bottomView = LayoutInflater.from(this)
+                        .inflate(
+                            R.layout.mds_main_invite,
+                            findViewById(R.id.lay_invite)
+                        )
+                    bottomView.findViewById<Button>(R.id.btn_acceptInvite).setOnClickListener {
+                        acceptInvite(
+                            link.getQueryParameter("invite").toString(),
+                            object : OnCompletedListener {
+                                override fun onCompleted(success: Boolean, msg: String) {
+                                    Toast.makeText(applicationContext, msg, Toast.LENGTH_SHORT)
+                                        .show()
+                                    bottomActionDialog.dismiss()
+                                }
+                            })
+                    }
+                    bottomView.findViewById<TextView>(R.id.tv_group_name).text =
+                        link.getQueryParameter("name").toString()
+                    bottomActionDialog.setContentView(bottomView)
+                    bottomActionDialog.show()
+                }
+
+            }
+            .addOnFailureListener(this) { e -> Log.w(TAG, "getDynamicLink:onFailure", e) }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -165,23 +210,6 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                     )
                 }
             }
-
-        Firebase.dynamicLinks
-            .getDynamicLink(intent)
-            .addOnSuccessListener(this) { pendingDynamicLinkData ->
-                var deepLink: Uri? = null
-                if (pendingDynamicLinkData != null) {
-                    deepLink = pendingDynamicLinkData.link
-
-                    Log.e(TAG, "onCreate: $deepLink")
-                    alert(
-                        "Данные ссылки",
-                        deepLink?.getQueryParameter("hello").toString(),
-                        "OnCreate()"
-                    )
-                }
-            }
-            .addOnFailureListener(this) { e -> Log.w(TAG, "getDynamicLink:onFailure", e) }
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -224,15 +252,52 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         )
     }
 
+    private fun acceptInvite(id: String, onCompleted: OnCompletedListener) {
+        val db = FirebaseFirestore.getInstance()
+        db.collection("invites")
+            .document(id)
+            .get()
+            .addOnSuccessListener {
+                if (it.exists()) {
+                    db.collectionGroup("groups")
+                        .whereEqualTo("id", (it["inviteTo"] as String))
+                        .limit(1L)
+                        .get()
+                        .addOnSuccessListener { q ->
+                            val data = hashMapOf<String, Any?>(
+                                "users" to hashMapOf<String, Any?>(
+                                    user.uid to null
+                                )
+                            )
+                            q.documents[0].reference.set(data, SetOptions.merge())
+                                .addOnSuccessListener {
+                                    launch { reloadGroups() }.invokeOnCompletion {
+                                        onCompleted.onCompleted(true, "Успешно")
+                                    }
+                                }.addOnFailureListener {
+                                    onCompleted.onCompleted(false, "Не удалось записать")
+                                }
+                        }.addOnFailureListener {
+                            onCompleted.onCompleted(false, "Группа не найдена")
+                        }
+                } else {
+                    onCompleted.onCompleted(false, "Документа не существует!")
+                }
+            }.addOnFailureListener {
+                onCompleted.onCompleted(false, "Приглашение не найдено")
+            }
+    }
+
     private fun getTimetables() {
         // запрос документов расписания
-        list_lessons.clear()
+        timetable?.lessons?.clear()
+        val list_lessons = ArrayList<Lesson>()
         db.collection("groups")
             .document(user.getGroupByType("school").id!!)
             .collection("lessonstime")
             .get()
             .addOnSuccessListener { timeTmp -> // расписание звонков
-                val time = (timeTmp.documents[0]["time"] as List<HashMap<String, String>>)
+                docTime = (timeTmp.documents[0]["time"] as List<HashMap<String, String>>)
                 db.collection("groups")
                     .document(user.getGroupByType("school").id!!) // Получаем уроки за определённый день
                     .collection("groups")
@@ -240,40 +305,29 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                     .collection("timetables")
                     .get()
                     .addOnSuccessListener { q ->
-                        q.documents.forEach { docLessons ->
-                            val offset = docLessons.getLong("offset")!!.toInt()
-                            var i = 0
-                            (docLessons["lessons"] as List<HashMap<String, Any>>).forEach { lesson ->
-                                if (lesson["groupId"] == null || user.checkGroupById(lesson["groupId"]!! as String)) {
-
-                                    var lt = LessonsTime("", "")
-
-                                    if (remoteConfig.getBoolean("allowTimeShow")){
-                                        lt = LessonsTime(
-                                            (time[i + offset]["startAt"] as String),
-                                            (time[i + offset]["endAt"] as String)
-                                        )
-                                    }
-                                    list_lessons.add(
-                                        Lesson(
-                                            (lesson["cab"] as String),
-                                            (lesson["name"] as String),
-                                            lt,
-                                            docLessons.getLong("dow")!! + 1,
-                                            (lesson["groupId"] as String?),
-                                        )
+                        q.documents.forEach { doc ->
+                            (doc["lessons"] as List<HashMap<String, Any>>).forEach { l ->
+                                list_lessons.add(
+                                    Lesson(
+                                        (l["index"] as Long),
+                                        (l["cab"] as String),
+                                        (l["name"] as String),
+                                        (l["teacher"] as String?),
+                                        LessonsTime(docTime[(l["index"] as Long).toInt()]["startAt"], docTime[(l["index"] as Long).toInt()]["endAt"]),
+                                        doc.getLong("dow")!!,
+                                        (l["groupId"] as String?),
                                     )
-                                    i++
-                                }
+                                )
                             }
                         }
-
-                        isTimetablesComplete = true
-
-                        Log.e(TAG, list_lessons.toString())
-
+                        timetable = Timetable(list_lessons)
                     }
             }
+
+        isTimetablesComplete = true
+
+        Log.e(TAG, list_lessons.toString())
+
     }
 
     fun getNextLesson(lesson_name: String): Long {
@@ -283,15 +337,15 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         val now = (calendar.timeInMillis / 1000)
         val tmpLessons = ArrayList<Lesson>()
 
-        list_lessons.forEach {
+        timetable?.lessons?.forEach {
             if (it.day > today) {
-                val tmp = Lesson(it.cab, it.name, it.time, it.day)
+                val tmp = it.copy()
                 tmpLessons.add(tmp)
             }
         }
 
-        list_lessons.forEach {
-            val tmp = Lesson(it.cab, it.name, it.time, it.day)
+        timetable?.lessons?.forEach {
+            val tmp = it.copy()
             tmpLessons.add(tmp)
         }
 
@@ -399,7 +453,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         }
     }
 
-    suspend fun reloadGroups() {
+    private suspend fun reloadGroups() {
         db.collectionGroup("groups")
             .whereEqualTo(FieldPath.of("users", uid), null)
             .get()
@@ -465,8 +519,6 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
             }.await()
 
     }
-
-// Launch
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.

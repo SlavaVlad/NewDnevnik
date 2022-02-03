@@ -7,129 +7,16 @@
     android:layout_marginHorizontal="16dp"
     tools:context=".ui.groups.vpPages_class.ItemP2GroupFragment">
 
-    <com.google.android.material.tabs.TabLayout
-        android:id="@+id/tabs_dow"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:clickable="false"
-        android:visibility="gone"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <com.google.android.material.tabs.TabItem
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:clickable="false"
-            android:focusableInTouchMode="false"
-            android:longClickable="false"
-            android:tag="0"
-            android:text="@string/dow_1" />
-
-        <com.google.android.material.tabs.TabItem
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:clickable="false"
-            android:focusableInTouchMode="false"
-            android:longClickable="false"
-            android:tag="1"
-            android:text="@string/dow_2" />
-
-        <com.google.android.material.tabs.TabItem
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:clickable="false"
-            android:focusableInTouchMode="false"
-            android:longClickable="false"
-            android:tag="2"
-            android:text="@string/dow_3" />
-
-        <com.google.android.material.tabs.TabItem
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:clickable="false"
-            android:focusableInTouchMode="false"
-            android:longClickable="false"
-            android:tag="3"
-            android:text="@string/dow_4" />
-
-        <com.google.android.material.tabs.TabItem
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:clickable="false"
-            android:focusableInTouchMode="false"
-            android:longClickable="false"
-            android:tag="4"
-            android:text="@string/dow_5" />
-
-        <com.google.android.material.tabs.TabItem
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:clickable="false"
-            android:focusableInTouchMode="false"
-            android:longClickable="false"
-            android:tag="5"
-            android:text="@string/dow_6" />
-
-    </com.google.android.material.tabs.TabLayout>
-
-    <androidx.viewpager2.widget.ViewPager2
-        android:id="@+id/vp_timetable"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="8dp"
-        app:layout_constraintBottom_toTopOf="@+id/btn_current"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tabs_dow">
-
-    </androidx.viewpager2.widget.ViewPager2>
-
     <Button
-        android:id="@+id/btn_next_dow"
-        android:layout_width="0dp"
+        android:id="@+id/button2"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp"
-        android:backgroundTint="@color/design_default_color_secondary_variant"
-        android:text="@string/dow_2"
+        android:text="Загрузить"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/btn_current" />
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fab_create_lesson"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="32dp"
-        android:clickable="true"
-        android:src="@drawable/ic_plus"
-        app:layout_constraintBottom_toTopOf="@+id/btn_next_dow"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/guideline8"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        app:layout_constraintGuide_begin="188dp"
-        app:layout_constraintGuide_end="188dp"
-        />
-
-    <Button
-        android:id="@+id/btn_current"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginBottom="8dp"
-        android:backgroundTint="@color/design_default_color_primary"
-        android:clickable="false"
-        android:text="Выбрано: ПН"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -157,6 +157,39 @@ class FragmentCreateTimetablePage : Fragment() {
         }
 
         lessons.add(arrayListOf(etName, etCab, tvGroupNumber, etOffset))
+
+        // TODO: Убрать перед релизом
+        val rnd = (0..10).random()
+        etName.setText(
+            when (rnd) {
+                0 -> "Русский язык"
+                1 -> "Математика"
+                2 -> "Английский язык"
+                3 -> "Литература"
+                4 -> "Физкультура"
+                5 -> "География"
+                6 -> "ОБЖ"
+                7 -> "Информатика"
+                8 -> "Экономика"
+                else -> "Физикааааа"
+            }
+        )
+        etCab.setText(
+            when (rnd) {
+                0 -> "405"
+                1 -> "405"
+                2 -> "309"
+                3 -> "405"
+                4 -> "1"
+                5 -> "405"
+                6 -> "405"
+                7 -> "408"
+                8 -> "405"
+                else -> "410"
+            }
+        )
+        etOffset.setText("${(0..3).random()}")
+
     }
 }
 

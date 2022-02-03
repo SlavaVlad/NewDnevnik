@@ -9,20 +9,23 @@ import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.firebase.dynamiclinks.ShortDynamicLink
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.omega_r.libs.omegaintentbuilder.OmegaIntentBuilder
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.*
 import well.keepitsimple.dnevnik.MainActivity
 import well.keepitsimple.dnevnik.R
+import well.keepitsimple.dnevnik.ShortLinkCompletedListener
+import well.keepitsimple.dnevnik.buildFirebaseLinkAsync
 import well.keepitsimple.dnevnik.ui.groups.CreateClass
 import kotlin.coroutines.CoroutineContext
 
-class InvitesAdapter(private val info: List<String>, private val codes: List<String>, private val inviteShareClickListener: InviteShareClickListener):
+class InvitesAdapter(
+    private val info: List<String>,
+    private val links: List<String>,
+    private val inviteShareClickListener: InviteShareClickListener
+) :
     RecyclerView.Adapter<InvitesAdapter.InvitesViewHolder>() {
 
     class InvitesViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -39,12 +42,12 @@ class InvitesAdapter(private val info: List<String>, private val codes: List<Str
     }
 
     override fun onBindViewHolder(h: InvitesViewHolder, position: Int) {
-        with(h){
+        with(h) {
             name.text = info[position]
-            code.text = codes[position]
+            code.text = links[position]
         }
         h.btnShare.setOnClickListener {
-            inviteShareClickListener.onClick(codes[position], info[position])
+            inviteShareClickListener.onClick(links[position], info[position])
         }
     }
 
@@ -91,35 +94,62 @@ class ItemP3GroupFragment : Fragment(), CoroutineScope {
         val info = requireArguments().getStringArrayList("info")
         val ids = requireArguments().getStringArrayList("ids")
 
-        val codes = mutableListOf<String>()
+        val links = mutableListOf<String>()
 
         val db = FirebaseFirestore.getInstance()
         val inviteRef = db.collection("invites")
 
         launch {
-            ids!!.forEach {
+
+            ids!!.forEachIndexed { index, it ->
+
                 val data = hashMapOf<String, Any>(
                     "inviteTo" to it,
                     "timestamp" to FieldValue.serverTimestamp()
                 )
+
                 inviteRef.add(data).addOnSuccessListener { dref ->
-                    codes.add(dref.id)
-                }.await()
+                    runBlocking {
+                        val str = info!![index]
+                        var compStr = ""
+                        for (i in str.iterator()) {
+                            if (i.toString() != ","){
+                                compStr += i
+                            } else {
+                                break
+                            }
+                        }
+                        buildFirebaseLinkAsync(
+                            mapOf(
+                                "invite" to dref.id,
+                                "name" to compStr,
+                            ),
+                            object : ShortLinkCompletedListener {
+                                override fun onCompleted(link: ShortDynamicLink) {
+                                    links.add(link.shortLink.toString())
+                                    if (links.size == ids.size) {
+                                        rv_invites.adapter = InvitesAdapter(
+                                            info.toList(),
+                                            links.toList(),
+                                            object :
+                                                InviteShareClickListener {
+                                                override fun onClick(link: String, info: String) {
+                                                    OmegaIntentBuilder(context!!)
+                                                        .share()
+                                                        .subject("Приглашение")
+                                                        .text("Приглашаю тебя в группу $info в приложении \"Твой дневник\": $link")
+                                                        .startActivity()
+                                                }
+                                            },
+                                        )
+                                        rv_invites.layoutManager = LinearLayoutManager(context)
+                                    }
+                                }
+                            })
+                    }
+                }
             }
 
-        }.invokeOnCompletion {
-            rv_invites.adapter = InvitesAdapter(info!!.toList(), codes.toList(),
-                object :
-                    InviteShareClickListener {
-                    override fun onClick(id: String, info: String) {
-                        OmegaIntentBuilder(context!!)
-                            .share()
-                            .subject("Приглашение")
-                            .text("Приглашаю тебя в группу $info, для этого введи код:\n$id\n в личном кабинете приложения \"Твой дневник\"")
-                            .startActivity()
-                    }
-                },)
-            rv_invites.layoutManager = LinearLayoutManager(context)
         }
 
         return view

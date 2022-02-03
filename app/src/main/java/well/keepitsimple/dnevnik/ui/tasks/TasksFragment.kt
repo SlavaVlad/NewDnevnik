@@ -210,7 +210,7 @@ class TasksFragment : Fragment(), CoroutineScope {
                     )
                     val bottomView = LayoutInflater.from(requireActivity())
                         .inflate(
-                            R.layout.modal_bottom_sheet_content,
+                            R.layout.mds_tasks_actions,
                             requireView().findViewById(R.id.bs_container)
                         )
                     bottomView.findViewById<Button>(R.id.complete).setOnClickListener {
