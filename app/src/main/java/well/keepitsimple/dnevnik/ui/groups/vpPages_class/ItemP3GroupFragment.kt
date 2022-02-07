@@ -137,7 +137,7 @@ class ItemP3GroupFragment : Fragment(), CoroutineScope {
                                                     OmegaIntentBuilder(context!!)
                                                         .share()
                                                         .subject("Приглашение")
-                                                        .text("Приглашаю тебя в группу $info в приложении \"Твой дневник\": $link")
+                                                        .text("Приглашаю тебя в $info в приложении \"Твой дневник\": $link")
                                                         .startActivity()
                                                 }
                                             },
@@ -145,7 +145,8 @@ class ItemP3GroupFragment : Fragment(), CoroutineScope {
                                         rv_invites.layoutManager = LinearLayoutManager(context)
                                     }
                                 }
-                            })
+                            }
+                        )
                     }
                 }
             }

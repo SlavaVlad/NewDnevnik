@@ -9,7 +9,7 @@ import android.widget.TextView
 import well.keepitsimple.dnevnik.R
 import well.keepitsimple.dnevnik.ui.timetables.objects.Lesson
 
-class LessonsAdapter(var ctx: Context, var ressource: Int, var d_item: ArrayList<Lesson>) :
+class LessonsAdapter(var ctx: Context, var ressource: Int, var d_item: List<Lesson>) :
     ArrayAdapter<Lesson>(ctx, ressource, d_item) {
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
         val layoutInflater = LayoutInflater.from(ctx)

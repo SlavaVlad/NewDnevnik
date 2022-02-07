@@ -48,12 +48,6 @@
         <meta-data
             android:name="firebase_performance_logcat_enabled"
             android:value="true" />
-
-
-        <activity
-            android:name="com.journeyapps.barcodescanner.CaptureActivity"
-            android:screenOrientation="portrait"
-            tools:replace="screenOrientation" />
     </application>
 
 </manifest>

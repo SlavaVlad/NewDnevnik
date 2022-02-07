@@ -60,7 +60,6 @@ import well.keepitsimple.dnevnik.ui.timetables.objects.LessonsTime
 import well.keepitsimple.dnevnik.ui.timetables.objects.Timetable
 import java.util.*
 import java.util.Calendar.DAY_OF_WEEK
-import kotlin.collections.ArrayList
 import kotlin.coroutines.CoroutineContext
 
 const val ONESIGNAL_APP_ID = "b5aa6c76-4619-4497-9b1e-2e7a1ef4095f"
@@ -85,7 +84,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
     val db = FirebaseFirestore.getInstance()
     var timetable: Timetable? = null
     val tasks = ArrayList<Task>()
-    var docTime: List<HashMap<String, String>> = emptyList()
+    var docTime = mutableListOf<LessonsTime>()
     val TAG = "MainActivity"
     var mAdView: AdView? = null
     private val remoteConfig = Firebase.remoteConfig
@@ -297,7 +296,10 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
             .collection("lessonstime")
             .get()
             .addOnSuccessListener { timeTmp -> // расписание звонков
-                docTime = (timeTmp.documents[0]["time"] as List<HashMap<String, String>>)
+                val _docTime = (timeTmp.documents[0]["time"] as List<HashMap<String, String>>)
+                _docTime.forEach {
+                    docTime.add(LessonsTime((it["startAt"] as String), (it["endAt"] as String)))
+                }
                 db.collection("groups")
                     .document(user.getGroupByType("school").id!!) // Получаем уроки за определённый день
                     .collection("groups")
@@ -307,17 +309,16 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                     .addOnSuccessListener { q ->
                         q.documents.forEach { doc ->
                             (doc["lessons"] as List<HashMap<String, Any>>).forEach { l ->
-                                list_lessons.add(
-                                    Lesson(
-                                        (l["index"] as Long),
-                                        (l["cab"] as String),
-                                        (l["name"] as String),
-                                        (l["teacher"] as String?),
-                                        LessonsTime(docTime[(l["index"] as Long).toInt()]["startAt"], docTime[(l["index"] as Long).toInt()]["endAt"]),
-                                        doc.getLong("dow")!!,
-                                        (l["groupId"] as String?),
-                                    )
+                                val lesson = Lesson(
+                                    (l["index"] as Long).toInt(),
+                                    (l["cab"] as String),
+                                    (l["name"] as String),
+                                    (l["teacher"] as String?),
+                                    docTime[(l["index"] as Long).toInt()],
+                                    doc.getLong("dow")!!.toInt(),
                                 )
+                                lesson.groupId = (l["groupId"] as String?)
+                                list_lessons.add(lesson)
                             }
                         }
                         timetable = Timetable(list_lessons)

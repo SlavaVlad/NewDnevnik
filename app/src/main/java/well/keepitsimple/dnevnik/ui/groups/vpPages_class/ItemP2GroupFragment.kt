@@ -1,26 +1,28 @@
 package well.keepitsimple.dnevnik.ui.groups.vpPages_class
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
-import android.widget.TextView
+import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.viewpager2.widget.ViewPager2
-import com.google.android.material.tabs.TabLayout
-import com.google.android.material.textfield.TextInputEditText
 import com.google.firebase.firestore.FirebaseFirestore
+import com.omega_r.libs.omegaintentbuilder.OmegaIntentBuilder
+import com.omega_r.libs.omegaintentbuilder.handlers.ActivityResultCallback
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
+import org.apache.poi.ss.usermodel.WorkbookFactory
 import well.keepitsimple.dnevnik.MainActivity
 import well.keepitsimple.dnevnik.R
-import well.keepitsimple.dnevnik.default.SlideAdapter
-import well.keepitsimple.dnevnik.next
+import well.keepitsimple.dnevnik.getNumToString
 import well.keepitsimple.dnevnik.ui.groups.CreateClass
+import well.keepitsimple.dnevnik.ui.timetables.objects.Lesson
+import well.keepitsimple.dnevnik.ui.timetables.objects.Timetable
 import kotlin.coroutines.CoroutineContext
 
 class ItemP2GroupFragment : Fragment(), CoroutineScope {
@@ -43,10 +45,11 @@ class ItemP2GroupFragment : Fragment(), CoroutineScope {
         job.cancel()
     }
 
-    lateinit var tabs: TabLayout
-    lateinit var vp_timetable: ViewPager2
-    lateinit var btn_next: Button
-    lateinit var btn_current: Button
+    lateinit var btn_load: Button
+    lateinit var next: Button
+    lateinit var getRef: Button
+
+    var timetable: Timetable? = null
 
     // id документа родителя
     // название группы
@@ -64,95 +67,78 @@ class ItemP2GroupFragment : Fragment(), CoroutineScope {
 
         Log.d(TAG, "onCreateView: CREATE_VIEW")
 
-        tabs = view.findViewById(R.id.tabs_dow)
-        vp_timetable = view.findViewById(R.id.vp_timetable)
-        btn_next = view.findViewById(R.id.btn_next_dow)
-        btn_current = view.findViewById(R.id.btn_current)
+        btn_load = view.findViewById(R.id.btn_load)
+        next = view.findViewById(R.id.next)
+        getRef = view.findViewById(R.id.btn_get_ref)
 
-        vp_timetable.adapter = SlideAdapter(
-            this, mutableListOf(
-                FragmentCreateTimetablePage(),
-                FragmentCreateTimetablePage(),
-                FragmentCreateTimetablePage(),
-
-                FragmentCreateTimetablePage(),
-                FragmentCreateTimetablePage(),
-                FragmentCreateTimetablePage(),
-            )
-        )
-
-        vp_timetable.isSaveEnabled = true
-
-        tabs.addOnTabSelectedListener(object :
-            TabLayout.OnTabSelectedListener {
-            override fun onTabSelected(tab: TabLayout.Tab?) {
-
-                vp_timetable.setCurrentItem(tab!!.position, true)
-                btn_current.text = "Выбрано: ${tabs.getTabAt(tabs.selectedTabPosition)!!.text}"
-
-                val tabIndex = tabs.selectedTabPosition
-
-                if (tabIndex != 5 && tabIndex != 0) { // вт-пт
-                    btn_next.text = "К ${tabs.getTabAt(tabIndex + 1)!!.text}"
-                } else {
-                    if (tabIndex == 0) { // 0
-                        btn_next.text = "К ${tabs.getTabAt(tabIndex + 1)!!.text}"
-                    } else { // 5
-                        btn_next.text = "Завершить"
+        btn_load.setOnClickListener {
+            OmegaIntentBuilder
+                .from(requireActivity())
+                .pick()
+                .file()
+                .createIntentHandler(requireActivity())
+                .startActivityForResult(object : ActivityResultCallback {
+                    override fun onActivityResult(resultCode: Int, data: Intent?) {
+                        if (data?.data != null) {
+                            timetable = parseTimetable(data.data!!)
+                            next.isEnabled = true
+                        } else {
+                            Toast.makeText(requireContext(), "Ошибка", Toast.LENGTH_SHORT).show()
+                            next.isEnabled = false
+                        }
                     }
-                }
+                })
+        }
 
-                Log.d(TAG, "onTabSelected: $tabIndex")
+        next.setOnClickListener {
+            finish()
+        }
 
-            }
-
-            override fun onTabUnselected(tab: TabLayout.Tab?) {}
-
-            override fun onTabReselected(tab: TabLayout.Tab?) {}
-        })
-
-        btn_next.setOnClickListener {
-
-            val item = ((vp_timetable.adapter as SlideAdapter).getItem(vp_timetable.currentItem) as FragmentCreateTimetablePage)
-            val dryData = item.lessons
-
-            val lessons = mutableListOf<HashMap<String, String>>()
-
-            //(item.lessons[it][0] as TextInputEditText).text.toString() - имя предмета
-            //(item.lessons[it][0] as TextInputEditText).text.toString() - кабинет
-            //(item.lessons[it][0] as TextInputEditText).text.toString() - индекс группы, если не "0"
-
-            var count = 0
-            repeat(item.lessonsCount) {
-                if ((dryData[it][0] as TextInputEditText).text!!.isNotEmpty()) {
-                    count++
-                }
-            } // Посчитали кол-во уроков
-
-            repeat(count) {
-                val hm = hashMapOf(
-                    "name" to (item.lessons[it][0] as TextInputEditText).text.toString(),
-                    "cab" to (item.lessons[it][1] as TextInputEditText).text.toString(),
-                )
-                if ((item.lessons[it][2] as TextView).text.toString().toInt() != 0) {
-                    hm["groupId"] = (item.lessons[it][2] as TextView).text.toString()
-                }
-                lessons.add(hm)
-            } // сложили уроки как Map's в лист lessons
-
-            val payload = hashMapOf(
-                "dow" to vp_timetable.currentItem + 1,
-                "offset" to (item.lessons[0][3] as TextView).text.toString().toInt(),
-                "lessons" to lessons
-            )
-
-            launch { (requireParentFragment() as CreateClass).addDay(payload, count) }
-
-            tabs.next()
+        getRef.setOnClickListener {
 
         }
+
 
         return view
     }
 
+    private fun parseTimetable(uri: Uri): Timetable {
+        val wb = WorkbookFactory.create(act.contentResolver.openInputStream(uri))
+        val lessons = ArrayList<Lesson>()
+        wb.sheetIterator().withIndex().forEachRemaining { _sheet ->
+            val dow = _sheet.index
+            val sheet = _sheet.value
+            sheet.removeRow(sheet.getRow(0)) // удалили шапку
+            sheet.rowIterator().forEachRemaining { row -> // проходимся по урокам
+                while (row.getCell(0) != null) {
+                    with(row) {
+                        val ls = Lesson(
+                            getCell(0).numericCellValue.toInt() - 1,
+                            getCell(2).getNumToString(),
+                            getCell(1).stringCellValue,
+                            getCell(3).stringCellValue,
+                            act.docTime[getCell(0).numericCellValue.toInt() - 1],
+                            dow + 1,
+                        )
+                        if (getCell(4) != null) {
+                            ls.groupId = getCell(4).getNumToString()
+                            ls.tag = getCell(4).getNumToString()
+                        }
+                        lessons.add(ls)
+                    }
+                    break
+                }
+            }
+        }
+        return Timetable(lessons)
+    }
+
+//(item.lessons[it][0] as TextInputEditText).text.toString() - имя предмета txt
+//(item.lessons[it][1] as TextInputEditText).text.toString() - кабинет int
+//(item.lessons[it][2] as TextInputEditText).text.toString() - индекс группы, если не "0" int
+
+    private fun finish() {
+        val pf = requireParentFragment() as CreateClass
+        pf.uploadClass(timetable!!)
+    }
 }

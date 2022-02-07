@@ -8,15 +8,49 @@
     tools:context=".ui.groups.vpPages_class.ItemP2GroupFragment">
 
     <Button
-        android:id="@+id/button2"
+        android:id="@+id/btn_load"
+        android:layout_width="wrap_content"
+        android:layout_height="48dp"
+        android:text="Загрузить"
+        app:layout_constraintBottom_toTopOf="@+id/btn_get_ref"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.762" />
+
+    <Button
+        android:id="@+id/next"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Загрузить"
+        android:layout_marginBottom="48dp"
+        android:enabled="false"
+        android:text="Далее"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <TextView
+        android:id="@+id/tv_label_info"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:text="Выберите таблицу с расписанием в формате xls.\nШаблон таблицы можно получить кнопкой &quot;ПОЛУЧИТЬ ШАБЛОН&quot;"
+        app:layout_constraintBottom_toTopOf="@+id/btn_load"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/btn_get_ref"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="176dp"
+        android:text="Получить шаблон"
+        app:layout_constraintBottom_toTopOf="@+id/next"
+        app:layout_constraintEnd_toEndOf="@+id/next"
+        app:layout_constraintStart_toStartOf="@+id/next" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -63,7 +63,7 @@ class TimetablesFragment : Fragment(), CoroutineScope {
         ctx = activity
     }
 
-    private fun setup(listLessons: ArrayList<Lesson>) {
+    private fun setup(listLessons: List<Lesson>) {
 
         tabs.addOnTabSelectedListener(object :
             TabLayout.OnTabSelectedListener { // выбрали расписание на другой день
@@ -88,9 +88,9 @@ class TimetablesFragment : Fragment(), CoroutineScope {
         }
     }
 
-    private fun setList(dayOfWeek: Int, lr: ArrayList<Lesson>) {
+    private fun setList(dayOfWeek: Int, lr: List<Lesson>) {
 
-        val lessons = ArrayList<Lesson>()
+        val lessons = mutableListOf<Lesson>()
 
         lr.forEach {
             if (it.day.toInt()-2 == dayOfWeek) {

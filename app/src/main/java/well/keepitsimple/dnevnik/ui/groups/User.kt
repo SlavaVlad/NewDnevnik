@@ -8,7 +8,7 @@ import kotlinx.coroutines.Job
 import well.keepitsimple.dnevnik.login.Group
 import kotlin.coroutines.CoroutineContext
 
-open class User() : CoroutineScope {
+class User : CoroutineScope {
 
     private var job: Job = Job()
 
@@ -71,7 +71,6 @@ open class User() : CoroutineScope {
     }
 
     fun isAllowedInGroup(permission: String, group: Group): Boolean {
-        group
         if (group.rights!!.contains(permission)) {
             return true
         } else if (group.admins!!.contains(this.uid)) {

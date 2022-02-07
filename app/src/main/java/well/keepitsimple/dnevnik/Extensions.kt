@@ -14,7 +14,10 @@ import com.google.firebase.dynamiclinks.ktx.dynamicLinks
 import com.google.firebase.dynamiclinks.ktx.shortLinkAsync
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.ktx.Firebase
+import org.apache.poi.ss.usermodel.Cell
+import org.apache.poi.ss.usermodel.CellType
 import well.keepitsimple.dnevnik.ui.settings.TAG
+
 
 fun <E> ArrayList<E>.addUnique(value: E) {
     if (!this.contains(value)) {
@@ -137,5 +140,19 @@ fun buildFirebaseLinkAsync(
         Log.d(TAG, "script: $this")
     }.addOnSuccessListener {
         onLinkCompletedListener.onCompleted(it)
+    }
+}
+
+fun Cell.getNumToString(): String {
+    return when(this.cellType){
+        CellType.NUMERIC -> {
+            this.numericCellValue.toInt().toString()
+        }
+        CellType.STRING -> {
+            this.stringCellValue
+        }
+        else -> {
+            ""
+        }
     }
 }

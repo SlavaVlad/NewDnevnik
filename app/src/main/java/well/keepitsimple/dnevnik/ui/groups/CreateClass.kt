@@ -19,6 +19,7 @@ import well.keepitsimple.dnevnik.default.SlideAdapter
 import well.keepitsimple.dnevnik.login.Rights
 import well.keepitsimple.dnevnik.ui.groups.vpPages_class.ItemP1GroupFragment
 import well.keepitsimple.dnevnik.ui.groups.vpPages_class.ItemP3GroupFragment
+import well.keepitsimple.dnevnik.ui.timetables.objects.Timetable
 import kotlin.coroutines.CoroutineContext
 
 class CreateClass : Fragment(), CoroutineScope {
@@ -32,8 +33,6 @@ class CreateClass : Fragment(), CoroutineScope {
         super.onDestroy()
         job.cancel()
     }
-
-    var t: ArrayList<HashMap<String, Any>> = ArrayList()
 
     val db = FirebaseFirestore.getInstance()
 
@@ -72,59 +71,56 @@ class CreateClass : Fragment(), CoroutineScope {
 
     }
 
-    fun addDay(hm: HashMap<String, Any>, count: Int) {
+    fun uploadClass(timetable: Timetable) {
 
-        t.add(hm)
+        val ids = ArrayList<String>()
+        val info = ArrayList<String>()
+        val added = ArrayList<String>()
 
-        if (t.size == 6) {
+        val user = act.user
 
-            val ids = ArrayList<String>()
-            val info = ArrayList<String>()
-            val added = ArrayList<String>()
+        var mainDocRef: DocumentReference // Верхняя группа
 
-            val user = act.user
-
-            var mainDocRef: DocumentReference
-
-            val mainGroup = hashMapOf(
-                "name" to ((vpCreateGroup.adapter as SlideAdapter).getItem(0) as ItemP1GroupFragment).groupName.editText!!.text.toString(),
-                "admins" to hashMapOf<String, Any>(
-                    act.uid!! to listOf(
-                        Rights.Doc.CREATE.string,
-                        Rights.Doc.DELETE.string,
-                        Rights.Doc.EDIT.string,
-                        Rights.Doc.VIEW.string,
-                    )
-                ),
-                "rights" to listOf(
+        val mainGroup = hashMapOf(
+            "name" to ((vpCreateGroup.adapter as SlideAdapter).getItem(0) as ItemP1GroupFragment).groupName.editText!!.text.toString(),
+            "admins" to hashMapOf<String, Any>(
+                act.uid!! to listOf(
+                    Rights.Doc.CREATE.string,
+                    Rights.Doc.DELETE.string,
+                    Rights.Doc.EDIT.string,
                     Rights.Doc.VIEW.string,
-                    Rights.Doc.COMPLETE.string,
-                ),
-                "type" to "class",
-                "users" to emptyMap<String, Any?>()
-            )
+                )
+            ),
+            "rights" to listOf(
+                Rights.Doc.VIEW.string,
+                Rights.Doc.COMPLETE.string,
+            ),
+            "type" to "class",
+            "users" to emptyMap<String, Any?>()
+        ) // создали класс
 
-            user.getSchoolRef()
-                .collection("groups")
-                .add(mainGroup)
-                .addOnSuccessListener { ref ->
+        user.getSchoolRef()
+            .collection("groups")
+            .add(mainGroup)
+            .addOnSuccessListener { ref ->
+                launch {
+                    mainDocRef = ref
+                    val data = hashMapOf<String, Any>(
+                        "id" to ref.id
+                    )
+                    ref.update(data)
+                    ids.add(mainDocRef.id)
+                    info.add(mainGroup["name"]!! as String)
                     launch {
-                        mainDocRef = ref
-                        val data = hashMapOf<String, Any>(
-                            "id" to ref.id
-                        )
-                        ref.update(data)
-                        ids.add(mainDocRef.id)
-                        info.add(mainGroup["name"]!! as String)
-                        launch {
-                            t.forEach { day ->
-                                var i = 0
-                                (day["lessons"] as List<HashMap<String, String>>).forEach { lesson ->
-                                    if (lesson.containsKey("groupId")) {
-                                        if (!added.contains("${lesson["name"]!!}|${lesson["groupId"]}")) {
+                        timetable.lessonsByDays.forEach { day -> // обход массива дней расписания -----------------------------------------------------------
+                            day.iterator().withIndex().forEach { _lesson ->
+                                    val lesson = _lesson.value
+                                    val i = _lesson.index
+                                    if (lesson.isGroup()) {
+                                        if (!added.contains("${lesson.name}|${lesson.groupId}")) {
                                             val sbClassData = hashMapOf(
-                                                "name" to lesson["name"]!!,
-                                                "tag" to lesson["groupId"]!!,
+                                                "name" to lesson.name,
+                                                "tag" to lesson.groupId,
                                                 "admins" to hashMapOf<String, Any>(
                                                     act.uid!! to listOf(
                                                         Rights.Doc.CREATE.string,
@@ -139,26 +135,25 @@ class CreateClass : Fragment(), CoroutineScope {
                                                 ),
                                                 "type" to "subclass",
                                                 "users" to emptyMap<String, Any?>()
-                                            )
+                                            ) // Подгруппа
                                             mainDocRef
                                                 .collection("groups")
                                                 .add(sbClassData)
                                                 .addOnSuccessListener {
-                                                    (day["lessons"] as List<HashMap<String, String>>)[i]["groupId"] =
+                                                    day[i].groupId =
                                                         it.id
                                                     val data = hashMapOf<String, Any>(
                                                         "id" to it.id
                                                     )
                                                     it.update(data)
                                                     ids.add(it.id)
-                                                    added.add("${lesson["name"]!!}|${lesson["groupId"]}")
-                                                    info.add("${lesson["name"]!!}, ${lesson["tag"]} группа")
-                                                    i++
+                                                    added.add("${lesson.name}|${lesson.groupId}")
+                                                    info.add("${lesson.name}, ${lesson.tag}")
                                                 }.await()
                                         } else {
                                             info.forEachIndexed { l, name ->
-                                                if ((day["lessons"] as List<HashMap<String, String>>)[i]["name"] == name) {
-                                                    (day["lessons"] as List<HashMap<String, String>>)[i]["groupId"] =
+                                                if (day[i].name == name) {
+                                                    day[i].groupId =
                                                         ids[l]
                                                 }
                                             }
@@ -166,24 +161,39 @@ class CreateClass : Fragment(), CoroutineScope {
                                     }
 
                                 }
-                                mainDocRef
-                                    .collection("timetables")
-                                    .document()
-                                    .set(day)
+                            val lessonsToDB: MutableList<HashMap<String, Any>> = mutableListOf()
+                            day.forEach { l ->
+                                val hm = hashMapOf<String, Any>(
+                                    "name" to l.name,
+                                    "cab" to l.cab.toString(),
+                                    "index" to l.index
+                                )
+                                if (l.isGroup()) {
+                                    hm["groupId"] = l.groupId!!
+                                }
+                                lessonsToDB.add(hm)
                             }
-                        }
-
-                    }.invokeOnCompletion {
-                        val p3 = ItemP3GroupFragment()
-                        val bundle = Bundle()
-                        bundle.putStringArrayList("ids", ids)
-                        bundle.putStringArrayList("info", info)
-                        p3.arguments = bundle
-                        (vpCreateGroup.adapter as SlideAdapter).insertItem(p3)
-                        vpCreateGroup.currentItem = 2
+                            val data = hashMapOf<String, Any>(
+                                "dow" to day[0].day,
+                                "lessons" to lessonsToDB
+                            )
+                            mainDocRef
+                                .collection("timetables")
+                                .document()
+                                .set(data)
+                        } // обход массива дней расписания ----------------------------------------------------------------------------
                     }
+
+                }.invokeOnCompletion { // Закончили все необходимые операции
+                    val p3 = ItemP3GroupFragment()
+                    val bundle = Bundle()
+                    bundle.putStringArrayList("ids", ids)
+                    bundle.putStringArrayList("info", info)
+                    p3.arguments = bundle
+                    (vpCreateGroup.adapter as SlideAdapter).insertItem(p3)
+                    vpCreateGroup.currentItem = 2
                 }
-        }
+            }
     }
 }
 
