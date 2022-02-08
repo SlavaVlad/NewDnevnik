@@ -8,7 +8,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.google.firebase.firestore.FirebaseFirestore
 import com.omega_r.libs.omegaintentbuilder.OmegaIntentBuilder
@@ -79,11 +78,15 @@ class ItemP2GroupFragment : Fragment(), CoroutineScope {
                 .createIntentHandler(requireActivity())
                 .startActivityForResult(object : ActivityResultCallback {
                     override fun onActivityResult(resultCode: Int, data: Intent?) {
-                        if (data?.data != null) {
+                        if (data?.data != null && parseTimetable(data.data!!) != null) {
                             timetable = parseTimetable(data.data!!)
                             next.isEnabled = true
                         } else {
-                            Toast.makeText(requireContext(), "Ошибка", Toast.LENGTH_SHORT).show()
+                            act.alert(
+                                "Не удалось преобразовать расписание",
+                                "Проверьте, что формат файла .xls и таблица составлена строго по шаблону",
+                                "parseTimetable()"
+                            )
                             next.isEnabled = false
                         }
                     }
@@ -98,39 +101,43 @@ class ItemP2GroupFragment : Fragment(), CoroutineScope {
 
         }
 
-
         return view
     }
 
-    private fun parseTimetable(uri: Uri): Timetable {
-        val wb = WorkbookFactory.create(act.contentResolver.openInputStream(uri))
-        val lessons = ArrayList<Lesson>()
-        wb.sheetIterator().withIndex().forEachRemaining { _sheet ->
-            val dow = _sheet.index
-            val sheet = _sheet.value
-            sheet.removeRow(sheet.getRow(0)) // удалили шапку
-            sheet.rowIterator().forEachRemaining { row -> // проходимся по урокам
-                while (row.getCell(0) != null) {
-                    with(row) {
-                        val ls = Lesson(
-                            getCell(0).numericCellValue.toInt() - 1,
-                            getCell(2).getNumToString(),
-                            getCell(1).stringCellValue,
-                            getCell(3).stringCellValue,
-                            act.docTime[getCell(0).numericCellValue.toInt() - 1],
-                            dow + 1,
-                        )
-                        if (getCell(4) != null) {
-                            ls.groupId = getCell(4).getNumToString()
-                            ls.tag = getCell(4).getNumToString()
+    private fun parseTimetable(uri: Uri): Timetable? {
+        try {
+            val wb = WorkbookFactory.create(act.contentResolver.openInputStream(uri))
+            val lessons = ArrayList<Lesson>()
+            wb.sheetIterator().withIndex().forEachRemaining { _sheet ->
+                val dow = _sheet.index
+                val sheet = _sheet.value
+                sheet.removeRow(sheet.getRow(0)) // удалили шапку
+                sheet.rowIterator().forEachRemaining { row -> // проходимся по урокам
+                    while (row.getCell(0) != null) {
+                        with(row) {
+                            val ls = Lesson(
+                                getCell(0).numericCellValue.toInt() - 1,
+                                getCell(2).getNumToString(),
+                                getCell(1).stringCellValue,
+                                getCell(3).stringCellValue,
+                                act.docTime[getCell(0).numericCellValue.toInt() - 1],
+                                dow + 1,
+                            )
+                            if (getCell(4) != null) {
+                                ls.groupId = getCell(4).getNumToString()
+                                ls.tag = getCell(4).getNumToString()
+                            }
+                            lessons.add(ls)
                         }
-                        lessons.add(ls)
+                        break
                     }
-                    break
                 }
             }
+            return Timetable(lessons)
+        } catch (e: Exception) {
+            Log.e(TAG, "parseTimetable: $e")
+            return null
         }
-        return Timetable(lessons)
     }
 
 //(item.lessons[it][0] as TextInputEditText).text.toString() - имя предмета txt

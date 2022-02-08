@@ -152,7 +152,15 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         //val adRequest = AdRequest.Builder().build()
         //mAdView !!.loadAd(adRequest)
         mAdView!!.isVisible = false
+        test()
 
+    }
+
+    private fun test() {
+        val sh = "raw/timetable_reference.xls"
+        //val intent = Intent(Intent.createChooser(Intent(Intent.ACTION_VIEW, Uri.parse("raw/res/$sh")), "select"))
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("raw/res/$sh"))
+        startActivity(intent)
     }
 
     private fun checkDeeplink() {

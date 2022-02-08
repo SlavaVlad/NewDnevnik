@@ -29,7 +29,6 @@ import well.keepitsimple.dnevnik.*
 import well.keepitsimple.dnevnik.login.Rights
 import well.keepitsimple.dnevnik.ui.groups.MemberTypes
 import java.util.*
-import kotlin.collections.ArrayList
 import kotlin.collections.set
 import kotlin.coroutines.CoroutineContext
 
