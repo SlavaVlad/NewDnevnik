@@ -8,6 +8,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import com.google.firebase.firestore.FirebaseFirestore
 import com.omega_r.libs.omegaintentbuilder.OmegaIntentBuilder
@@ -16,9 +17,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import org.apache.poi.ss.usermodel.WorkbookFactory
-import well.keepitsimple.dnevnik.MainActivity
-import well.keepitsimple.dnevnik.R
-import well.keepitsimple.dnevnik.getNumToString
+import well.keepitsimple.dnevnik.*
 import well.keepitsimple.dnevnik.ui.groups.CreateClass
 import well.keepitsimple.dnevnik.ui.timetables.objects.Lesson
 import well.keepitsimple.dnevnik.ui.timetables.objects.Timetable
@@ -98,6 +97,16 @@ class ItemP2GroupFragment : Fragment(), CoroutineScope {
         }
 
         getRef.setOnClickListener {
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                putExtra(Intent.EXTRA_TEXT, "TEXT")
+                type = "text/plain"
+            }
+
+            val file = downloadFileFromRawFolder(R.raw.timetable_reference, "Шаблон.xls", "saved_files", requireActivity())
+
+            val uri = FileProvider.getUriForFile(requireContext(), "${BuildConfig.APPLICATION_ID}.provider", file!!)
+
+            Log.d(TAG, "onCreateView: $uri")
 
         }
 
@@ -113,19 +122,23 @@ class ItemP2GroupFragment : Fragment(), CoroutineScope {
                 val sheet = _sheet.value
                 sheet.removeRow(sheet.getRow(0)) // удалили шапку
                 sheet.rowIterator().forEachRemaining { row -> // проходимся по урокам
-                    while (row.getCell(0) != null) {
+                    while (row.getCell(1) != null) {
                         with(row) {
                             val ls = Lesson(
-                                getCell(0).numericCellValue.toInt() - 1,
-                                getCell(2).getNumToString(),
+                                getCell(0).numericCellValue.toInt(),
+                                getCell(2).getValue().toString(),
                                 getCell(1).stringCellValue,
-                                getCell(3).stringCellValue,
-                                act.docTime[getCell(0).numericCellValue.toInt() - 1],
+                                "Teacher",
+                                null,
                                 dow + 1,
                             )
                             if (getCell(4) != null) {
-                                ls.groupId = getCell(4).getNumToString()
-                                ls.tag = getCell(4).getNumToString()
+                                try {
+                                    ls.groupId = getCell(4).getStringOrNull()
+                                    ls.tag = ls.groupId
+                                } catch (e: Exception) {
+                                    Log.e(TAG, "parseTimetable: $e")
+                                }
                             }
                             lessons.add(ls)
                         }

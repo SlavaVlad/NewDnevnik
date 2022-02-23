@@ -13,7 +13,6 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.drawerlayout.widget.DrawerLayout
-import androidx.fragment.app.FragmentTransaction
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
@@ -53,7 +52,6 @@ import well.keepitsimple.dnevnik.databinding.ActivityMainBinding
 import well.keepitsimple.dnevnik.login.Group
 import well.keepitsimple.dnevnik.ui.groups.User
 import well.keepitsimple.dnevnik.ui.groups.UserDataSetEvent
-import well.keepitsimple.dnevnik.ui.settings.SettingsFragment
 import well.keepitsimple.dnevnik.ui.tasks.Task
 import well.keepitsimple.dnevnik.ui.timetables.objects.Lesson
 import well.keepitsimple.dnevnik.ui.timetables.objects.LessonsTime
@@ -104,26 +102,27 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
 
         val wn = WhatsNew.newInstance(
             WhatsNewItem(
-                "Группы",
-                "Теперь можно создавать классы и добавлять в них учеников!",
-                R.drawable.ic_group
-            ),
-            WhatsNewItem(
-                "Инвайты",
-                "Вводите код, который вам дал учитель и вы без всяких затруднений становитесь учеником определённого класса",
+                "Приглашения",
+                "Приглашение учеников работает теперь только через ссылки-приглашения",
                 R.drawable.ic_link
             ),
             WhatsNewItem(
-                "Скорость",
-                "Запросов стало немного меньше и они вынесены в свои потоки, поэтому приложение будет меньше тормозить при открытии вкладки меню, например",
-                R.drawable.ic_speed
+                "Группы",
+                "Каждая группа должна иметь свой уникальный тег (имя)",
+                R.drawable.ic_tag
             ),
             WhatsNewItem(
-                "Как говаривал Chrome",
-                "\"В этом обновлении мы повысили стабильность и производительность\"©",
-                R.drawable.ic_citata
+                "Расписание",
+                "Расписание полностью переработано",
+                R.drawable.ic_timetables
+            ),
+            WhatsNewItem(
+                "Повышена стабильность",
+                "Переработан редактор создания группы",
+                R.drawable.ic_edit
             ),
         )
+
         wn.titleText = "Что нового?"
         wn.buttonText = "Хорошо"
         //wn.buttonBackground = R.color.design_default_color_secondary
@@ -152,15 +151,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         //val adRequest = AdRequest.Builder().build()
         //mAdView !!.loadAd(adRequest)
         mAdView!!.isVisible = false
-        test()
 
-    }
-
-    private fun test() {
-        val sh = "raw/timetable_reference.xls"
-        //val intent = Intent(Intent.createChooser(Intent(Intent.ACTION_VIEW, Uri.parse("raw/res/$sh")), "select"))
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("raw/res/$sh"))
-        startActivity(intent)
     }
 
     private fun checkDeeplink() {
@@ -195,7 +186,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                 }
 
             }
-            .addOnFailureListener(this) { e -> Log.w(TAG, "getDynamicLink:onFailure", e) }
+            .addOnFailureListener(this) { e -> Log.e(TAG, "getDynamicLink:onFailure", e) }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -253,7 +244,11 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         // menu should be considered as top level destinations.
         appBarConfiguration = AppBarConfiguration(
             setOf(
-                R.id.nav_tasks, R.id.nav_lk, R.id.nav_settings, R.id.nav_timetables, R.id.nav_groups
+                R.id.nav_tasks,
+                R.id.nav_lk,
+                R.id.nav_settings,
+                R.id.nav_timetables,
+                R.id.nav_groups
             ),
             drawerLayout
         )
@@ -413,7 +408,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                 firebaseAuthWithGoogle(account.idToken!!)
             } catch (e: ApiException) {
                 // Google Sign In failed, update UI appropriately
-                Log.w(F, "Google sign in failed", e)
+                Log.e(F, "Google sign in failed", e)
             }
         }
     }
@@ -497,27 +492,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                 }
                 user.groupsAdmin = groups
                 if (user.getGroupByType("school").id == null || user.getGroupByType("class").id == null) {
-                    var msg = "Отсутствуют необходимые группы типа:"
-                    if (user.getGroupByType("school").id == null) {
-                        msg += "\n- школа"
-                    }
-                    if (user.getGroupByType("class").id == null) {
-                        msg += "\n- класс"
-                    }
-                    android.app.AlertDialog.Builder(this)
-                        .setTitle("Добавьте группы")
-                        .setMessage(msg)
-                        .setCancelable(false)
-                        .setPositiveButton("Добавить") { dialog, id ->
-                            binding.navView.setCheckedItem(R.id.nav_settings)
-                            val fragment = SettingsFragment()
-                            val trans: FragmentTransaction = supportFragmentManager
-                                .beginTransaction()
-                                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
-                                .addToBackStack(null)
-                            trans.replace(R.id.nav_host_fragment_content_main, fragment)
-                            trans.commit()
-                        }.show()
+                    //...
                 } else {
                     getTimetables()
                     EventBus.getDefault()

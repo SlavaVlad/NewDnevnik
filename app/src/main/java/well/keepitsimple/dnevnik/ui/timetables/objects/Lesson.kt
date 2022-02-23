@@ -8,7 +8,7 @@ data class Lesson(
     val time: LessonsTime?,
     val day: Int,
 ) {
-    var tag = ""
+    var tag: String? = null
     var groupId: String? = null
     fun isGroup (): Boolean {
         return groupId != null

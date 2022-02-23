@@ -108,81 +108,74 @@ class CreateClass : Fragment(), CoroutineScope {
                     val data = hashMapOf<String, Any>(
                         "id" to ref.id
                     )
-                    ref.update(data)
+                    ref.update(data).await()
                     ids.add(mainDocRef.id)
                     info.add(mainGroup["name"]!! as String)
-                    launch {
-                        timetable.lessonsByDays.forEach { day -> // обход массива дней расписания -----------------------------------------------------------
-                            day.iterator().withIndex().forEach { _lesson ->
-                                    val lesson = _lesson.value
-                                    val i = _lesson.index
-                                    if (lesson.isGroup()) {
-                                        if (!added.contains("${lesson.name}|${lesson.groupId}")) {
-                                            val sbClassData = hashMapOf(
-                                                "name" to lesson.name,
-                                                "tag" to lesson.groupId,
-                                                "admins" to hashMapOf<String, Any>(
-                                                    act.uid!! to listOf(
-                                                        Rights.Doc.CREATE.string,
-                                                        Rights.Doc.DELETE.string,
-                                                        Rights.Doc.EDIT.string,
-                                                        Rights.Doc.VIEW.string,
-                                                    )
-                                                ),
-                                                "rights" to listOf(
-                                                    Rights.Doc.VIEW.string,
-                                                    Rights.Doc.COMPLETE.string,
-                                                ),
-                                                "type" to "subclass",
-                                                "users" to emptyMap<String, Any?>()
-                                            ) // Подгруппа
-                                            mainDocRef
-                                                .collection("groups")
-                                                .add(sbClassData)
-                                                .addOnSuccessListener {
-                                                    day[i].groupId =
-                                                        it.id
-                                                    val data = hashMapOf<String, Any>(
-                                                        "id" to it.id
-                                                    )
-                                                    it.update(data)
-                                                    ids.add(it.id)
-                                                    added.add("${lesson.name}|${lesson.groupId}")
-                                                    info.add("${lesson.name}, ${lesson.tag}")
-                                                }.await()
-                                        } else {
-                                            info.forEachIndexed { l, name ->
-                                                if (day[i].name == name) {
-                                                    day[i].groupId =
-                                                        ids[l]
-                                                }
-                                            }
-                                        }
+                    timetable.lessonsByDays.forEach { day -> // обход массива дней расписания -----------------------------------------------------------
+                        day.iterator().withIndex().forEach { _lesson ->
+                            val lesson = _lesson.value
+                            val i = _lesson.index
+                            if (lesson.isGroup() && !info.contains(lesson.tag!!)) {
+                                val sbClassData = hashMapOf(
+                                    "name" to lesson.name,
+                                    "tag" to lesson.groupId,
+                                    "admins" to hashMapOf<String, Any>(
+                                        act.uid!! to listOf(
+                                            Rights.Doc.CREATE.string,
+                                            Rights.Doc.DELETE.string,
+                                            Rights.Doc.EDIT.string,
+                                            Rights.Doc.VIEW.string,
+                                        )
+                                    ),
+                                    "rights" to listOf(
+                                        Rights.Doc.VIEW.string,
+                                        Rights.Doc.COMPLETE.string,
+                                    ),
+                                    "type" to "subclass",
+                                    "users" to emptyMap<String, Any?>()
+                                ) // Подгруппа
+                                mainDocRef
+                                    .collection("groups")
+                                    .add(sbClassData)
+                                    .addOnSuccessListener {
+                                        day[i].groupId =
+                                            it.id
+                                        val data = hashMapOf<String, Any>(
+                                            "id" to it.id
+                                        )
+                                        it.update(data)
+                                        ids.add(it.id)
+                                        info.add(lesson.tag!!)
+                                    }.await()
+                            } else {
+                                info.forEachIndexed { l, name ->
+                                    if (day[i].tag == name) {
+                                        day[i].groupId = ids[l]
                                     }
-
                                 }
-                            val lessonsToDB: MutableList<HashMap<String, Any>> = mutableListOf()
-                            day.forEach { l ->
-                                val hm = hashMapOf<String, Any>(
-                                    "name" to l.name,
-                                    "cab" to l.cab.toString(),
-                                    "index" to l.index
-                                )
-                                if (l.isGroup()) {
-                                    hm["groupId"] = l.groupId!!
-                                }
-                                lessonsToDB.add(hm)
                             }
-                            val data = hashMapOf<String, Any>(
-                                "dow" to day[0].day,
-                                "lessons" to lessonsToDB
+                        }
+                        val lessonsToDB: MutableList<HashMap<String, Any>> = mutableListOf()
+                        day.forEach { l ->
+                            val hm = hashMapOf<String, Any>(
+                                "name" to l.name,
+                                "cab" to l.cab.toString(),
+                                "index" to l.index
                             )
-                            mainDocRef
-                                .collection("timetables")
-                                .document()
-                                .set(data)
-                        } // обход массива дней расписания ----------------------------------------------------------------------------
-                    }
+                            if (l.isGroup()) {
+                                hm["groupId"] = l.groupId!!
+                            }
+                            lessonsToDB.add(hm)
+                        }
+                        val data = hashMapOf<String, Any>(
+                            "dow" to day[0].day,
+                            "lessons" to lessonsToDB
+                        )
+                        mainDocRef
+                            .collection("timetables")
+                            .document()
+                            .set(data).await()
+                    } // обход массива дней расписания ----------------------------------------------------------------------------
 
                 }.invokeOnCompletion { // Закончили все необходимые операции
                     val p3 = ItemP3GroupFragment()

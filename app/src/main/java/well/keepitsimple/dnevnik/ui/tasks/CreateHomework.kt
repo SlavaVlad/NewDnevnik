@@ -124,7 +124,10 @@ class CreateHomework : Fragment(), CoroutineScope {
     }
 
     private fun check(): Boolean {
-        return !til_text.isErrorEnabled && cg_subjects.checkedChipIds != emptyList<Int>() && cg_targets.checkedChipIds != emptyList<Int>() && cg_types.checkedChipIds != emptyList<Int>()
+        return !til_text.isErrorEnabled &&
+                cg_subjects.checkedChipIds != emptyList<Int>() &&
+                cg_targets.checkedChipIds != emptyList<Int>() &&
+                cg_types.checkedChipIds != emptyList<Int>()
     }
 
     private fun loadAllChips() {

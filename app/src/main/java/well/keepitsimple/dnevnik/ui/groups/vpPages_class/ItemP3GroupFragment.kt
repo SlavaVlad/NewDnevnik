@@ -13,7 +13,11 @@ import com.google.firebase.dynamiclinks.ShortDynamicLink
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.omega_r.libs.omegaintentbuilder.OmegaIntentBuilder
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import well.keepitsimple.dnevnik.MainActivity
 import well.keepitsimple.dnevnik.R
 import well.keepitsimple.dnevnik.ShortLinkCompletedListener
@@ -109,7 +113,6 @@ class ItemP3GroupFragment : Fragment(), CoroutineScope {
                 )
 
                 inviteRef.add(data).addOnSuccessListener { dref ->
-                    runBlocking {
                         val str = info!![index]
                         var compStr = ""
                         for (i in str.iterator()) {
@@ -147,8 +150,7 @@ class ItemP3GroupFragment : Fragment(), CoroutineScope {
                                 }
                             }
                         )
-                    }
-                }
+                    }.await()
             }
 
         }
