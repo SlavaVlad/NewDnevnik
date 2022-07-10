@@ -25,21 +25,32 @@
                 android:id="@+id/textView8"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Уведомления"
-                android:textAppearance="@style/TextAppearance.AppCompat.Medium" />
+                android:text="Осторожно!"
+                android:textAppearance="@style/TextAppearance.AppCompat.Large" />
 
-            <TextView
-                android:id="@+id/textView9"
+            <Space
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Задано на завтра" />
+                android:layout_height="20dp" />
 
             <Button
                 android:id="@+id/btn_script"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:enabled="true"
+                android:enabled="false"
                 android:text="Launch Script" />
+
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="20dp" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/s_rv_invites"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                tools:itemCount="3"
+                tools:listitem="@layout/invite_item" />
 
         </LinearLayout>
     </ScrollView>

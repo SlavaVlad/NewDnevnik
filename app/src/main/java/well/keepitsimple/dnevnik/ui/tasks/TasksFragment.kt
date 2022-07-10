@@ -35,7 +35,6 @@ import well.keepitsimple.dnevnik.login.Rights
 import well.keepitsimple.dnevnik.ui.groups.UserDataSetEvent
 import java.time.Instant
 import java.util.*
-import kotlin.collections.ArrayList
 import kotlin.collections.set
 import kotlin.coroutines.CoroutineContext
 import kotlin.math.ceil
@@ -79,7 +78,10 @@ class TasksFragment : Fragment(), CoroutineScope {
 
     override fun onStart() {
         super.onStart()
-        if (act.user.uid != "" && act.user.getGroupByType("class").id != null && act.user.getGroupByType("school").id != null) {
+        if (act.user.uid != "" && act.user.getGroupByType("class").id != null && act.user.getGroupByType(
+                "school"
+            ).id != null
+        ) {
             setUI()
         }
     }
@@ -115,8 +117,9 @@ class TasksFragment : Fragment(), CoroutineScope {
     }
 
     private fun setUI() {
-            btnCreateHomework.isVisible = true
-                launch { getTasks() }
+        btnCreateHomework.isVisible =
+            act.user.isAllowedInGroup("docCreate", act.user.getGroupByType("class"))
+        launch { getTasks() }
     }
 
     private fun getTasks() {
@@ -136,7 +139,10 @@ class TasksFragment : Fragment(), CoroutineScope {
                                     getDeadlineInDays(doc.getTimestamp("deadline")!!) > -1
                                 ) {
                                     tasks.add(
-                                        Task((getDeadlineInDays(doc.getTimestamp("deadline")!!)), doc)
+                                        Task(
+                                            (getDeadlineInDays(doc.getTimestamp("deadline")!!)),
+                                            doc
+                                        )
                                     )
                                 }
                             }
@@ -185,11 +191,12 @@ class TasksFragment : Fragment(), CoroutineScope {
             object : TaskOnClickListener {
                 override fun onClick(doc: DocumentSnapshot) {
                     val bundle = Bundle()
-                    with(bundle){
+                    with(bundle) {
                         putString("subject", doc.getString("subject"))
                         putString("type", doc.getString("type"))
                         putString("text", doc.getString("text"))
-                        putInt("deadline",
+                        putInt(
+                            "deadline",
                             getDeadlineInDays(doc.getTimestamp("deadline")!!).toInt()
                         )
                     }
@@ -205,79 +212,99 @@ class TasksFragment : Fragment(), CoroutineScope {
             },
             object : TaskOnLongClickListener {
                 override fun onLongClick(doc: DocumentSnapshot, position: Int) {
-                    val bottomActionDialog = BottomSheetDialog(
-                        requireActivity(), R.style.ThemeOverlay_MaterialComponents_BottomSheetDialog
-                    )
-                    val bottomView = LayoutInflater.from(requireActivity())
-                        .inflate(
-                            R.layout.mds_tasks_actions,
-                            requireView().findViewById(R.id.bs_container)
+
+                    val mClass = act.user.getGroupByType("class")
+
+                    if (act.user.isAllowedInGroup("docEdit", mClass)
+                        or
+                        act.user.isAllowedInGroup("docComplete", mClass)
+                        or
+                        act.user.isAllowedInGroup("docDelete", mClass)
+                    ) {
+
+                        val bottomActionDialog = BottomSheetDialog(
+                            requireActivity(),
+                            R.style.ThemeOverlay_MaterialComponents_BottomSheetDialog
                         )
-                    bottomView.findViewById<Button>(R.id.complete).setOnClickListener {
-                        it as Button
-                        Toast.makeText(requireContext(), "Сщьздуеу!!!", Toast.LENGTH_SHORT).show()
-                        bottomActionDialog.dismiss()
-                    }
-                    bottomActionDialog.setContentView(bottomView)
-                    bottomView.findViewById<Button>(R.id.complete).setOnClickListener {
-                        hwToUndoComplete = list[position]
-                        hwComplete(list, position, rv_tasks.adapter as TasksRecyclerAdapter)
-                        Snackbar.make(
-                            rv_tasks,
-                            "Выполнено ${list[position].doc.getString("text")!!}",
-                            Snackbar.LENGTH_LONG
-                        )
-                            .setAction("Undo") {
-                                hwUndoComplete(
-                                    list,
-                                    position,
-                                    rv_tasks.adapter as TasksRecyclerAdapter,
-                                    hwToUndoComplete
-                                )
-                            }
-                            .show()
-                        bottomActionDialog.dismiss()
-                    }
-                    bottomView.findViewById<Button>(R.id.edit).setOnClickListener {
-                        act.toEdit = doc
-                        val trans: FragmentTransaction = requireFragmentManager()
-                            .beginTransaction()
-                            .setTransition(TRANSIT_FRAGMENT_OPEN)
-                            .addToBackStack(null)
-                        trans.replace(R.id.nav_host_fragment_content_main, EditHomework())
-                        trans.commit()
-                        bottomActionDialog.dismiss()
-                    }
-                    bottomView.findViewById<Button>(R.id.delete).setOnClickListener {
-                        val adapter = rv_tasks.adapter as TasksRecyclerAdapter
-                        val builder = AlertDialog.Builder(requireActivity())
-                        builder
-                            .setTitle("Это действие невозможно отменить!")
-                            .setMessage(
-                                "Удалить задание по предмету ${
-                                    list[position].doc.getString("subject")
-                                }?"
+                        val bottomView = LayoutInflater.from(requireActivity())
+                            .inflate(
+                                R.layout.mds_tasks_actions,
+                                requireView().findViewById(R.id.bs_container)
                             )
-                            .setCancelable(false)
-                            .setPositiveButton("Удалить") { dialog, id ->
-                                hwDelete(list, position, adapter)
-                                Snackbar.make(
-                                    rv_tasks,
-                                    "Удалено ${list[position].doc.getString("text")!!}",
-                                    Snackbar.LENGTH_LONG
+
+                        bottomView.findViewById<Button>(R.id.edit).isVisible =
+                            act.user.isAllowedInGroup("docEdit", mClass)
+                        bottomView.findViewById<Button>(R.id.complete).isVisible =
+                            act.user.isAllowedInGroup("docComplete", mClass)
+                        bottomView.findViewById<Button>(R.id.delete).isVisible =
+                            act.user.isAllowedInGroup("docDelete", mClass)
+
+                        bottomView.findViewById<Button>(R.id.complete).setOnClickListener {
+                            Toast.makeText(requireContext(), "Сщьздуеу!!!", Toast.LENGTH_SHORT)
+                                .show()
+                            bottomActionDialog.dismiss()
+                        }
+                        bottomActionDialog.setContentView(bottomView)
+                        bottomView.findViewById<Button>(R.id.complete).setOnClickListener {
+                            hwToUndoComplete = list[position]
+                            hwComplete(list, position, rv_tasks.adapter as TasksRecyclerAdapter)
+                            Snackbar.make(
+                                rv_tasks,
+                                "Выполнено ${list[position].doc.getString("text")!!}",
+                                Snackbar.LENGTH_LONG
+                            )
+                                .setAction("Undo") {
+                                    hwUndoComplete(
+                                        list,
+                                        position,
+                                        rv_tasks.adapter as TasksRecyclerAdapter,
+                                        hwToUndoComplete
+                                    )
+                                }
+                                .show()
+                            bottomActionDialog.dismiss()
+                        }
+                        bottomView.findViewById<Button>(R.id.edit).setOnClickListener {
+                            act.toEdit = doc
+                            val trans: FragmentTransaction = requireFragmentManager()
+                                .beginTransaction()
+                                .setTransition(TRANSIT_FRAGMENT_OPEN)
+                                .addToBackStack(null)
+                            trans.replace(R.id.nav_host_fragment_content_main, EditHomework())
+                            trans.commit()
+                            bottomActionDialog.dismiss()
+                        }
+                        bottomView.findViewById<Button>(R.id.delete).setOnClickListener {
+                            val adapter = rv_tasks.adapter as TasksRecyclerAdapter
+                            val builder = AlertDialog.Builder(requireActivity())
+                            builder
+                                .setTitle("Это действие невозможно отменить!")
+                                .setMessage(
+                                    "Удалить задание по предмету ${
+                                        list[position].doc.getString("subject")
+                                    }?"
                                 )
-                                    .show()
-                            }
-                            .setNegativeButton("Не удалять") { dialog, id ->
-                                adapter.notifyItemChanged(position)
-                            }
-                            .setOnDismissListener {
-                                adapter.notifyItemChanged(position)
-                            }
-                            .show()
-                        bottomActionDialog.dismiss()
+                                .setCancelable(false)
+                                .setPositiveButton("Удалить") { dialog, id ->
+                                    hwDelete(list, position, adapter)
+                                    Snackbar.make(
+                                        rv_tasks,
+                                        "Удалено ${list[position].doc.getString("text")!!}",
+                                        Snackbar.LENGTH_LONG
+                                    )
+                                        .show()
+                                }
+                                .setNegativeButton("Не удалять") { dialog, id ->
+                                    adapter.notifyItemChanged(position)
+                                }
+                                .setOnDismissListener {
+                                    adapter.notifyItemChanged(position)
+                                }
+                                .show()
+                            bottomActionDialog.dismiss()
+                        }
+                        bottomActionDialog.show()
                     }
-                    bottomActionDialog.show()
                 }
             }
         )

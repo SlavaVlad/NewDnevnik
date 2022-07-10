@@ -18,6 +18,7 @@
         <entry key="..\:/Android/Repository/app/src/main/res/drawable/ic_launcher_background.xml" value="0.3609375" />
         <entry key="..\:/Android/Repository/app/src/main/res/drawable/ic_launcher_foreground.xml" value="0.37864583333333335" />
         <entry key="..\:/Android/Repository/app/src/main/res/drawable/ic_list.xml" value="0.3609375" />
+        <entry key="..\:/Android/Repository/app/src/main/res/drawable/ic_menu.xml" value="0.3675" />
         <entry key="..\:/Android/Repository/app/src/main/res/drawable/ic_menu_camera.xml" value="0.3609375" />
         <entry key="..\:/Android/Repository/app/src/main/res/drawable/ic_menu_slideshow.xml" value="0.3609375" />
         <entry key="..\:/Android/Repository/app/src/main/res/drawable/ic_menu_three_dots.xml" value="0.3609375" />
@@ -30,8 +31,8 @@
         <entry key="..\:/Android/Repository/app/src/main/res/layout/activity_group_code_entering.xml" value="0.24166666666666667" />
         <entry key="..\:/Android/Repository/app/src/main/res/layout/activity_main.xml" value="0.3625" />
         <entry key="..\:/Android/Repository/app/src/main/res/layout/alert_dialog_fio.xml" value="0.3625" />
-        <entry key="..\:/Android/Repository/app/src/main/res/layout/app_bar_main.xml" value="0.3625" />
-        <entry key="..\:/Android/Repository/app/src/main/res/layout/content_main.xml" value="0.3625" />
+        <entry key="..\:/Android/Repository/app/src/main/res/layout/app_bar_main.xml" value="0.24444444444444444" />
+        <entry key="..\:/Android/Repository/app/src/main/res/layout/content_main.xml" value="0.24444444444444444" />
         <entry key="..\:/Android/Repository/app/src/main/res/layout/create_document_page1.xml" value="0.41207815275310833" />
         <entry key="..\:/Android/Repository/app/src/main/res/layout/create_document_page2.xml" value="0.3625" />
         <entry key="..\:/Android/Repository/app/src/main/res/layout/create_document_page3.xml" value="0.3625" />
@@ -73,6 +74,7 @@
         <entry key="..\:/Android/Repository/app/src/main/res/layout/item_timetable.xml" value="0.13894736842105262" />
         <entry key="..\:/Android/Repository/app/src/main/res/layout/lesson_item.xml" value="0.3625" />
         <entry key="..\:/Android/Repository/app/src/main/res/layout/mds_main_invite.xml" value="0.33" />
+        <entry key="..\:/Android/Repository/app/src/main/res/layout/mds_tasks_actions.xml" value="0.24444444444444444" />
         <entry key="..\:/Android/Repository/app/src/main/res/layout/modal_bottom_sheet_content.xml" value="0.23246492985971945" />
         <entry key="..\:/Android/Repository/app/src/main/res/layout/nav_header_main.xml" value="0.3625" />
         <entry key="..\:/Android/Repository/app/src/main/res/layout/task_item.xml" value="0.25" />
@@ -82,7 +84,8 @@
         <entry key="..\:/Android/Repository/app/src/main/res/menu/document.xml" value="0.34479166666666666" />
         <entry key="..\:/Android/Repository/app/src/main/res/menu/documentActionsMenu.xml" value="0.34479166666666666" />
         <entry key="..\:/Android/Repository/app/src/main/res/menu/document_actions_menu.xml" value="0.34479166666666666" />
-        <entry key="..\:/Android/Repository/app/src/main/res/menu/main.xml" value="0.3625" />
+        <entry key="..\:/Android/Repository/app/src/main/res/menu/main.xml" value="0.24444444444444444" />
+        <entry key="..\:/Android/Repository/app/src/main/res/menu/tasks.xml" value="0.24444444444444444" />
         <entry key="..\:/Android/Repository/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" value="0.2046875" />
         <entry key="..\:/Android/Repository/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml" value="0.23385416666666667" />
         <entry key="..\:/Android/Repository/app/src/main/res/xml/remote_config_defaults.xml" value="0.24444444444444444" />

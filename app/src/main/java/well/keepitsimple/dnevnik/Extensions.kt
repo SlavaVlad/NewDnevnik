@@ -208,7 +208,6 @@ fun Cell.getStringOrNull(): String? {
         null
     }
 }
-
 fun Cell.getDoubleOrNull(): Double? {
     return if (stringCellValue != null) {
         numericCellValue

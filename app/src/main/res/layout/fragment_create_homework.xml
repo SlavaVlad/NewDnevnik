@@ -34,7 +34,7 @@
                 android:focusedByDefault="true"
                 android:hint="Текст"
                 app:counterEnabled="true"
-                app:counterMaxLength="510"
+                app:counterMaxLength="512"
                 app:counterTextColor="@color/colorPrimary"
                 app:helperTextEnabled="true">
 
@@ -43,9 +43,12 @@
                     android:id="@+id/et_text"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:autoLink="all"
+                    android:capitalize="sentences"
+                    android:drawingCacheQuality="auto"
                     android:focusedByDefault="true"
-                    android:inputType="textAutoCorrect|textMultiLine|textPersonName|textAutoComplete"
-                    android:maxLength="510" />
+                    android:inputType="textLongMessage|textAutoCorrect|textMultiLine|textPersonName|textAutoComplete"
+                    android:maxLength="512" />
 
             </com.google.android.material.textfield.TextInputLayout>
 

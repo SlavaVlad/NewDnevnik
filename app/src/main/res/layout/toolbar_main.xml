@@ -19,13 +19,11 @@
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
+        style="@style/ToolbarStyle"
         android:layout_width="match_parent"
-        android:layout_height="55dp"
-        android:background="@color/purple_700"
+        android:layout_height="?attr/actionBarSize"
         app:layout_anchor="@+id/include"
         app:layout_anchorGravity="top|center"
-        app:navigationIcon="@drawable/ic_menu"
-        app:popupTheme="@style/Theme.Дневник.PopupOverlay"
-        app:titleTextColor="@color/white" />
+        app:menu="@menu/tasks" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

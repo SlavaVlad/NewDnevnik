@@ -11,12 +11,15 @@ import android.view.ViewGroup
 import android.widget.ListView
 import androidx.fragment.app.Fragment
 import com.google.android.material.tabs.TabLayout
-import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
+import org.greenrobot.eventbus.ThreadMode
 import well.keepitsimple.dnevnik.MainActivity
 import well.keepitsimple.dnevnik.R
+import well.keepitsimple.dnevnik.ui.groups.UserDataSetEvent
 import well.keepitsimple.dnevnik.ui.timetables.lessons.LessonsAdapter
 import well.keepitsimple.dnevnik.ui.timetables.objects.Lesson
 import java.util.Calendar.DAY_OF_WEEK
@@ -25,7 +28,7 @@ import kotlin.coroutines.CoroutineContext
 const val TAG = "Timetables"
 
 class TimetablesFragment : Fragment(), CoroutineScope {
-    val db = FirebaseFirestore.getInstance()
+
     lateinit var list: ListView
     lateinit var tabs: TabLayout
     lateinit var ctx: Activity
@@ -50,10 +53,10 @@ class TimetablesFragment : Fragment(), CoroutineScope {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_timetables, container, false)
 
+        EventBus.getDefault().register(this)
+
         list = view.findViewById(R.id.vp_parents)
         tabs = view.findViewById(R.id.tabs_dow)
-
-        setup(act.timetable!!.lessons)
 
         return view
     }
@@ -61,6 +64,18 @@ class TimetablesFragment : Fragment(), CoroutineScope {
     override fun onAttach(activity: Activity) {
         super.onAttach(activity)
         ctx = activity
+    }
+
+    override fun onStart() {
+        super.onStart()
+        if (act.timetable != null) {
+            setup(act.timetable!!.lessons)
+        }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN_ORDERED)
+    fun onMessageEvent(event: UserDataSetEvent?) {
+        setup(act.timetable!!.lessons)
     }
 
     private fun setup(listLessons: List<Lesson>) {
@@ -82,9 +97,12 @@ class TimetablesFragment : Fragment(), CoroutineScope {
         val dow = calendar.get(DAY_OF_WEEK)
         Log.d(TAG, "setup: $dow")
 
-        if (dow <= tabs.tabCount) {
+        if (dow-1 <= tabs.tabCount) {
             tabs.selectTab(tabs.getTabAt(dow-2))
-            setList(dow-2, listLessons)
+            setList(dow, listLessons)
+        } else {
+            tabs.selectTab(tabs.getTabAt(dow-2))
+            setList(0, listLessons)
         }
     }
 
@@ -93,7 +111,7 @@ class TimetablesFragment : Fragment(), CoroutineScope {
         val lessons = mutableListOf<Lesson>()
 
         lr.forEach {
-            if (it.day.toInt()-2 == dayOfWeek) {
+            if (it.day-1 == dayOfWeek-2) {
                 lessons.add(it)
             }
         }

@@ -40,8 +40,6 @@ import com.google.firebase.remoteconfig.ktx.remoteConfigSettings
 import com.instabug.library.Instabug
 import com.instabug.library.invocation.InstabugInvocationEvent
 import com.onesignal.OneSignal
-import io.github.tonnyl.whatsnew.WhatsNew
-import io.github.tonnyl.whatsnew.item.WhatsNewItem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -66,6 +64,7 @@ const val WEEK = 7
 
 class MainActivity : AppCompatActivity(), CoroutineScope {
 
+    private var lastLink: String? = null
     private lateinit var auth: FirebaseAuth
     private lateinit var googleSignInClient: GoogleSignInClient
     private val RC_SIGN_IN: Int = 123
@@ -100,35 +99,6 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
     override fun onStart() {
         super.onStart()
 
-        val wn = WhatsNew.newInstance(
-            WhatsNewItem(
-                "Приглашения",
-                "Приглашение учеников работает теперь только через ссылки-приглашения",
-                R.drawable.ic_link
-            ),
-            WhatsNewItem(
-                "Группы",
-                "Каждая группа должна иметь свой уникальный тег (имя)",
-                R.drawable.ic_tag
-            ),
-            WhatsNewItem(
-                "Расписание",
-                "Расписание полностью переработано",
-                R.drawable.ic_timetables
-            ),
-            WhatsNewItem(
-                "Повышена стабильность",
-                "Переработан редактор создания группы",
-                R.drawable.ic_edit
-            ),
-        )
-
-        wn.titleText = "Что нового?"
-        wn.buttonText = "Хорошо"
-        //wn.buttonBackground = R.color.design_default_color_secondary
-        //wn.buttonTextColor = R.color.white
-        wn.presentAutomatically(this@MainActivity)
-
         checkDeeplink()
 
         // Check if user is signed in (non-null) and update UI accordingly.
@@ -158,33 +128,35 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
         Firebase.dynamicLinks
             .getDynamicLink(intent)
             .addOnSuccessListener(this) { pendingDynamicLinkData ->
-                val link: Uri? = pendingDynamicLinkData?.link
-                if (link?.getQueryParameter("invite") != null) {
-                    val bottomActionDialog = BottomSheetDialog(
-                        this, R.style.ThemeOverlay_MaterialComponents_BottomSheetDialog
-                    )
-                    val bottomView = LayoutInflater.from(this)
-                        .inflate(
-                            R.layout.mds_main_invite,
-                            findViewById(R.id.lay_invite)
+                if (lastLink != pendingDynamicLinkData?.link.toString()) { // проверка на повторение deepLink
+                    lastLink = pendingDynamicLinkData?.link.toString()
+                    val link: Uri? = pendingDynamicLinkData?.link
+                    if (link?.getQueryParameter("invite") != null) {
+                        val bottomActionDialog = BottomSheetDialog(
+                            this, R.style.ThemeOverlay_MaterialComponents_BottomSheetDialog
                         )
-                    bottomView.findViewById<Button>(R.id.btn_acceptInvite).setOnClickListener {
-                        acceptInvite(
-                            link.getQueryParameter("invite").toString(),
-                            object : OnCompletedListener {
-                                override fun onCompleted(success: Boolean, msg: String) {
-                                    Toast.makeText(applicationContext, msg, Toast.LENGTH_SHORT)
-                                        .show()
-                                    bottomActionDialog.dismiss()
-                                }
-                            })
+                        val bottomView = LayoutInflater.from(this)
+                            .inflate(
+                                R.layout.mds_main_invite,
+                                findViewById(R.id.lay_invite)
+                            )
+                        bottomView.findViewById<Button>(R.id.btn_acceptInvite).setOnClickListener {
+                            acceptInvite(
+                                link.getQueryParameter("invite").toString(),
+                                object : OnCompletedListener {
+                                    override fun onCompleted(success: Boolean, msg: String) {
+                                        Toast.makeText(applicationContext, msg, Toast.LENGTH_SHORT)
+                                            .show()
+                                        bottomActionDialog.dismiss()
+                                    }
+                                })
+                        }
+                        bottomView.findViewById<TextView>(R.id.tv_group_name).text =
+                            link.getQueryParameter("name").toString()
+                        bottomActionDialog.setContentView(bottomView)
+                        bottomActionDialog.show()
                     }
-                    bottomView.findViewById<TextView>(R.id.tv_group_name).text =
-                        link.getQueryParameter("name").toString()
-                    bottomActionDialog.setContentView(bottomView)
-                    bottomActionDialog.show()
                 }
-
             }
             .addOnFailureListener(this) { e -> Log.e(TAG, "getDynamicLink:onFailure", e) }
     }
@@ -260,6 +232,8 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
             .document(id)
             .get()
             .addOnSuccessListener {
+                val a = it
+                a
                 if (it.exists()) {
                     db.collectionGroup("groups")
                         .whereEqualTo("id", (it["inviteTo"] as String))
@@ -290,7 +264,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
             }
     }
 
-    private fun getTimetables() {
+    private fun getTimetable() {
         // запрос документов расписания
         timetable?.lessons?.clear()
         val list_lessons = ArrayList<Lesson>()
@@ -317,7 +291,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                                     (l["cab"] as String),
                                     (l["name"] as String),
                                     (l["teacher"] as String?),
-                                    docTime[(l["index"] as Long).toInt()],
+                                    docTime[(l["index"] as Long).toInt() - 1],
                                     doc.getLong("dow")!!.toInt(),
                                 )
                                 lesson.groupId = (l["groupId"] as String?)
@@ -494,7 +468,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
                 if (user.getGroupByType("school").id == null || user.getGroupByType("class").id == null) {
                     //...
                 } else {
-                    getTimetables()
+                    getTimetable()
                     EventBus.getDefault()
                         .post(UserDataSetEvent(user.uid, user.groupsAdmin, user.groupsUser))
                 }
@@ -506,7 +480,7 @@ class MainActivity : AppCompatActivity(), CoroutineScope {
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         // Inflate the menu; this adds items to the action bar if it is present.
-        menuInflater.inflate(R.menu.main, menu)
+        menuInflater.inflate(R.menu.tasks, menu)
         return true
     }
 

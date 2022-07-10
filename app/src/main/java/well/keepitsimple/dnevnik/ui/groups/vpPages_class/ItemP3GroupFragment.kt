@@ -97,11 +97,11 @@ class ItemP3GroupFragment : Fragment(), CoroutineScope {
 
         val info = requireArguments().getStringArrayList("info")
         val ids = requireArguments().getStringArrayList("ids")
+        val db = FirebaseFirestore.getInstance()
+        val inviteRef = db.collection("invites")
 
         val links = mutableListOf<String>()
 
-        val db = FirebaseFirestore.getInstance()
-        val inviteRef = db.collection("invites")
 
         launch {
 
